@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_MUSIC_PLAYER
+	bool "Music Player"
+	default n
+	
+if LVX_USE_DEMO_MUSIC_PLAYER
+	config LVX_MUSIC_PLAYER_DATA_ROOT
+		string "Music Player Data Root"
+		default "/sdcard"
+endif
