@@ -96,7 +96,7 @@ static void bar_volume_set_value(int16_t value, lv_obj_t* bar_volume)
 
 static void bar_volume_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* bar = lv_bar_create(par);
     lv_obj_set_size(bar, 160, 3);
@@ -111,7 +111,7 @@ static void btn_volume_event_handler(lv_event_t* event)
 {
     lv_obj_t* obj = lv_event_get_target(event);
     lv_event_code_t code = lv_event_get_code(event);
-    page_ctx_t* ctx = (page_ctx_t*)lv_event_get_user_data(event);
+    page_ctx_t* ctx = lv_event_get_user_data(event);
 
     if (code == LV_EVENT_CLICKED) {
         lv_obj_t* img = lv_obj_get_child(obj, 0);
@@ -127,7 +127,7 @@ static void btn_volume_event_handler(lv_event_t* event)
 
 static void btn_volume_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* btn1 = lv_btn_create(par);
     lv_obj_set_size(btn1, 85, 48);
@@ -165,7 +165,7 @@ static void btn_volume_create(lv_obj_t* par)
 
 static void obj_play_anim_ready_callback(lv_anim_t* a_p)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_anim_get_user_data(a_p);
+    page_ctx_t* ctx = lv_anim_get_user_data(a_p);
 
     if (a_p->act_time == 0)
         return;
@@ -192,7 +192,7 @@ static void obj_play_event_handler(lv_event_t* event)
 {
     lv_event_code_t code = lv_event_get_code(event);
     lv_obj_t* obj = lv_event_get_target(event);
-    page_ctx_t* ctx = (page_ctx_t*)lv_event_get_user_data(event);
+    page_ctx_t* ctx = lv_event_get_user_data(event);
 
     if (code == LV_EVENT_CLICKED) {
         lv_obj_t* img = lv_obj_get_child(obj, 0);
@@ -212,7 +212,7 @@ static void obj_play_event_handler(lv_event_t* event)
 
 static void obj_play_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* obj = lv_obj_create(ctx->arc_play);
     lv_obj_set_size(obj, 104, 104);
@@ -233,32 +233,6 @@ static void obj_play_create(lv_obj_t* par)
     ctx->obj_play = obj;
 }
 
-static void arc_play_create(lv_obj_t* par)
-{
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
-
-    lv_obj_t* arc = lv_arc_create(par);
-    lv_obj_set_style_arc_color(arc, MC_COLOR_PINK, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(arc, 6, LV_PART_INDICATOR);
-
-    lv_obj_set_style_bg_color(arc, MC_COLOR_PINK, LV_PART_KNOB); // 设置 arc knob颜色
-    lv_obj_set_style_pad_all(arc, 0, LV_PART_KNOB); // 设置arc knob size
-
-    lv_obj_set_style_arc_color(arc, MC_COLOR_PINK_BG, LV_PART_MAIN);
-    lv_obj_set_style_arc_width(arc, 6, LV_PART_MAIN);
-
-    lv_obj_set_style_border_width(arc, 0, LV_PART_MAIN);
-    lv_obj_set_size(arc, 121, 121);
-    lv_obj_align(arc, LV_ALIGN_CENTER, 0, 0);
-
-    lv_arc_set_start_angle(arc, 270);
-    lv_arc_set_bg_angles(arc, 0, 360);
-    lv_arc_set_range(arc, 0, 1000);
-    lv_arc_set_rotation(arc, 270);
-
-    ctx->arc_play = arc;
-}
-
 static void spangroup_time_update(page_ctx_t* ctx, uint32_t cur_ms, uint32_t end_ms)
 {
     uint32_t cur_min = cur_ms / 60 / 1000;
@@ -276,9 +250,44 @@ static void spangroup_time_update(page_ctx_t* ctx, uint32_t cur_ms, uint32_t end
     lv_span_set_text(ctx->span_end_time, end_buf);
 }
 
+static void arc_play_event_handler(lv_event_t* event)
+{
+    page_ctx_t* ctx = lv_event_get_user_data(event);
+    int32_t value = lv_arc_get_value(ctx->arc_play);
+    ctx->music_current_time = lv_map(value, lv_arc_get_min_value(ctx->arc_play), lv_arc_get_max_value(ctx->arc_play), 0, ctx->music_end_time);
+    spangroup_time_update(ctx, ctx->music_current_time, ctx->music_end_time);
+}
+
+static void arc_play_create(lv_obj_t* par)
+{
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
+
+    lv_obj_t* arc = lv_arc_create(par);
+    lv_obj_set_style_arc_color(arc, MC_COLOR_PINK, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(arc, 6, LV_PART_INDICATOR);
+
+    lv_obj_set_style_bg_color(arc, MC_COLOR_PINK, LV_PART_KNOB); // 设置 arc knob颜色
+    lv_obj_set_style_pad_all(arc, 0, LV_PART_KNOB); // 设置arc knob size
+
+    lv_obj_set_style_arc_color(arc, MC_COLOR_PINK_BG, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(arc, 6, LV_PART_MAIN);
+
+    lv_obj_set_style_border_width(arc, 0, LV_PART_MAIN);
+    lv_obj_set_size(arc, 121, 121);
+    lv_obj_align(arc, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_add_event_cb(arc, arc_play_event_handler, LV_EVENT_VALUE_CHANGED, ctx);
+
+    lv_arc_set_start_angle(arc, 270);
+    lv_arc_set_bg_angles(arc, 0, 360);
+    lv_arc_set_range(arc, 0, 1000);
+    lv_arc_set_rotation(arc, 270);
+
+    ctx->arc_play = arc;
+}
+
 static void spangroup_time_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
     lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
@@ -303,7 +312,7 @@ static void spangroup_time_create(lv_obj_t* par)
 
 static void label_music_info_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
     lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
@@ -352,7 +361,7 @@ static void btn_music_event_handler(lv_event_t* event)
 {
     lv_obj_t* obj = lv_event_get_target(event);
     lv_event_code_t code = lv_event_get_code(event);
-    page_ctx_t* ctx = (page_ctx_t*)lv_event_get_user_data(event);
+    page_ctx_t* ctx = lv_event_get_user_data(event);
 
     if (code == LV_EVENT_CLICKED) {
         lv_obj_t* img = lv_obj_get_child(obj, 0);
@@ -364,7 +373,7 @@ static void btn_music_event_handler(lv_event_t* event)
 
 static void btn_music_ctrl_create(lv_obj_t* par)
 {
-    page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
+    page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* btn1 = lv_btn_create(par);
     lv_obj_set_size(btn1, 85, 64);
