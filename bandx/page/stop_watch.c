@@ -99,7 +99,7 @@ static void list_history_create(lv_obj_t* par)
     page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
 
     lv_obj_t* list = lv_list_create(par);
-    lv_obj_set_style_text_font(list, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(list, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_bg_color(list, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_border_width(list, 0, LV_PART_MAIN);
 
@@ -113,13 +113,13 @@ static void label_time_create(lv_obj_t* par)
     page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_38"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_38"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_hex(0x87FFCE), LV_PART_MAIN);
 
     lv_label_set_text(label, "00:00.000");
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, ctx->label_time_ready_y);
-    lv_obj_set_width(label, 170);
+    lv_obj_set_width(label, 180);
     lv_obj_set_style_border_color(label, lv_color_make(0x80, 0x80, 0x80), LV_PART_MAIN);
     lv_obj_set_style_border_width(label, 2, LV_PART_MAIN);
     lv_obj_set_style_border_side(label, LV_BORDER_SIDE_BOTTOM, LV_PART_MAIN);
@@ -192,6 +192,7 @@ static void sw_record(page_ctx_t* ctx)
         list_btn = lv_list_add_btn(ctx->list_history, NULL, NULL);
         lv_obj_clear_flag(list_btn, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_style_border_width(list_btn, 2, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(list_btn, 0, LV_PART_MAIN);
 
         spangroup = lv_spangroup_create(list_btn);
 
