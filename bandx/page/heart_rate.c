@@ -136,7 +136,7 @@ static void label_hr_current_create(lv_obj_t* par)
     lv_obj_align(img, LV_ALIGN_TOP_MID, 0, 28);
 
     lv_obj_t* label1 = lv_label_create(par);
-    lv_obj_set_style_text_font(label1, resource_get_font("bahnschrift_72"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label1, resource_get_font(BANDX_REGULAR_FONT "_72"), LV_PART_MAIN);
     lv_label_set_text(label1, "--");
     lv_obj_set_style_text_color(label1, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_align(label1, LV_ALIGN_CENTER, LV_PART_MAIN);
@@ -145,7 +145,7 @@ static void label_hr_current_create(lv_obj_t* par)
     lv_obj_t* label2 = lv_label_create(par);
     lv_obj_set_style_text_font(
         label2,
-        resource_get_font("bahnschrift_20"),
+        resource_get_font(BANDX_REGULAR_FONT "_20"),
         LV_PART_MAIN);
     lv_obj_set_style_text_color(label2, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN);
     lv_label_set_text(label2, "bpm");
@@ -388,15 +388,15 @@ static void on_page_construct(lv_fragment_t* self, void* args)
         ctx->color_bar_grp[i] = color_bar_grp[i];
     }
     lv_style_init(&ctx->color_bar_style);
-    lv_style_set_text_font(&ctx->color_bar_style, resource_get_font("bahnschrift_20"));
+    lv_style_set_text_font(&ctx->color_bar_style, resource_get_font(BANDX_REGULAR_FONT "_20"));
     lv_style_set_text_color(&ctx->color_bar_style, lv_color_white());
 
     lv_style_init(&ctx->label_hr_style1);
-    lv_style_set_text_font(&ctx->label_hr_style1, resource_get_font("bahnschrift_20"));
+    lv_style_set_text_font(&ctx->label_hr_style1, resource_get_font(BANDX_REGULAR_FONT "_20"));
     lv_style_set_text_color(&ctx->label_hr_style1, lv_palette_main(LV_PALETTE_GREY));
 
     lv_style_init(&ctx->label_hr_style2);
-    lv_style_set_text_font(&ctx->label_hr_style2, resource_get_font("bahnschrift_20"));
+    lv_style_set_text_font(&ctx->label_hr_style2, resource_get_font(BANDX_REGULAR_FONT "_20"));
     lv_style_set_text_color(&ctx->label_hr_style2, lv_color_make(0xF1, 0x5A, 0x24));
 }
 

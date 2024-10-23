@@ -108,6 +108,11 @@ bool page_is_last_page_dialplate(void);
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #endif
 
+#if !defined(BANDX_REGULAR_FONT) && !defined(BANDX_BOLD_FONT)
+#define BANDX_REGULAR_FONT "AlibabaPuHuiTi-3-55-Regular"
+#define BANDX_BOLD_FONT "AlibabaPuHuiTi-3-95-ExtraBold"
+#endif
+
 #define AUTO_EVENT_CREATE(ae, ae_data)                               \
     do {                                                             \
         if (page_get_autoshow_enable()) {                            \
