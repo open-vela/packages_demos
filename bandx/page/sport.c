@@ -81,7 +81,7 @@ static void sport_title_create(lv_obj_t* par)
     lv_obj_t* label = lv_label_create(obj);
     lv_label_set_text(label, "Sports");
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_15"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_15"), LV_PART_MAIN);
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 }
 
@@ -115,8 +115,8 @@ static void sport_list_create(page_ctx_t* ctx)
         lv_obj_t* label = lv_label_create(obj_base);
         lv_label_set_text(label, ctx->sport_info_grp[i].sport_name);
         lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
-        lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_15"), LV_PART_MAIN);
-        lv_obj_align_to(label, img, LV_ALIGN_OUT_RIGHT_MID, 6, 0);
+        lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_15"), LV_PART_MAIN);
+        lv_obj_align_to(label, img, LV_ALIGN_OUT_RIGHT_MID, 4, 0);
     }
     lv_obj_add_event(ctx->list, on_sport_list_event, LV_EVENT_ALL, obj_base);
 }
@@ -156,15 +156,15 @@ static void on_page_construct(lv_fragment_t* self, void* args)
     page_ctx_t* ctx = (page_ctx_t*)self;
 
     sport_info_t sport_info_grp[SPORT_INFO_CNT] = {
-        { "icon_sprint", "Outdoor running", 0x9AFF9A },
-        { "icon_walking", "Walking", 0x87CEFA },
+        { "icon_running", "Running", 0x9AFF9A },
         { "icon_stretching", "Stretching", 0xFFF68F },
-        { "icon_hiking", "Hiking", 0xAB82FF },
-        { "icon_bicycle", "Outdoor cycling", 0xFFC1C1 },
-        { "icon_running", "Indoor running", 0x97FFFF },
-        { "icon_skipping_rope", "Rope skipping", 0xFFA54F },
-        { "icon_swimming", "Swimming", 0xFF83FA },
-        { "icon_sports", "More sports", 0x4876FF },
+        { "icon_riding", "Riding", 0xFFC1C1 },
+        { "icon_skiing", "Skiing", 0xAB82FF },
+        { "icon_yoga", "Yoga", 0x97FFFF },
+        { "icon_tabletennis", "Table tennis", 0xFF83FA },
+        { "icon_basketball", "Basketball", 0xFFA54F },
+        { "icon_volleyball", "Volleyball", 0x87CEFA },
+        { "icon_more_sports", "More sports", 0x4876FF },
     };
 
     for (int i = 0; i < SPORT_INFO_CNT; i++) {
