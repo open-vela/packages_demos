@@ -95,7 +95,7 @@ static void bar_setting_create(lv_obj_t* par, bar_setting_t* bar_setting, int le
         lv_obj_align(obj_base, LV_ALIGN_TOP_MID, 0, bar_setting[i].y);
 
         lv_obj_t* label = lv_label_create(obj_base);
-        lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+        lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
         lv_obj_set_style_text_color(label, lv_color_make(0x66, 0x66, 0x66), LV_PART_MAIN);
         lv_label_set_text(label, bar_setting[i].text);
         lv_obj_align_to(label, obj_base, LV_ALIGN_TOP_LEFT, 0, 0);
@@ -147,7 +147,7 @@ static void sw_auto_show_create(page_ctx_t* ctx)
 {
     lv_obj_t* par = ctx->base.obj;
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_make(0x66, 0x66, 0x66), LV_PART_MAIN);
     lv_label_set_text(label, "Auto-show");
     lv_obj_align(label, LV_ALIGN_TOP_LEFT, 23, 187);
@@ -166,7 +166,7 @@ static void sw_auto_show_create(page_ctx_t* ctx)
 static void label_info_create(lv_obj_t* par)
 {
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(label, BX_NAME " " BX_VERSION "\n"__DATE__
                                      "\nBuild");

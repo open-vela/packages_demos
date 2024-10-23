@@ -137,7 +137,7 @@ static void label_score_create(lv_obj_t* par)
     lv_obj_t* label1 = lv_label_create(par);
     lv_obj_set_style_text_font(
         label1,
-        resource_get_font("bahnschrift_20"),
+        resource_get_font(BANDX_REGULAR_FONT "_20"),
         LV_PART_MAIN);
     lv_obj_set_style_text_color(label1, lv_color_hex(0x808080), LV_PART_MAIN);
     lv_label_set_text(label1, "Score");
@@ -146,7 +146,7 @@ static void label_score_create(lv_obj_t* par)
     lv_obj_t* label2 = lv_label_create(par);
     lv_obj_set_style_text_font(
         label2,
-        resource_get_font("bahnschrift_72"),
+        resource_get_font(BANDX_REGULAR_FONT "_72"),
         LV_PART_MAIN);
     lv_obj_set_style_text_color(label2, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(label2, "78");
@@ -156,20 +156,20 @@ static void label_score_create(lv_obj_t* par)
 static void label_total_time_create(lv_obj_t* par)
 {
     lv_obj_t* label1 = lv_label_create(par);
-    lv_obj_set_style_text_font(label1, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label1, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label1, lv_color_hex(0x808080), LV_PART_MAIN);
     lv_label_set_text(label1, "Total time");
     lv_obj_align(label1, LV_ALIGN_TOP_MID, 0, 224);
 
     lv_obj_t* label2 = lv_label_create(par);
-    lv_obj_set_style_text_font(label2, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label2, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label2, lv_color_hex(0x3FA9F5), LV_PART_MAIN);
     lv_label_set_text(label2, "8 h 52 min");
     lv_obj_set_style_text_align(label2, LV_ALIGN_CENTER, 0);
     lv_obj_align(label2, LV_ALIGN_TOP_MID, 0, 249);
 
     lv_obj_t* spangroup = lv_spangroup_create(par);
-    lv_obj_set_style_text_font(spangroup, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(spangroup, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
 
     lv_span_t* span = lv_spangroup_new_span(spangroup);
     lv_span_set_text_static(span, "00:29");
@@ -241,7 +241,7 @@ static void obj_sleep_time_create(lv_obj_t* par, sleep_time_t* sleep_time, int l
     lv_obj_t* label1 = lv_label_create(par);
     lv_obj_set_style_text_font(
         label1,
-        resource_get_font("bahnschrift_15"),
+        resource_get_font(BANDX_REGULAR_FONT "_15"),
         LV_PART_MAIN);
     lv_obj_set_style_text_color(
         label1,
@@ -255,7 +255,7 @@ static void obj_sleep_time_create(lv_obj_t* par, sleep_time_t* sleep_time, int l
     lv_obj_t* label2 = lv_label_create(par);
     lv_obj_set_style_text_font(
         label2,
-        resource_get_font("bahnschrift_15"),
+        resource_get_font(BANDX_REGULAR_FONT "_15"),
         LV_PART_MAIN);
     lv_obj_set_style_text_color(
         label2,
@@ -284,7 +284,7 @@ static void obj_sleep_info_create(lv_obj_t* par, sleep_info_t* sleep_info, int l
         lv_obj_t* label1 = lv_label_create(obj_base);
         lv_obj_set_style_text_font(
             label1,
-            resource_get_font("bahnschrift_20"),
+            resource_get_font(BANDX_REGULAR_FONT "_20"),
             LV_PART_MAIN);
         lv_obj_set_style_text_color(
             label1,
@@ -296,7 +296,7 @@ static void obj_sleep_info_create(lv_obj_t* par, sleep_info_t* sleep_info, int l
         lv_obj_t* label2 = lv_label_create(obj_base);
         lv_obj_set_style_text_font(
             label2,
-            resource_get_font("bahnschrift_20"),
+            resource_get_font(BANDX_REGULAR_FONT "_20"),
             LV_PART_MAIN);
         lv_obj_set_style_text_color(
             label2,
@@ -312,7 +312,7 @@ static void obj_sleep_info_create(lv_obj_t* par, sleep_info_t* sleep_info, int l
         lv_obj_t* label3 = lv_label_create(obj_base);
         lv_obj_set_style_text_font(
             label3,
-            resource_get_font("bahnschrift_20"),
+            resource_get_font(BANDX_REGULAR_FONT "_20"),
             LV_PART_MAIN);
         lv_obj_set_style_text_color(
             label3,

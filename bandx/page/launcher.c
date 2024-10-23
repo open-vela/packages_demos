@@ -225,7 +225,7 @@ static void on_page_construct(lv_fragment_t* self, void* args)
     lv_style_set_radius(&ctx->icon_style, 10);
 
     lv_style_init(&ctx->label_style);
-    lv_style_set_text_font(&ctx->label_style, resource_get_font("erasbd_23"));
+    lv_style_set_text_font(&ctx->label_style, resource_get_font(BANDX_BOLD_FONT "_23"));
     lv_style_set_text_color(&ctx->label_style, lv_color_white());
 
     app_entry_t app_entry[APP_ENTRY_CNT] = {

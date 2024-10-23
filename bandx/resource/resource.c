@@ -83,7 +83,7 @@ void resource_init(void)
 #define FONT_DEF(NAME, SIZE)                                                                          \
     do {                                                                                              \
         lv_font_t* font = lv_freetype_font_create(CONFIG_BANDX_BASE_PATH FONT_BASE_PATH #NAME ".ttf", \
-            LV_FREETYPE_FONT_RENDER_MODE_BITMAP,                                                                  \
+            LV_FREETYPE_FONT_RENDER_MODE_BITMAP,                                                      \
             SIZE,                                                                                     \
             LV_FREETYPE_FONT_STYLE_NORMAL);                                                           \
         if (font) {                                                                                   \

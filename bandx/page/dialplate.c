@@ -80,7 +80,7 @@ static lv_obj_t* obj_batt_create(lv_obj_t* par)
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_width(bar, 0, LV_PART_MAIN);
     lv_obj_set_style_radius(bar, 0, LV_PART_MAIN);
-    lv_obj_set_size(bar, lv_obj_get_self_width(par) / 2, lv_obj_get_self_height(par));
+    lv_obj_set_size(bar, lv_obj_get_self_width(par) / 2, lv_obj_get_self_height(par) - 2);
     lv_obj_align(bar, LV_ALIGN_LEFT_MID, 2, 0);
 
     return bar;
@@ -115,7 +115,7 @@ static void label_date_create(lv_obj_t* par)
     page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
 
     lv_obj_t* spangroup = lv_spangroup_create(par);
-    lv_obj_set_style_text_font(spangroup, resource_get_font("erasbd_23"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(spangroup, resource_get_font(BANDX_BOLD_FONT "_23"), LV_PART_MAIN);
     lv_obj_set_style_text_color(spangroup, lv_color_white(), LV_PART_MAIN);
     lv_obj_align(spangroup, LV_ALIGN_TOP_MID, 0, 25);
 
@@ -134,7 +134,7 @@ static void label_time_create(lv_obj_t* par)
     page_ctx_t* ctx = (page_ctx_t*)lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("erasbd_128"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_BOLD_FONT "_110"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 33);
     ctx->label_time_hour = label;
@@ -148,7 +148,7 @@ static void label_time_create(lv_obj_t* par)
     lv_obj_set_pos(img, 99, 136);
 
     label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("erasbd_128"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_BOLD_FONT "_110"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_hex(0xF15A24), LV_PART_MAIN);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 115);
     ctx->label_time_min = label;
@@ -219,7 +219,7 @@ static void color_bar_create(lv_obj_t* par, color_bar_t* color_bar, int len)
         lv_obj_t* label = lv_label_create(bar);
         lv_obj_set_style_text_font(
             label,
-            resource_get_font("erasbd_28"),
+            resource_get_font(BANDX_BOLD_FONT "_28"),
             LV_PART_MAIN);
         lv_obj_set_style_text_color(
             label,

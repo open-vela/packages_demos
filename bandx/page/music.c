@@ -290,12 +290,12 @@ static void spangroup_time_create(lv_obj_t* par)
     page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_label_set_text(label, "--");
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 87);
 
     lv_obj_t* spangroup = lv_spangroup_create(par);
-    lv_obj_set_style_text_font(spangroup, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(spangroup, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
 
     lv_span_t* cur_span = lv_spangroup_new_span(spangroup);
     lv_style_set_text_color(&cur_span->style, lv_color_hex(0xB9005E));
@@ -315,7 +315,7 @@ static void label_music_info_create(lv_obj_t* par)
     page_ctx_t* ctx = lv_obj_get_user_data(par);
 
     lv_obj_t* label = lv_label_create(par);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_20"), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_20"), LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(label, "");
     lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);

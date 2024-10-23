@@ -72,7 +72,7 @@ static void on_page_created(lv_fragment_t* self, lv_obj_t* obj)
     LV_LOG_USER("self: %p obj: %p", self, obj);
 
     lv_obj_t* label = lv_label_create(obj);
-    lv_obj_set_style_text_font(label, resource_get_font("bahnschrift_38"), 0);
+    lv_obj_set_style_text_font(label, resource_get_font(BANDX_REGULAR_FONT "_38"), 0);
     lv_label_set_text(label, "SPORT");
     lv_obj_center(label);
 
