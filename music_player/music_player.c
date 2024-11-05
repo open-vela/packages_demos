@@ -40,6 +40,7 @@
  *********************/
 
 #include "music_player.h"
+#include <stdlib.h>
 #include <netutils/cJSON.h>
 #include <time.h>
 
