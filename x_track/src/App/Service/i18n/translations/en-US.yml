@@ -1,0 +1,42 @@
+en-US:
+  EPHEMERIS: Ephemeris
+  LOAD_SUCCESS: Load Success
+  LOW_BATTERY: Low Battery
+  SHUTDOWN?: Shutdown?
+  NO_OPERATION: No Operation
+  'NO': 'No'
+  'YES': 'Yes'
+  START_RECORD: Start Record
+  STOP_RECORD: Stop Record
+  GNSS_NOT_READY: GNSS Not Ready
+  OPEN_FILE_FAILED: Open File Failed
+  AVG_SPEED: AVG
+  TIME: Time
+  DISTANCE: Distance
+  CALORIES: Calories
+  LOADING...: Loading...
+  POWER_OFF: Power Off
+  SPORT: Sport
+  GNSS: GNSS
+  BATTERY: Battery
+  ABOUT: About
+  TOTAL_TRIP: Total Trip
+  TOTAL_TIME: Total Time
+  MAX_SPEED: Max Speed
+  LATITUDE: Latitude
+  LONGITUDE: Longitude
+  ALTITUDE: Altitude
+  UTC_TIME: UTC Time
+  COURSE: Course
+  SPEED: Speed
+  DATE: Date
+  USAGE: Usage
+  VOLTAGE: Voltage
+  STATUS: Status
+  CHARGE: Charge
+  DISCHARGE: Discharge
+  NAME: Name
+  AUTHOR: Author
+  GRAPHICS: GUI
+  COMPILER: Compiler
+  BUILD_DATE: Build
