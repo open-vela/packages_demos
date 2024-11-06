@@ -1,0 +1,19 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_X_TRACK
+	bool "X-TRACK demo"
+	depends on GRAPHICS_LVGL && LV_USE_LIBPNG && LIB_PNG && NETUTILS_CJSON && UIKIT_FONT_MANAGER
+	default n
+	---help---
+		Enable build X-TRACK Demo programs
+
+if LVX_USE_DEMO_X_TRACK
+
+config X_TRACK_RESOURCE_DIR_PATH
+	string "Resource directory path for X-TRACK"
+	default "/data"
+
+endif # LVX_USE_DEMO_X_TRACK
