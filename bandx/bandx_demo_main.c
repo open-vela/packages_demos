@@ -36,6 +36,11 @@ int main(int argc, FAR char* argv[])
     uv_loop_t ui_loop;
     lv_memset(&ui_loop, 0, sizeof(uv_loop_t));
 
+    if (lv_is_initialized()) {
+        LV_LOG_ERROR("LVGL already initialized! aborting.");
+        return -1;
+    }
+
     lv_init();
 
     lv_nuttx_dsc_init(&info);
