@@ -101,6 +101,8 @@ struct resource_s {
 };
 
 struct ctx_s {
+    bool resource_healthy_check;
+
     album_info_t* current_album;
     lv_obj_t* current_album_related_obj;
 
