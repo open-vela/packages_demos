@@ -58,8 +58,9 @@
 
 /* Init functions */
 static void read_configs(void);
-static void init_resource(void);
+static bool init_resource(void);
 static void reload_music_config(void);
+static void app_create_error_page(void);
 static void app_create_main_page(void);
 static void app_create_top_layer(void);
 
@@ -141,6 +142,13 @@ void app_create(void)
     CF.wifi.conn_delay = 2000000;
     wifi_connect(&CF.wifi);
 #endif
+
+    C.resource_healthy_check = init_resource();
+
+    if (!C.resource_healthy_check) {
+        app_create_error_page();
+        return;
+    }
 
     app_create_main_page();
     app_set_play_status(PLAY_STATUS_STOP);
@@ -566,7 +574,7 @@ static void app_playback_progress_bar_event_handler(lv_event_t* e)
     }
 }
 
-static void init_resource(void)
+static bool init_resource(void)
 {
     // Fonts
     R.fonts.size_16.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Normal.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 16, LV_FREETYPE_FONT_STYLE_NORMAL);
@@ -574,6 +582,14 @@ static void init_resource(void)
     R.fonts.size_24.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Normal.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
     R.fonts.size_28.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 38, LV_FREETYPE_FONT_STYLE_NORMAL);
     R.fonts.size_60.bold = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 60, LV_FREETYPE_FONT_STYLE_NORMAL);
+
+    if (R.fonts.size_16.normal == NULL ||
+        R.fonts.size_22.bold == NULL   ||
+        R.fonts.size_24.normal == NULL ||
+        R.fonts.size_28.normal == NULL ||
+        R.fonts.size_60.bold == NULL ) {
+        return false;
+    }
 
     // Styles
     lv_style_init(&R.styles.button_default);
@@ -600,6 +616,8 @@ static void init_resource(void)
 
     // albums
     reload_music_config();
+
+    return true;
 }
 
 static void app_create_top_layer(void)
@@ -684,11 +702,21 @@ static void app_create_top_layer(void)
     lv_obj_add_event_cb(R.ui.volume_bar, app_volume_bar_event_handler, LV_EVENT_ALL, NULL);
 }
 
+static void app_create_error_page(void)
+{
+    lv_obj_t* root = lv_screen_active();
+    lv_obj_t* label = lv_label_create(root);
+    lv_obj_set_width(label, LV_PCT(80));
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+    lv_label_set_text(label, "Resource loading failed. \nPlease check the device and \nread the document for more details.");
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_32, LV_PART_MAIN);
+    lv_obj_center(label);
+}
+
 static void app_create_main_page(void)
 {
-    init_resource();
-
     lv_obj_t* root = lv_screen_active();
+
     lv_obj_set_style_bg_color(root, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_border_width(root, 0, LV_PART_MAIN);
     lv_obj_set_flex_flow(root, LV_FLEX_FLOW_COLUMN);
