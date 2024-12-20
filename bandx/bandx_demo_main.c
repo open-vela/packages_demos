@@ -56,7 +56,7 @@ int main(int argc, FAR char* argv[])
     // refresh lvgl ui
     lv_nuttx_uv_loop(&ui_loop, &result);
 
-    lv_display_delete(result.disp);
+    lv_nuttx_deinit(&result);
     lv_deinit();
 
     return 0;
