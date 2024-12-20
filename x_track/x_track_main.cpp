@@ -96,7 +96,7 @@ extern "C" int main(int argc, const char* argv[])
     /* Clean up */
     lv_timer_delete(app_timer);
     App_DestroyContext(appCtx);
-    lv_display_delete(result.disp);
+    lv_nuttx_deinit(&result);
     lv_deinit();
     return 0;
 }
