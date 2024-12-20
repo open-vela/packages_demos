@@ -8,6 +8,6 @@
 
 ## 使用说明
 
-- [音乐播放器](../../../../open-vela/docss/Example/Music_Player_Example_zh-cn.md)
-- [智能手环](../../../../open-vela/docss/Example/Smart_Band_Example_zh-cn.md)
-- [自行车码表](../../../../open-vela/docss/Example/X_Track_zh-cn.md)
+- [音乐播放器](../../../../open-vela/docs/Example/Music_Player_Example_zh-cn.md)
+- [智能手环](../../../../open-vela/docs/Example/Smart_Band_Example_zh-cn.md)
+- [自行车码表](../../../../open-vela/docs/Example/X_Track_zh-cn.md)
