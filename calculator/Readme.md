@@ -85,23 +85,23 @@ vela-opensource/apps/packages/demos/calculator/
 
 ```bash
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap -j$(nproc)
-
+```
 ### 配置模拟器（menuconfig）
 ```bash
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
-
+```
 ### 清理构建产物
 ```bash
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j$(nproc)
-
+```
 ### 启动模拟器
 ```bash
 ./emulator.sh vela
-
+```
 
 ### 启动计算器应用
 ```bash
 calculator &
-
+```
 
 ---
