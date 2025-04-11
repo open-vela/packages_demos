@@ -26,16 +26,15 @@ static void lv_nuttx_uv_loop(uv_loop_t* loop, lv_nuttx_result_t* result)
     lv_nuttx_uv_deinit(&data);
 }
 
+#include "calculator_cre.h"
 
-#include "calculator.h"
-
-int main(void) {
+extern "C" int calculator_main(int argc, FAR char *argv[]){
     // 初始化LVGL
     lv_nuttx_dsc_t info;
     lv_nuttx_result_t result;
     uv_loop_t ui_loop;
     lv_memset(&ui_loop, 0, sizeof(uv_loop_t));
-        if (lv_is_initialized()) {
+    if (lv_is_initialized()) {
         LV_LOG_ERROR("LVGL already initialized! aborting.");
         return -1;
     }
@@ -64,4 +63,3 @@ int main(void) {
 
     return 0;
 }
-
