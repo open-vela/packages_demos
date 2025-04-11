@@ -5,12 +5,7 @@
 基于 open-vela，制作了一个 **高级计算器**，
 计算器函数部分引用自仓库https://github.com/W-Mai/ExpressionCalc
 该计算器基本布局如下
-  calculate     Clear        Del
-| "7" | "8" | "9" | "/"   | "sqrt" |
-| "4" | "5" | "6" | "*"   | "log"  |
-| "1" | "2" | "3" | "-"   | "sin"  |
-| "0" | "." | "(" | ")"   | "cos"  |
-| "PI"| "E" | "^" | "%"   | "+"    |
+![1](https://github.com/user-attachments/assets/cfe8b45c-bcd6-4401-903c-dcbc54addbcb)
 其中 calculate是计算结果，Clear是清屏，Del是退位。
 该计算器实现了以下功能：
 
