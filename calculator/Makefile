@@ -21,9 +21,9 @@ PROGNAME = calculator
 PRIORITY = 100
 STACKSIZE = 32768
 MODULE = $(CONFIG_LVX_USE_DEMO_CALCULATOR)
-
-CSRCS = calculator.c 
-MAINSRC = calculator_main.c
+CXXEXT := .cpp
+CXXSRCS = calculator_cre.cpp expression_calc.cpp 
+MAINSRC = calculator_main.cpp
 endif
 
 include $(APPDIR)/Application.mk

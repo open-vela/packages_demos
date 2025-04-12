@@ -8,7 +8,5 @@ config LVX_USE_DEMO_CALCULATOR
 	default n
 		
 if LVX_USE_DEMO_CALCULATOR
-	config LVX_CALCULATOR_DATA_ROOT
-		string "Calculator Data Root"
-		default "/sdcard"
+
 endif
