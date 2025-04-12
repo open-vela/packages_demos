@@ -2,7 +2,7 @@
 #include <nuttx/config.h>
 #include <unistd.h>
 #include <uv.h>
-
+#include "calculator_cre.h"
 // include lvgl headers
 #include <lvgl/lvgl.h>
 
@@ -27,15 +27,13 @@ static void lv_nuttx_uv_loop(uv_loop_t* loop, lv_nuttx_result_t* result)
 }
 
 
-#include "calculator.h"
 
-int main(void) {
-    // 初始化LVGL
+extern "C" int calculator_main(int argc, FAR char *argv[]){
     lv_nuttx_dsc_t info;
     lv_nuttx_result_t result;
     uv_loop_t ui_loop;
     lv_memset(&ui_loop, 0, sizeof(uv_loop_t));
-        if (lv_is_initialized()) {
+    if (lv_is_initialized()) {
         LV_LOG_ERROR("LVGL already initialized! aborting.");
         return -1;
     }
@@ -49,19 +47,15 @@ int main(void) {
         return 1;
     }
 
-    // 创建一个LVGL屏幕
-    lv_obj_t *scr = lv_scr_act();
+    // screen
+    lv_obj_t *scr = lv_screen_active();
 
-    // 创建计算器界面
     calculator_create(scr);
 
-    // 启动 UI 循环（libuv 驱动）
     lv_nuttx_uv_loop(&ui_loop, &result);
 
-    // 清理资源
     lv_nuttx_deinit(&result);
     lv_deinit();
 
     return 0;
 }
-
