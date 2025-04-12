@@ -4,8 +4,11 @@
 
 基于 open-vela，制作了一个 **高级计算器**，
 计算器函数部分,使用ExpressionCalc，引用自仓库https://github.com/W-Mai/ExpressionCalc
+计算器运行显示如下图
+![1](https://github.com/user-attachments/assets/6f3ce528-a8d8-4228-820b-debb76c98a62)
 其中 calculate是计算结果，Clear是清屏，Del是退位。
 该计算器实现了以下功能：
+
 
 ### 1. 基本四则运算
 
@@ -135,12 +138,4 @@ calculator &
 ```
 
 ---
-
-
-
-
-
-
-
-
 
