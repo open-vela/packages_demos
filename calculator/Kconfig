@@ -7,6 +7,4 @@ config LVX_USE_DEMO_CALCULATOR
 	bool "CALCULATOR"
 	default n
 		
-if LVX_USE_DEMO_CALCULATOR
 
-endif
