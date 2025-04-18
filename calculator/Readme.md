@@ -1,5 +1,25 @@
 # 高级计算器 - 基于 open-vela
 
+## 📚 目录
+
+1. [一、基本介绍](#一基本介绍)  
+   - [1. 基本四则运算](#1-基本四则运算)  
+   - [2. 高级计算支持](#2-高级计算支持)  
+   - [3. 结果后输入智能处理](#3-结果后输入智能处理)  
+2. [二、实现思路](#二实现思路)  
+   - [1. Token 级别与运算符优先级](#1-token-级别与运算符优先级)  
+   - [2. 表达式解析](#2-表达式解析)  
+   - [3. 逆波兰表示法计算](#3-逆波兰表示法计算)  
+   - [4. 基于 LVGL 使用 create_button() 动态创建按键](#4-基于-lvgl-使用-create_button-动态创建按键)  
+   - [5. 输入保护机制](#5-输入保护机制)  
+3. [三、使用说明](#三使用说明)  
+   - [1. 配置模拟器（menuconfig）](#1配置模拟器menuconfig)  
+   - [2. makefile 编译问题](#2makefile-编译问题)  
+   - [3. 资源推送更新 /res](#3资源推送更新-res)  
+4. [📁 原工程路径](#-原工程路径)  
+5. [🛠️ 常用指令](#-常用指令)
+
+
 ## 一、基本介绍
 
 - 基于 open-vela，制作了一个 **高级计算器**，
@@ -7,6 +27,8 @@
 - 其中 calculate是计算结果，Clear是清屏，Del是退位。
 - PI和E，sqrt以及cos等需要加括号使用
 例如 PI() / 2 、 E() + 4 、sqrt(4) 、cos(2)
+
+![计算器界面](./screenshot.png)
 
 该计算器实现了以下功能：
 
@@ -75,7 +97,7 @@
 
 ### 5. 输入保护机制
 
-- 输入非法或不符合规则（如多个 `.`、负数开根号、除以零等）时自动显示 `ERROR`
+- 输入非法或不符合规则（如多个 `.`、负数开根号、除以零等）时，运算显示 `ERROR`
 
 - 删除、清除、错误重置等操作处理完善，确保系统稳定运行
 
@@ -88,16 +110,21 @@
 ```bash
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
 ```
-进行以下操作设置，以支持C++编写,主要是成功include其头文件，例如iostream.h,cmath.h
+#### (1)编译设置
+- 配置LVX_USE_DEMO_CALCULATOR 为 yes
+- LVX_CALCULATOR_DATA_ROOT的路径设置为/data   (Kconfig文件默认预设为 /data)
+#### (2)使用C++头文件需要配置
+进行以下操作设置，以支持C++编写include头文件，例如iostream.h,cmath.h
 - 设置 C++ library为 Toolchain C++ support
 - 设置 C++ low level library select 为 GNU low level libsupc++
 - 设置  (gnu++20) Language standard
 
-然后因为程序使用了错误处理机制，需要开启以下设置
+然后因为C++程序使用了错误处理机制，需要开启以下设置
 - enable exception support
 
 
 ### 2.makefile编译问题
+#### (1)编译找不到Main函数
 
 ```
 arm-none-eabi-ld: /home/foam/vela-opensource/nuttx/staging/libapps.a(builtin_list.c.home.foam.vela-opensource.apps.builtin_1.o):(.rodata.g_builtins+0x7c): undefined reference to calculator_main'
@@ -105,6 +132,32 @@ arm-none-eabi-ld: /home/foam/vela-opensource/nuttx/staging/libapps.a(builtin_lis
 - 因为makefile文件中的PROGNAME = calculator
 - 在编译时会试图链接一个函数名叫：int calculator_main(int argc, char *argv[])
 - 并且还需要加上extern "C" ，所以得到主函数为extern "C" int calculator_main 才能成功编译。
+
+#### (2)makefile编写
+- 因为使用了cpp文件，所以需要增加CXXEXT以指出.cpp格式文件
+```
+CXXEXT := .cpp
+```
+- 并且C++文件需要使用CXXSRCS标出，如
+```
+CXXSRCS = calculator_cre.cpp expression_calc.cpp 
+```
+
+### 3.资源推送更新 /res
+需要在模拟器运行状况下，使用ADB指令更新资源推送，才能显示更换的新图片和字体。
+- 启动模拟器
+```bash
+./emulator.sh vela
+```
+- ADB推送更新资源（在模拟器运行状况下，终端使用）
+```bash
+adb push apps/packages/demos/calculator/res /data/
+```
+- 之后启动计算器应用即可
+```bash
+calculator &
+```
+
 
 ## 📁 原工程路径
 vela-opensource/apps/packages/demos/calculator/
@@ -123,6 +176,11 @@ vela-opensource/apps/packages/demos/calculator/
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
 ```
 
+### ADB推送更新资源（在模拟器运行状况下）
+```bash
+adb push apps/packages/demos/calculator/res /data/
+```
+
 ### 清理构建产物
 ```bash
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j$(nproc)
@@ -136,7 +194,6 @@ vela-opensource/apps/packages/demos/calculator/
 ```bash
 calculator &
 ```
-
 ---
 
 
