@@ -7,4 +7,8 @@ config LVX_USE_DEMO_CALCULATOR
 	bool "CALCULATOR"
 	default n
 		
-
+if LVX_USE_DEMO_CALCULATOR
+	config LVX_CALCULATOR_DATA_ROOT
+		string "Calculator Data Root"
+		default "/data"
+endif

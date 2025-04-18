@@ -49,13 +49,15 @@ extern "C" int calculator_main(int argc, FAR char *argv[]){
 
    // Dynamically allocate memory for the CalculatorState object
     CalculatorState* state = new CalculatorState();
+    resource_s* R = new resource_s();
+    // Create a structure to hold both the button text and the state
     state->clear_on_next_input = false;
     state->clear_error = false;
 
     // screen
     lv_obj_t *scr = lv_screen_active();
     // Create the calculator UI and pass the state to it
-    calculator_create(scr, state);
+    calculator_create(scr, state, R);
 
     lv_nuttx_uv_loop(&ui_loop, &result);
 
@@ -63,5 +65,7 @@ extern "C" int calculator_main(int argc, FAR char *argv[]){
     lv_deinit();
     // Clean up: delete the allocated calculator state object when done
     delete state;
+    delete R;
+
     return 0;
 }
