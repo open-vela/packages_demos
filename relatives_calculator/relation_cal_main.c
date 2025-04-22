@@ -9,7 +9,7 @@
 // include lvgl headers
 #include <lvgl/lvgl.h>
 
-#include "relatives_cal.h"
+#include "relation_cal.h"
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
 
@@ -62,7 +62,12 @@ int main(int argc, FAR char* argv[])
         return 1;
     }
 
-    relatives_cal_app_create();
+    relation_cal_app_create();
+
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
+    // refresh lvgl ui
+    lv_nuttx_uv_loop(&ui_loop, &result);
+#endif
 
     while (1)
     {
@@ -74,10 +79,7 @@ int main(int argc, FAR char* argv[])
       idle = idle ? idle : 1;
       usleep(idle * 1000);
     }
-#ifdef CONFIG_LV_USE_NUTTX_LIBUV
-    // refresh lvgl ui
-    lv_nuttx_uv_loop(&ui_loop, &result);
-#endif
+
     lv_nuttx_deinit(&result);
     lv_deinit();
     
