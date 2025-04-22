@@ -2,8 +2,8 @@
 // Created by BenignX on 2024/3/21.
 //
 
-#ifndef LVGL_APP_H
-#define LVGL_APP_H
+#ifndef MUSIC_PLAYER_H
+#define MUSIC_PLAYER_H
 
 #include "audio_ctl.h"
 #include "lvgl.h"
@@ -128,4 +128,4 @@ struct conf_s {
 
 void app_create(void);
 
-#endif // LVGL_APP_H
+#endif // MUSIC_PLAYER_H

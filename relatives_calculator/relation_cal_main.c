@@ -1,10 +1,17 @@
 // include NuttX headers
 #include <nuttx/config.h>
 #include <unistd.h>
+
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
 #include <uv.h>
+#endif
 
 // include lvgl headers
 #include <lvgl/lvgl.h>
+
+#include "relation_cal.h"
+
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
 
 static void lv_nuttx_uv_loop(uv_loop_t* loop, lv_nuttx_result_t* result)
 {
@@ -26,15 +33,19 @@ static void lv_nuttx_uv_loop(uv_loop_t* loop, lv_nuttx_result_t* result)
     lv_nuttx_uv_deinit(&data);
 }
 
-#include "music_player.h"
+#endif
+
 
 int main(int argc, FAR char* argv[])
 {
     // init lvgl
     lv_nuttx_dsc_t info;
     lv_nuttx_result_t result;
+
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
     uv_loop_t ui_loop;
     lv_memset(&ui_loop, 0, sizeof(uv_loop_t));
+#endif
 
     if (lv_is_initialized()) {
         LV_LOG_ERROR("LVGL already initialized! aborting.");
@@ -51,13 +62,27 @@ int main(int argc, FAR char* argv[])
         return 1;
     }
 
-    app_create();
+    relation_cal_app_create();
 
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
     // refresh lvgl ui
     lv_nuttx_uv_loop(&ui_loop, &result);
+#endif
+
+    while (1)
+    {
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
+    }
 
     lv_nuttx_deinit(&result);
     lv_deinit();
+    
 
     return 0;
 }

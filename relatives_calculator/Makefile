@@ -19,11 +19,19 @@ include $(APPDIR)/Make.defs
 ifeq ($(CONFIG_LVX_USE_DEMO_RELATIVES_CALCULATOR), y)
 PROGNAME = rel_cal
 PRIORITY = 100
-STACKSIZE = 32768
+<<<<<<< HEAD
+STACKSIZE = 131072
 MODULE = $(CONFIG_LVX_USE_DEMO_RELATIVES_CALCULATOR)
 
-CSRCS = relatives_cal.c
-MAINSRC = relatives_cal_main.c
+CSRCS = relation_cal.c lv_font_chinese_siyuan_16.c
+MAINSRC = relation_cal_main.c 
+=======
+STACKSIZE = 131072
+MODULE = $(CONFIG_LVX_USE_DEMO_RELATIVES_CALCULATOR)
+
+CSRCS = relation_cal.c lv_font_chinese_siyuan_16.c
+MAINSRC = relation_cal_main.c 
+>>>>>>> rel_cal
 endif
 
 include $(APPDIR)/Application.mk
