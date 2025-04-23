@@ -17,6 +17,7 @@ static const char *btnm_map[] = {
     "父亲", "丈夫", "儿子", "哥哥", "姐姐", "<-", "清除", "\n",
     "母亲", "妻子", "女儿", "弟弟", "妹妹", " " , "计算", ""  };
 
+    
 
 static uint8_t init_relation_tree(relation_tree_t *self,relation_tree_t *relaion_buffer);
 static uint8_t add_relation_node(relation_type_t relation,relation_cal_t *self);
