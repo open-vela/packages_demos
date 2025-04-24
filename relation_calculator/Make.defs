@@ -14,5 +14,5 @@
 # limitations under the License.
 #
 ifneq ($(CONFIG_LVX_USE_DEMO_CALCULATOR),)
-CONFIGURED_APPS += $(APPDIR)/packages/demos/relatives_calculator
+CONFIGURED_APPS += $(APPDIR)/packages/demos/relation_calculator
 endif
