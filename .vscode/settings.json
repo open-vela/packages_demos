@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "relation_cal.h": "c"
-    }
-    "C_Cpp.intelliSenseEngineFallback": "Disabled", //需要添加的
-    "C_Cpp.intelliSenseEngine": "Tag Parser",  //  需要添加的
-}
