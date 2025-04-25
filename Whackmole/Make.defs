@@ -1,0 +1,4 @@
+ # Make.defs
+ifneq ($(CONFIG_LVX_USE_DEMO_WHACKMOLE),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/Whackmole
+endif
