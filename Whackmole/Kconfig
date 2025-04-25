@@ -1,0 +1,14 @@
+ 
+config LVX_USE_DEMO_WHACKMOLE
+    bool "Whackmole"
+    default n
+    help
+      Enable the demo Whackmole application.
+
+if LVX_USE_DEMO_WHACKMOLE
+config LVX_WHACKMOLE_DATA_ROOT
+    string "Whackmole Data Root"
+    default "/sdcard"
+    help
+      Specify the data storage path for the Whackmole application.
+endif
