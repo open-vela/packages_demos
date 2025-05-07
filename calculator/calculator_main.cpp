@@ -53,7 +53,7 @@ extern "C" int calculator_main(int argc, FAR char *argv[])
 
     // Create the screen and calculator UI
     lv_obj_t* scr = lv_screen_active();
-    calculator_create(scr, state, R);  // Create the calculator UI
+    lv_draw_buf_t* draw_buf = calculator_create(scr, state, R);  // Create the calculator UI
 
     lv_nuttx_uv_loop(&ui_loop, &result);
 
@@ -61,6 +61,11 @@ extern "C" int calculator_main(int argc, FAR char *argv[])
     lv_deinit();
 
     // Clean up: delete allocated objects
+    if (draw_buf) {
+    cleanup_resources(draw_buf);
+    } else {
+        LV_LOG_WARN("no resources to clean.");
+    }
     delete state;
     delete R;
 
