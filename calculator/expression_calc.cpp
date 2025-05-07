@@ -102,7 +102,7 @@ inline bool eXpressionCalc::checkNumber() {
     return isdigit(*ExprIt)
         || ((ExprIt == Expr.begin() || *(ExprIt - 1) == '(')
             && ((*ExprIt == '-' || *ExprIt == '+') && (ExprIt + 1) != Expr.end()))
-        || *ExprIt == '.' && (ExprIt + 1) != Expr.end() && isdigit(*(ExprIt + 1));
+        || ((*ExprIt == '.') && (ExprIt + 1) != Expr.end() && isdigit(*(ExprIt + 1)));
 }
 
 std::string eXpressionCalc::readNumber() {
