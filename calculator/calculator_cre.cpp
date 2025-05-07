@@ -66,12 +66,22 @@ static void btn_input_cb(lv_event_t *e) {
     auto old = lv_label_get_text(state->label);
     std::string buf;
 
-    // If it's clear input or there's an error, start fresh
-    if ((state->clear_on_next_input && std::isdigit(txt[0])) || state->clear_error) {
+    // Check if the input is one of the special functions or constants (e.g., sin, cos, log, sqrt, PI, E)
+    bool is_function_or_constant = false;
+
+    if (strcmp(txt, "sin") == 0 || strcmp(txt, "cos") == 0 || strcmp(txt, "log") == 0 || strcmp(txt, "sqrt") == 0 ||
+        strcmp(txt, "PI") == 0 || strcmp(txt, "E") == 0 || strcmp(txt, "(") == 0 || strcmp(txt, ")") == 0) {
+        is_function_or_constant = true;
+    }
+
+    // If it's clear input or there's an error, or it's a function/constant, start fresh
+    if ((state->clear_on_next_input && (std::isdigit(txt[0]) || is_function_or_constant)) || state->clear_error) {
         buf = txt;  // Start with the current button text
         state->clear_on_next_input = false;
+        state->clear_error = false;
     } else {
         buf = std::string(old) + txt;  // Concatenate the old text with new input
+        state->clear_on_next_input = false;
     }
 
     lv_label_set_text(state->label, buf.c_str());  // Update the label with the new text
@@ -110,30 +120,44 @@ static void calc_btn_cb(lv_event_t *e) {
     auto expr = lv_label_get_text(state->label);
     char result_buf[256];
 
-    try {
-        XCLZ::eXpressionCalc calc;
-        calc.setExpression(expr);
+    // Process the expression to handle negative numbers correctly
+    std::string modified_expr = expr;
 
-        const auto rpn = calc.reversePolishNotation();
-        if (calc.getError().type != XCLZ::ErrorType::Well) {
-            throw std::runtime_error(calc.errorToString() + ": " + calc.getError().msg);
-        }
+    // If the first character is '-', prepend '0' for negative number
+    if (modified_expr[0] == '-') {
+        modified_expr = "0" + modified_expr;  // Change '-2' to '0-2'
+    }
 
-        const auto val = calc.evalNotation(rpn);
-        if (calc.getError().type != XCLZ::ErrorType::Well) {
-            throw std::runtime_error(calc.errorToString() + ": " + calc.getError().msg);
-        }
+    // For other negative numbers in the expression, check if '(-' is found
+    size_t pos = 0;
+    while ((pos = modified_expr.find("(-", pos)) != std::string::npos) {
+        modified_expr.replace(pos, 2, "(0-");  // Change '(-' to '(0-'
+        pos += 3;  // Skip over the replaced text "(0-" to avoid infinite loop
+    }
 
-        std::snprintf(result_buf, sizeof(result_buf), "%.8g", val);  // Format the result
-        state->clear_on_next_input = true;
-    } catch (const std::exception &ex) {
-        std::snprintf(result_buf, sizeof(result_buf), "Error: %s", ex.what());  // Display error message
+    XCLZ::eXpressionCalc calc;
+    calc.setExpression(modified_expr);  // Use the modified expression
+
+    const auto rpn = calc.reversePolishNotation();
+    if (calc.getError().type != XCLZ::ErrorType::Well) {
+        std::snprintf(result_buf, sizeof(result_buf), "Error: %s: %s", calc.errorToString().c_str(), calc.getError().msg.c_str());
         state->clear_on_next_input = true;
         state->clear_error = true;
+    } else {
+        const auto val = calc.evalNotation(rpn);
+        if (calc.getError().type != XCLZ::ErrorType::Well) {
+            std::snprintf(result_buf, sizeof(result_buf), "Error: %s: %s", calc.errorToString().c_str(), calc.getError().msg.c_str());
+            state->clear_on_next_input = true;
+            state->clear_error = true;
+        } else {
+            std::snprintf(result_buf, sizeof(result_buf), "%.8g", val);  // Format the result
+            state->clear_on_next_input = true;
+        }
     }
 
     lv_label_set_text(state->label, result_buf);  // Update label with the result or error message
 }
+
 
 // Helper function to create a button
 static void create_button(lv_obj_t *parent, const char *txt, int col, int row, CalculatorState* state, Resource* R) {
