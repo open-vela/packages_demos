@@ -26,12 +26,13 @@ public:
         lv_font_t* size_22_bold;
         lv_font_t* size_24_normal;
         lv_font_t* size_28_normal;
+        lv_font_t* size_48_normal;
         lv_font_t* size_60_bold;
 
         Fonts()
             : size_16_normal(nullptr), size_22_bold(nullptr),
               size_24_normal(nullptr), size_28_normal(nullptr),
-              size_60_bold(nullptr) {}
+              size_48_normal(nullptr), size_60_bold(nullptr) {}
     };
 
     // Images sub-structure
@@ -58,7 +59,8 @@ public:
         fonts.size_16_normal = lv_freetype_font_create((fonts_path + "/MiSans-Normal.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 16, LV_FREETYPE_FONT_STYLE_NORMAL);
         fonts.size_22_bold = lv_freetype_font_create((fonts_path + "/MiSans-Semibold.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 22, LV_FREETYPE_FONT_STYLE_NORMAL);
         fonts.size_24_normal = lv_freetype_font_create((fonts_path + "/MiSans-Normal.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
-        fonts.size_28_normal = lv_freetype_font_create((fonts_path + "/MiSans-Semibold.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 38, LV_FREETYPE_FONT_STYLE_NORMAL);
+        fonts.size_28_normal = lv_freetype_font_create((fonts_path + "/MiSans-Normal.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 28, LV_FREETYPE_FONT_STYLE_NORMAL);
+        fonts.size_48_normal = lv_freetype_font_create((fonts_path + "/MiSans-Normal.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 48, LV_FREETYPE_FONT_STYLE_NORMAL);
         fonts.size_60_bold = lv_freetype_font_create((fonts_path + "/MiSans-Semibold.ttf").c_str(), LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 60, LV_FREETYPE_FONT_STYLE_NORMAL);
 
         // Image initialization
@@ -66,7 +68,7 @@ public:
         printf("icons Path: %s\n", images.background.c_str());
 
         // Check if fonts were loaded successfully
-        if (!fonts.size_16_normal || !fonts.size_22_bold || !fonts.size_24_normal || !fonts.size_28_normal || !fonts.size_60_bold) {
+        if (!fonts.size_16_normal || !fonts.size_22_bold || !fonts.size_24_normal || !fonts.size_28_normal || !fonts.size_48_normal || !fonts.size_60_bold ) {
             return false;
         }
         
@@ -91,6 +93,6 @@ private:
 };
 
 // Function to create the calculator UI
-void calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R);
-
+lv_draw_buf_t* calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R);
+void cleanup_resources(lv_draw_buf_t *draw_buf);
 #endif // CALCULATOR_H
