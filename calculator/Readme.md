@@ -25,10 +25,10 @@
 - 基于 open-vela，制作了一个 **高级计算器**，
 - 计算器函数部分引用自仓库https://github.com/W-Mai/ExpressionCalc
 - 其中 calculate是计算结果，Clear是清屏，Del是退位。
-- PI和E，sqrt以及cos等需要加括号使用
-例如 PI() / 2 、 E() + 4 、sqrt(4) 、cos(2)
+- sqrt以及cos等函数需要加括号使用，常量PI和E可以直接使用。
+例如 PI / 2 、 E + 4 、sqrt(4) 、cos(-2)
 
-![计算器界面](./screen_history/screenshot_commit5.png)
+![计算器界面](./screen_history/screenshot_commit7.png)
 
 该计算器实现了以下功能：
 

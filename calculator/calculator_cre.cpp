@@ -14,6 +14,7 @@
 *│   ├── load_resources(): Initializes fonts and images; returns false if any resource fails to load
 *│
 *├── Functions
+*│   ├── cleanup_resources(): ensuring no memory leaks occur during UI rendering cleanup.
 *│   ├── app_create_main_page(): Creates the main UI page with background image
 *│   ├── btn_input_cb(): Button click handler for input; appends the button text to the display
 *│   ├── btn_clear_cb(): Button click handler for clearing the display
@@ -41,19 +42,56 @@
 #include "calculator_cre.h"
 
 
-// Function to create the main page of the application
-static void app_create_main_page(lv_obj_t *parent, Resource* R)
-{
-    // Create the background image object
-    lv_obj_t* background_image = lv_image_create(parent);
+#include "lvgl.h"
 
-    // Set the source of the background image
-    lv_image_set_src(background_image, R->images.background.c_str());  // Set background image resource
-    
-    // Align image to the center of the screen and set size
-    lv_obj_align(background_image, LV_ALIGN_CENTER, 0, 0);  // Center the image on the screen
-    lv_obj_set_size(background_image, 1280, 800);  // Set image size to match screen dimensions
+
+void cleanup_resources(lv_draw_buf_t *draw_buf) {
+    if (draw_buf != NULL) {
+        lv_draw_buf_destroy(draw_buf);
+    }
+    LV_LOG_INFO("Resources cleaned up.");
 }
+
+lv_draw_buf_t* app_create_main_page(lv_obj_t *parent, Resource* R) {
+    // Step 1: Create image decoder descriptor
+    lv_image_decoder_dsc_t decoder_dsc;
+    lv_image_decoder_args_t args = { 0 }; // Custom args if needed
+    lv_result_t res = lv_image_decoder_open(&decoder_dsc, R->images.background.c_str(), &args);
+
+    if(res != LV_RESULT_OK) {
+        LV_LOG_ERROR("Image decode failed: %s", R->images.background.c_str());
+        return NULL;
+    }
+
+    // Step 2: Get decoded data (decoder_dsc.decoded)
+    const lv_draw_buf_t* const_buf = decoder_dsc.decoded;
+
+    // Create a writable copy of the draw buffer
+    lv_draw_buf_t* draw_buf = lv_draw_buf_dup(const_buf);
+
+    if(draw_buf == NULL) {
+        LV_LOG_ERROR("Failed to duplicate draw buffer.");
+        lv_image_decoder_close(&decoder_dsc);
+        return NULL;
+    }
+
+    // Step 3: Use the decoded image (e.g., draw it to a canvas)
+    lv_obj_t* canvas = lv_canvas_create(parent);
+    lv_canvas_set_draw_buf(canvas, draw_buf);  // Set the decoded buffer
+
+    lv_obj_clear_flag(canvas, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(canvas, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
+    lv_obj_set_style_opa(canvas, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_move_background(canvas);
+    lv_obj_align(canvas, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_size(canvas, 1280, 800);
+
+    // Step 4: Clean up after we're done with the buffer
+    lv_image_decoder_close(&decoder_dsc);
+    return draw_buf;
+}
+
+
 
 // Button input callback function
 static void btn_input_cb(lv_event_t *e) {
@@ -67,15 +105,15 @@ static void btn_input_cb(lv_event_t *e) {
     std::string buf;
 
     // Check if the input is one of the special functions or constants (e.g., sin, cos, log, sqrt, PI, E)
-    bool is_function_or_constant = false;
+    bool is_function_or_constant = 
+        strcmp(txt, "sin") == 0 || strcmp(txt, "cos") == 0 || strcmp(txt, "log") == 0 ||
+        strcmp(txt, "sqrt") == 0 || strcmp(txt, "PI") == 0 || strcmp(txt, "E") == 0 ||
+        strcmp(txt, "(") == 0 || strcmp(txt, ")") == 0;
 
-    if (strcmp(txt, "sin") == 0 || strcmp(txt, "cos") == 0 || strcmp(txt, "log") == 0 || strcmp(txt, "sqrt") == 0 ||
-        strcmp(txt, "PI") == 0 || strcmp(txt, "E") == 0 || strcmp(txt, "(") == 0 || strcmp(txt, ")") == 0) {
-        is_function_or_constant = true;
-    }
+    bool is_digit_or_func = std::isdigit(txt[0]) || is_function_or_constant;
+    bool should_clear = (state->clear_on_next_input && is_digit_or_func) || state->clear_error;
 
-    // If it's clear input or there's an error, or it's a function/constant, start fresh
-    if ((state->clear_on_next_input && (std::isdigit(txt[0]) || is_function_or_constant)) || state->clear_error) {
+    if (should_clear) {
         buf = txt;  // Start with the current button text
         state->clear_on_next_input = false;
         state->clear_error = false;
@@ -86,6 +124,7 @@ static void btn_input_cb(lv_event_t *e) {
 
     lv_label_set_text(state->label, buf.c_str());  // Update the label with the new text
 }
+
 
 // Callback function for the clear button
 static void btn_clear_cb(lv_event_t *e) {
@@ -135,6 +174,29 @@ static void calc_btn_cb(lv_event_t *e) {
         pos += 3;  // Skip over the replaced text "(0-" to avoid infinite loop
     }
 
+    // Detect "PI" and append "()" if not followed by '('
+    pos = 0;
+    while ((pos = modified_expr.find("PI", pos)) != std::string::npos) {
+        if (pos + 2 >= modified_expr.size() || modified_expr[pos + 2] != '(') {
+            modified_expr.insert(pos + 2, "()");
+            pos += 4;  // Move past "PI()"
+        } else {
+            pos += 3;  // Skip over "PI("
+        }
+    }
+
+    // Detect "E" and append "()" if not followed by '('
+    pos = 0;
+    while ((pos = modified_expr.find("E", pos)) != std::string::npos) {
+        if (pos + 1 >= modified_expr.size() || modified_expr[pos + 1] != '(') {
+            modified_expr.insert(pos + 1, "()");
+            pos += 3;  // Move past the inserted "E()"
+        } else {
+            pos += 2;  // Already has '(', skip over "E("
+        }
+    }
+
+
     XCLZ::eXpressionCalc calc;
     calc.setExpression(modified_expr);  // Use the modified expression
 
@@ -163,7 +225,7 @@ static void calc_btn_cb(lv_event_t *e) {
 static void create_button(lv_obj_t *parent, const char *txt, int col, int row, CalculatorState* state, Resource* R) {
     auto btn = lv_btn_create(parent);
     lv_obj_set_size(btn, 100, 80);  // Set button size
-    lv_obj_align(btn, LV_ALIGN_CENTER, col * 110 - 220, row * 90 - 70);  // Position the button on the screen
+    lv_obj_align(btn, LV_ALIGN_CENTER, col * 110 - 220, row * 90 - 80);  // Position the button on the screen
 
     // Set style properties for the button
     lv_obj_set_style_radius(btn, 30, LV_STATE_DEFAULT); // Rounded corners
@@ -204,21 +266,21 @@ static void create_button(lv_obj_t *parent, const char *txt, int col, int row, C
 }
 
 // Function to create the entire calculator UI
-void calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R) {
+lv_draw_buf_t*  calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R) {
     // Initialize resources (fonts and images) by calling load_resources
     if (!R->load_resources()) {
         // Handle error if resources failed to load
         printf("Failed to load resources\n");
     }// Initialize resources (fonts and images)
-    app_create_main_page(parent, R);  // Create the main page with the background
+    auto draw_buf = app_create_main_page(parent, R);  // Create the main page with the background
 
     // Input display box
     auto screen = lv_scr_act();  // Get the current screen
     lv_obj_set_style_bg_color(screen, lv_color_hex(0xF0F0F0), LV_STATE_DEFAULT);  // Set gray background
     state->label = lv_label_create(parent);
-    lv_obj_set_size(state->label, 540, 100);  // Set label size
-    lv_obj_align(state->label, LV_ALIGN_TOP_MID, 0, 70);  // Align label at the top center
-    lv_obj_set_style_text_font(state->label, &lv_font_montserrat_48 , LV_STATE_DEFAULT);  // Set label font
+    lv_obj_set_size(state->label, 540, 130);  // Set label size
+    lv_obj_align(state->label, LV_ALIGN_TOP_MID, 0, 40);  // Align label at the top center
+    lv_obj_set_style_text_font(state->label, R->fonts.size_48_normal, LV_STATE_DEFAULT);  // Set label font
     lv_obj_set_style_radius(state->label, 10, 0);  // Set label border radius
     lv_obj_set_style_border_width(state->label, 2, 0);  // Set border width
     lv_obj_set_style_border_color(state->label, lv_color_hex(0x000000), 0);  // Set border color (black)
@@ -251,7 +313,7 @@ void calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R) {
     lv_obj_set_style_border_width(calc_btn, 2, LV_STATE_DEFAULT); // Border width
     lv_obj_set_style_border_color(calc_btn, lv_color_hex(0x000000), LV_STATE_DEFAULT); // Border color (black)
     lv_obj_set_size(calc_btn, 130, 80);  // Set button size
-    lv_obj_align(calc_btn, LV_ALIGN_CENTER, -160, -160);  // Position the button on the screen
+    lv_obj_align(calc_btn, LV_ALIGN_CENTER, -200, -170);  // Position the button on the screen
     auto calc_lbl = lv_label_create(calc_btn);  // Create button label
     lv_label_set_text(calc_lbl, "calculate");
     lv_obj_set_style_text_font(calc_lbl, R->fonts.size_22_bold, LV_STATE_DEFAULT);
@@ -266,7 +328,7 @@ void calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R) {
     lv_obj_set_style_radius(clear_btn, 35, LV_STATE_DEFAULT); // Rounded corners
     lv_obj_set_style_border_width(clear_btn, 2, LV_STATE_DEFAULT); // Border width
     lv_obj_set_style_border_color(clear_btn, lv_color_hex(0x000000), LV_STATE_DEFAULT); // Border color (black)
-    lv_obj_align(clear_btn, LV_ALIGN_CENTER, 160, -160);  // Position the button on the screen
+    lv_obj_align(clear_btn, LV_ALIGN_CENTER, 200, -170);  // Position the button on the screen
     auto clear_lbl = lv_label_create(clear_btn);
     lv_label_set_text(clear_lbl, "Clear");
     lv_obj_set_style_text_font(clear_lbl, R->fonts.size_22_bold , LV_STATE_DEFAULT);
@@ -281,11 +343,13 @@ void calculator_create(lv_obj_t *parent, CalculatorState* state, Resource* R) {
     lv_obj_set_style_radius(del_btn, 35, LV_STATE_DEFAULT); // Rounded corners
     lv_obj_set_style_border_width(del_btn, 2, LV_STATE_DEFAULT); // Border width
     lv_obj_set_style_border_color(del_btn, lv_color_hex(0x000000), LV_STATE_DEFAULT); // Border color (black)
-    lv_obj_align(del_btn, LV_ALIGN_CENTER, 0, -160);  // Position the button on the screen
+    lv_obj_align(del_btn, LV_ALIGN_CENTER, 0, -170);  // Position the button on the screen
     auto del_lbl = lv_label_create(del_btn);
     lv_label_set_text(del_lbl, "Del"); // ⌫ 
     lv_obj_set_style_text_font(del_lbl, R->fonts.size_22_bold , LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(del_lbl, lv_color_hex(0xFFFAFA), LV_STATE_DEFAULT);  // Set label color
     lv_obj_center(del_lbl);
     lv_obj_add_event_cb(del_btn, btn_del_cb, LV_EVENT_CLICKED, state);
+
+    return draw_buf;
 }
