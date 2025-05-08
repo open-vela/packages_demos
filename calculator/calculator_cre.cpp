@@ -138,18 +138,33 @@ static void btn_clear_cb(lv_event_t *e) {
 static void btn_del_cb(lv_event_t *e) {
     auto state = static_cast<CalculatorState*>(lv_event_get_user_data(e));
     auto txt = lv_label_get_text(state->label);
-    size_t len = std::strlen(txt);  // Use strlen for regular strings
+    std::string str(txt);  // Convert to std::string for easier manipulation
+    size_t len = str.length();
 
-    // If it's clear input or there's an error, reset
+    // If input should be cleared or there's an error, reset the label
     if (state->clear_on_next_input || state->clear_error) {
         lv_label_set_text(state->label, "");
         state->clear_on_next_input = false;
         state->clear_error = false;
-    } else {
-    if (len > 0) {
-        std::string text(txt, len - 1);  // Create a string from the input text, removing the last character
-        lv_label_set_text(state->label, text.c_str());  // Update the label with the modified text
+        return;
     }
+
+    // Define keywords to delete as a whole
+    const std::vector<std::string> keywords = { "sqrt", "sin", "cos", "log", "PI" };
+
+    // Check if the current text ends with any of the keywords
+    for (const auto& kw : keywords) {
+        if (len >= kw.length() && str.compare(len - kw.length(), kw.length(), kw) == 0) {
+            str.erase(len - kw.length());  // Erase the entire keyword
+            lv_label_set_text(state->label, str.c_str());
+            return;
+        }
+    }
+
+    // Otherwise, delete the last character
+    if (len > 0) {
+        str.pop_back();
+        lv_label_set_text(state->label, str.c_str());
     }
 }
 
