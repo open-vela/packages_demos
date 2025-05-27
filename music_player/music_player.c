@@ -580,7 +580,7 @@ static bool init_resource(void)
     R.fonts.size_16.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Normal.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 16, LV_FREETYPE_FONT_STYLE_NORMAL);
     R.fonts.size_22.bold = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 22, LV_FREETYPE_FONT_STYLE_NORMAL);
     R.fonts.size_24.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Normal.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
-    R.fonts.size_28.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 38, LV_FREETYPE_FONT_STYLE_NORMAL);
+    R.fonts.size_28.normal = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 28, LV_FREETYPE_FONT_STYLE_NORMAL);
     R.fonts.size_60.bold = lv_freetype_font_create(FONTS_ROOT "/MiSans-Semibold.ttf", LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 60, LV_FREETYPE_FONT_STYLE_NORMAL);
 
     if (R.fonts.size_16.normal == NULL ||
