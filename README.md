@@ -11,3 +11,4 @@ This repository implements examples of openvela native application code. Develop
 - [Music Player](../../../../open-vela/docs/blob/dev/Examples/Music_Player_Example.md)  
 - [Smart Band](../../../../open-vela/docs/blob/dev/Examples/Smart_Band_Example.md)  
 - [Bicycle Computer](../../../../open-vela/docs/blob/dev/Examples/X_Track.md)
+- [Calculator](calculator/Readme.md)
