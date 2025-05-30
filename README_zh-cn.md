@@ -11,3 +11,4 @@
 - [音乐播放器](../../../../open-vela/docs/blob/dev/Examples/Music_Player_Example_zh-cn.md)
 - [智能手环](../../../../open-vela/docs/blob/dev/Examples/Smart_Band_Example_zh-cn.md)
 - [自行车码表](../../../../open-vela/docs/blob/dev/Examples/X_Track_zh-cn.md)
+- [计算器](calculator/Readme.md)
