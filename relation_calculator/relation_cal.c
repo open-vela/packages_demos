@@ -32,7 +32,7 @@ static const relation_transformation_t transitions[] = {
     {REL_FATHER, REL_MOTHER, REL_GRANDMOTHER}, // Father's mother is grandmother
     {REL_MOTHER, REL_FATHER, REL_GRANDFATHER}, // Mother's father is grandfather
     {REL_MOTHER, REL_MOTHER, REL_GRANDMOTHER}, // Mother's mother is grandmother
-    {REL_GRANDFATHER, REL_SON, REL_UNCLE},     // Grandfather to son is REL_UNCLE
+    {REL_GRANDFATHER, REL_SON, REL_FATHER},     // Grandfather to son is father
     {REL_GRANDFATHER, REL_DAUGHTER, REL_AUNT}, // Grandfather to daughter is aunt
     {REL_GRANDMOTHER, REL_SON, REL_FATHER},    // Grandmother to son is father
     {REL_GRANDMOTHER, REL_DAUGHTER, REL_AUNT}, // Grandmother to daughter is aunt
@@ -48,10 +48,10 @@ static const relation_transformation_t transitions[] = {
     {REL_MATERNAL_GRANDMOTHER, REL_MOTHER, REL_MATERNAL_GREAT_GRANDMOTHER}, // Maternal grandmother's mother is maternal great - grandmother
 
     // Sibling relationships
-    {REL_ELDER_BROTHER, REL_FATHER, REL_ELDER_BROTHER},              // Elder brother to father remains elder brother
-    {REL_ELDER_BROTHER, REL_MOTHER, REL_ELDER_BROTHER},              // Elder brother to mother remains elder brother
-    {REL_YOUNGER_BROTHER, REL_FATHER, REL_YOUNGER_BROTHER},          // Younger brother to father remains younger brother
-    {REL_YOUNGER_BROTHER, REL_MOTHER, REL_YOUNGER_BROTHER},          // Younger brother to mother remains younger brother
+    {REL_ELDER_BROTHER, REL_FATHER, REL_FATHER},             
+    {REL_ELDER_BROTHER, REL_MOTHER, REL_MOTHER},             
+    {REL_YOUNGER_BROTHER, REL_FATHER, REL_FATHER},          // Younger brother to father remains father
+    {REL_YOUNGER_BROTHER, REL_MOTHER, REL_MOTHER},          // Younger brother to mother remains younger brother
     {REL_ELDER_SISTER, REL_FATHER, REL_ELDER_SISTER},                // Elder sister to father remains elder sister
     {REL_ELDER_SISTER, REL_MOTHER, REL_ELDER_SISTER},                // Elder sister to mother remains elder sister
     {REL_YOUNGER_SISTER, REL_FATHER, REL_YOUNGER_SISTER},            // Younger sister to father remains younger sister
@@ -66,8 +66,8 @@ static const relation_transformation_t transitions[] = {
     {REL_YOUNGER_SISTER, REL_YOUNGER_SISTER, REL_YOUNGER_SISTER},    // Younger sister to younger sister remains younger sister
 
     // Spouse relationships
-    {REL_WIFE, REL_HUSBAND, REL_WIFE},    // Wife to husband remains wife
-    {REL_HUSBAND, REL_WIFE, REL_HUSBAND}, // Husband to wife remains husband
+    {REL_WIFE, REL_HUSBAND, REL_SELF},    
+    {REL_HUSBAND, REL_WIFE, REL_SELF}, 
 
     // Uncle and aunt relationships
     {REL_FATHER, REL_ELDER_BROTHER, REL_UNCLE},            // Father's elder brother is uncle
@@ -132,12 +132,9 @@ static const relation_transformation_t transitions[] = {
     {REL_DAUGHTER, REL_DAUGHTER, REL_GRANDDAUGHTER}, // Daughter to daughter is granddaughter
 
     {REL_GRANDSON, REL_FATHER, REL_SON},           // Grandson to father is son
-    {REL_GRANDSON, REL_MOTHER, REL_DAUGHTER},      // Grandson to mother is daughter
+    {REL_GRANDSON, REL_MOTHER, REL_DAUGHTER_IN_LAW},      // Grandson to mother is daughter
     {REL_GRANDDAUGHTER, REL_FATHER, REL_SON},      // Granddaughter to father is son
-    {REL_GRANDDAUGHTER, REL_MOTHER, REL_DAUGHTER}, // Granddaughter to mother is daughter
-
-    {REL_SON, REL_SON_IN_LAW, REL_DAUGHTER_IN_LAW},      // Son to son - in - law is daughter - in - law (Needs adjustment)
-    {REL_DAUGHTER, REL_DAUGHTER_IN_LAW, REL_SON_IN_LAW}, // Daughter to daughter - in - law is son - in - law (Needs adjustment)
+    {REL_GRANDDAUGHTER, REL_MOTHER, REL_DAUGHTER_IN_LAW}, // Granddaughter to mother is daughter
 
     {REL_SON_IN_LAW, REL_HUSBAND, REL_SON},        // Son - in - law to husband is son
     {REL_DAUGHTER_IN_LAW, REL_WIFE, REL_DAUGHTER}, // Daughter - in - law to wife is daughter
