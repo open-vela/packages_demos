@@ -12,3 +12,4 @@
 - [智能手环](../../../../open-vela/docs/blob/dev/Examples/Smart_Band_Example_zh-cn.md)
 - [自行车码表](../../../../open-vela/docs/blob/dev/Examples/X_Track_zh-cn.md)
 - [计算器](calculator/Readme.md)
+- [亲戚计算器](relation_calculator/Readme.md)
