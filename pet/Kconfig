@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_PET
+	bool "Virtual Pet Demo"
+	default n
+	
+if LVX_USE_DEMO_PET
+	config LVX_PET_DATA_ROOT
+		string "Pet Demo Data Root"
+		default "/sdcard"
+endif
