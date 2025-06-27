@@ -12,6 +12,10 @@ This is an automatic snake game implemented based on the LVGL graphics library. 
 - Real-time score display
 - Random food generation
 - Different colors for snake head (bright green) and body (dark green)
+![image](https://github.com/user-attachments/assets/736618e7-0a27-4148-8d9d-9080b5d6e961)
+
+![image](https://github.com/user-attachments/assets/a5b2a22b-0aca-46a8-b874-3b450ce12e3f)
+
 
 ## Configuration
 
