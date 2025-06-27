@@ -1,0 +1,3 @@
+ifneq ($(CONFIG_LVX_USE_DEMO_SNAKE_GAME),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/snake_game
+endif

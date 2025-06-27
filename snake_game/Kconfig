@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_SNAKE_GAME
+	bool "Snake Game"
+	default n
+
+if LVX_USE_DEMO_SNAKE_GAME
+	config LVX_SNAKE_GAME_DATA_ROOT
+		string "Snake Game Data Root"
+		default "/data"
+endif
