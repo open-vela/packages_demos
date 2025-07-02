@@ -1,6 +1,13 @@
 #include "relation_cal.h"
 #include <string.h>
 
+#define SCREEN_WIDTH    (lv_obj_get_width(lv_scr_act()))
+#define SCREEN_HEIGHT   (lv_obj_get_height(lv_scr_act()))
+
+#define DEMO_WIDTH (int32_t)((SCREEN_WIDTH * 0.85f))
+#define DEMO_HEIGHT (int32_t)(((DEMO_WIDTH) / 16.0f) * 9.0f)
+#define DEMO_TITLE_HEIGHT (int32_t)(((DEMO_WIDTH) / 16.0f) * 1.2f)
+
 static relation_cal_t g_rel_cal;
 
 static const relation_transformation_t transitions[] = {
@@ -22,10 +29,10 @@ static const relation_transformation_t transitions[] = {
     {REL_MOTHER, REL_SON, REL_SELF},      // Mother to son is self
     {REL_MOTHER, REL_DAUGHTER, REL_SELF}, // Mother to daughter is self
     {REL_MOTHER, REL_HUSBAND, REL_FATHER},
-    {REL_SON, REL_FATHER, REL_FATHER},      // Son to father is father
-    {REL_SON, REL_MOTHER, REL_MOTHER},      // Son to mother is mother
-    {REL_DAUGHTER, REL_FATHER, REL_FATHER}, // Daughter to father is father
-    {REL_DAUGHTER, REL_MOTHER, REL_MOTHER}, // Daughter to mother is mother
+    {REL_SON, REL_FATHER, REL_SELF},      // Son to father is self
+    {REL_SON, REL_MOTHER, REL_SELF},      // Son to mother is self
+    {REL_DAUGHTER, REL_FATHER, REL_SELF}, // Daughter to father is self
+    {REL_DAUGHTER, REL_MOTHER, REL_SELF}, // Daughter to mother is self
 
     // Grandparent relationships
     {REL_FATHER, REL_FATHER, REL_GRANDFATHER}, // Father's father is grandfather
@@ -224,11 +231,13 @@ static const btnm_relation_t btnm_relation[] = {
     {"哥哥", REL_ELDER_BROTHER, GENDER_MALE},
     {"弟弟", REL_YOUNGER_BROTHER, GENDER_MALE},
     {"姐姐", REL_ELDER_SISTER, GENDER_FEMALE},
-    {"妹妹", REL_YOUNGER_SISTER, GENDER_FEMALE}};
+    {"妹妹", REL_YOUNGER_SISTER, GENDER_FEMALE}
+};
 
 static const char *btnm_map[] = {
     "父亲", "丈夫", "儿子", "哥哥", "姐姐", "<-", "清除", "\n",
-    "母亲", "妻子", "女儿", "弟弟", "妹妹", " ", "计算", ""};
+    "母亲", "妻子", "女儿", "弟弟", "妹妹", " ", "计算", ""
+};
 
 static void rel_cal_main_page(void);
 static void rel_cal_btnmatrix_event_cb(lv_event_t *e);
@@ -237,10 +246,15 @@ static const char *calculate_relationship(relation_cal_t *self);
 
 void relation_cal_app_create(void)
 {
-    g_rel_cal.fonts.siyuan = lv_freetype_font_create(REL_CAL_FONTS_ROOT "/SourceHanSansCN-Bold.ttf",
-                                                     LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
-                                                     16,
-                                                     LV_FREETYPE_FONT_STYLE_NORMAL);
+#ifdef CONFIG_ESP32S3_BOX_LCD
+    LV_FONT_DECLARE(lv_font_siyuan_10);
+
+    g_rel_cal.fonts.siyuan = &lv_font_siyuan_10;
+#else
+    LV_FONT_DECLARE(lv_font_siyuan_16);
+
+    g_rel_cal.fonts.siyuan = &lv_font_siyuan_16;
+#endif
 
     if (NULL == g_rel_cal.fonts.siyuan)
     {
@@ -257,16 +271,14 @@ static void rel_cal_main_page(void)
     lv_obj_remove_style_all(root);
     lv_obj_center(root);
     lv_obj_set_style_bg_color(root, lv_color_white(), 0);
-    lv_obj_set_style_shadow_color(root, lv_color_hex(0xE4E7EB), 0);
-    lv_obj_set_style_shadow_width(root, 40, 0);
     lv_obj_align(root, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_size(root, 760, 460);
+    lv_obj_set_size(root, DEMO_WIDTH, DEMO_HEIGHT);
     lv_obj_set_flex_flow(root, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollbar_mode(root, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(root, LV_OBJ_FLAG_SCROLLABLE);
 
     g_rel_cal.ui.title = lv_label_create(root);
-    lv_obj_set_size(g_rel_cal.ui.title, 760, 50);
+    lv_obj_set_size(g_rel_cal.ui.title, DEMO_WIDTH, DEMO_TITLE_HEIGHT);
     lv_label_set_text(g_rel_cal.ui.title, "亲属关系计算器");
     lv_obj_set_style_text_font(g_rel_cal.ui.title, g_rel_cal.fonts.siyuan, LV_PART_MAIN);
     lv_obj_set_style_text_color(g_rel_cal.ui.title, lv_color_hex(0x2C3E50), 0);
@@ -361,7 +373,6 @@ static void rel_transform_handle(const uint8_t id, const char *text)
         if (g_rel_cal.rel_count)
         {
             g_rel_cal.rel_count--;
-            // TBD:delete
             lv_textarea_delete_char(g_rel_cal.ui.screen);
             lv_textarea_delete_char(g_rel_cal.ui.screen);
             lv_textarea_delete_char(g_rel_cal.ui.screen);
