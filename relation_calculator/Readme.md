@@ -1,72 +1,102 @@
-# 亲戚计算器
+# Relative Calculator
 
-## 运行效果
+\[ [English](Readme.md) | Simplified Chinese \]
+
+## Running Effect
 
 ![alt text](img/show.gif)
 
-## 使用说明
+## Usage Instructions
 
-### 配置项目
+### Running on Emulator
 
-1. 切换到 openvela 仓库的根目录，执行如下命令来配置亲戚计算器。
+#### Project Configuration
 
-    > 模拟器配置文件（defconfig）在 `vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap/` 目录下，使用 `build.sh` 配置和编译开发板的代码。
+1. Switch to the root directory of the openvela repository and execute the following command to configure the relative calculator.
 
-    ```Bash
-    ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
-    ```
+   > The emulator configuration file (defconfig) is located in the `vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap/` directory. Use `build.sh` to configure and compile the development board code.
 
-2. 按下 `/` 键逐个搜索修改如下配置：
+   ```Bash
+   ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
+   ```
 
-    ```Bash
-    LVX_USE_DEMO_RELATIVES_CALCULATOR=y
-    LVX_REL_CAL_DATA_ROOT="/data"
-    ```
+2. Press the `/` key to search and modify the following configuration one by one:
 
-### 编译项目
+   ```Bash
+   LVX_USE_DEMO_RELATIVES_CALCULATOR=y
+   ```
 
+#### Compiling the Project
 ```Bash
-# 清理构建产物
+# Clean build artifacts
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j$(nproc)
 
-# 开始构建
+# Start building
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap -j$(nproc)
 ```
 
-### 启动模拟器并推送资源
 
-1. 切换到 openvela 仓库的根目录，启动模拟器：
 
-    ```Bash
-    ./emulator.sh vela
-    ```
-
-2. 使用模拟器支持的 ADB 将资源推送到设备，在 openvela 仓库的根目录下打开一个新的终端，输入 adb push 后跟文件路径，即可将资源传输到相应位置。
-
-    ```Bash
-    # 安装adb
-    sudo apt install android-tools-adb
-
-    # 推送资源
-    adb push apps/packages/demos/relation_calculator/res /data/
-    ```
-
-### 启动计算器
-
-在模拟器的终端环境 `openvela-ap>` 中输入如下命令：
+#### Starting the Calculator
+In the emulator's terminal environment `openvela-ap>`, enter the following command:
 
 ```Bash
 rel_cal &
 ```
 
-## 增加关系
+### Running on ESP32S3-box
+#### Project Configuration
 
-如果想要增加新的关系，需要在 `/demos/relation_calculator/relation_cal.c` 文件中根据以下步骤进行修改。
+1. Switch to the root directory of the openvela repository and execute the following command to configure the relative calculator.
 
-### 增加关系状态
+   > The emulator configuration file (defconfig) is located in the `nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3` directory. Use `build.sh` to configure and compile the development board code.
 
-添加状态只需要在 `static const relation_transformation_t transitions[] = {...}` 数组中添加新的状态,格式需要按照 `relation_transformation_t` 的定义来填写。
-`relation_transformation_t` 的定义如下：
+   ```Bash
+   ./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 menuconfig
+   ```
+
+2. Press the `/` key to search and modify the following configuration one by one:
+
+   ```Bash
+   LVX_USE_DEMO_RELATIVES_CALCULATOR=y
+   ```
+
+#### Compiling the Project
+
+```Bash
+# Clean build artifacts
+./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 distclean -j$(nproc)
+
+# Start building
+./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 -j$(nproc)
+```
+
+
+#### Flashing Resources
+Switch to the root directory of the nuttx repository and start flashing resources:
+
+```Bash
+make -j20 flash ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
+```
+
+#### Starting the Serial Terminal
+
+```Bash
+sudo minicom -D /dev/ttyACM0 -b 115200
+```
+
+#### Starting the Calculator
+In the emulator's terminal environment `openvela-ap>`, enter the following command:
+
+```Bash
+rel_cal &
+```
+
+## Adding Relationships
+If you want to add new relationships, you need to modify the `/demos/relation_calculator/relation_cal.c` file according to the following steps.
+
+### Adding Relationship States
+To add a state, simply add a new state to the `static const relation_transformation_t transitions[] = {...}` array, following the format defined by `relation_transformation_t`. The definition of `relation_transformation_t` is as follows:
 
 ```C
 typedef struct relation_transformation_s
@@ -77,19 +107,14 @@ typedef struct relation_transformation_s
 } relation_transformation_t;
 ```
 
-### 增加支持关系
+### Adding Supported Relationships
+1. Add the new relationship type to `typedef enum relation_type_e`.
+2. Add the new relationship name to `static const char *relation_names[]`.
 
-1. 在 `typedef enum relation_type_e` 中添加新的关系类型。
-2. 在 `static const char *relation_names[]` 中添加新的关系名称。
+**Note:** Relationship names need to correspond one-to-one with relationship types.
 
-**注意：** 关系名称需要和关系类型一一对应。
+## Implementation Description
+The relative calculator is implemented using a state transition approach.
 
-## 实现说明
-
-采用了状态转移的方式来实现这个亲戚计算器。
-
-
-## 目前缺点
-
-家族树和状态转移的方式始终绕不开需要使用大量的代码来构建这个关系，目前想不到更好的实现方式了。
-
+## Current Shortcomings
+Both the family tree and state transition approaches inevitably require a large amount of code to build the relationships. Currently, no better implementation method has been thought of. We hope everyone can share better ideas for discussion.
