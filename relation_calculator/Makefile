@@ -22,9 +22,14 @@ PRIORITY = 100
 STACKSIZE = 131072
 MODULE = $(CONFIG_LVX_USE_DEMO_RELATIVES_CALCULATOR)
 
-CSRCS = relation_cal.c
-MAINSRC = relation_cal_main.c 
+MAINSRC = relation_cal_main.c
+CSRCS += relation_cal.c
+ifeq ($(CONFIG_ESP32S3_BOX_LCD), y)
+CSRCS += ./fonts/lv_font_siyuan_10.c
+else
+CSRCS += ./fonts/lv_font_siyuan_16.c
 endif
 
 include $(APPDIR)/Application.mk
 
+endif
