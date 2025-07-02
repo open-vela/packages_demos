@@ -1,5 +1,5 @@
-#ifndef __RRLATION_CAL_H__
-#define __RRLATION_CAL_H__
+#ifndef __RELATION_CAL_H__
+#define __RELATION_CAL_H__
 
 /*********************
  *      INCLUDES
@@ -114,7 +114,7 @@ typedef struct relation_cal_s
 
     struct
     {
-        lv_font_t *siyuan;
+        const lv_font_t *siyuan;
     } fonts;
 
     relation_type_t rel_list[MAX_REL_LEN];
@@ -132,4 +132,4 @@ typedef struct relation_transformation_s
 
 void relation_cal_app_create(void);
 
-#endif /* __RRLATION_CAL_H__ */
+#endif /* __RELATION_CAL_H__ */

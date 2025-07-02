@@ -55,6 +55,11 @@ int main(int argc, FAR char *argv[])
     lv_init();
 
     lv_nuttx_dsc_init(&info);
+
+#ifdef CONFIG_LV_USE_NUTTX_LCD
+    info.fb_path = "/dev/lcd0";
+#endif
+
     lv_nuttx_init(&info, &result);
 
     if (result.disp == NULL)

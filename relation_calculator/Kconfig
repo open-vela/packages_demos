@@ -6,9 +6,3 @@
 config LVX_USE_DEMO_RELATIVES_CALCULATOR
 	bool "Relatives Calculator"
 	default n
-
-if LVX_USE_DEMO_RELATIVES_CALCULATOR
-	config LVX_REL_CAL_DATA_ROOT
-		string "REL CAL Data Root"
-		default "/data"
-endif
