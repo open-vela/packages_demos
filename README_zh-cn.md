@@ -13,3 +13,4 @@
 - [自行车码表](../../../docs/blob/dev/zh-cn/demo/X_Track_zh-cn.md)
 - [计算器](calculator/Readme.md)
 - [亲戚计算器](relation_calculator/Readme.md)
+- [打地鼠](Whackmole/Readme.md)
