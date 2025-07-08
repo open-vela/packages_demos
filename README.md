@@ -13,3 +13,4 @@ This repository implements examples of openvela native application code. Develop
 - [Bicycle Computer](../../../docs/blob/dev/en/demo/X_Track.md)
 - [Calculator](calculator/Readme.md)
 - [Relation Calculator](relation_calculator/Readme.md)
+- [Whackmole](Whackmole/Readme.md)
