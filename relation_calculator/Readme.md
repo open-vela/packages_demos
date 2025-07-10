@@ -1,6 +1,6 @@
 # Relative Calculator
 
-\[ [English](Readme.md) | Simplified Chinese \]
+\[ English | [简体中文](Readme_zh-cn.md) \]
 
 ## Running Effect
 
