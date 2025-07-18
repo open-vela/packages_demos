@@ -1,10 +1,11 @@
 # 🎮 Breakout Game 《打砖块游戏》
-“KUN生是旷野,不是轨道!” 拥有对篮球无限热爱的KUN，在家族中独树一帜，正挥洒着汗水，勤奋努力的击打篮球撞碎砖块，缔造属于自己的篮球哲学。 
+**“KUN生是旷野,不是轨道!”** 
+拥有对篮球无限热爱的KUN，在家族中独树一帜，正挥洒着汗水，勤奋努力的击打篮球撞碎砖块，缔造属于自己的篮球哲学。 
 
 🧱 基于OpenVela和LVGL开发的触屏Breakout打砖块游戏，实现了基本的游戏逻辑，增加了图片素材并实现了打击音效。
 
 
-在对应素材文件夹下，已通过readme和LICENSE文件详细标明了作者出处等信息，满足了相应的license协议要求，允许个人在作品及商业中使用，但不得对素材进行单独售卖。
+在对应素材文件夹下，已通过`readme`和`LICENSE`文件详细标明了作者出处等信息，满足了相应的license协议要求，允许个人在作品及商业中使用，但不得对素材进行单独售卖。
 
 以下是第二版游戏界面：
 <img src="./screenshot/screenshot_2.png" alt="" width="75%">
@@ -22,13 +23,13 @@
 # 🖼️ Image Handling（图片处理）
 ## 1. libpng decoder（libpng 解码器）
 好消息，OpenVela系统已经内置了该PNG解码器，仅需将`LIB_PNG`和`LV_USE_LIBPNG`配置为`yes`，即可轻松使用`lv_image_set_src`等函数读取使用`PNG`图片。使用方法可以参考：`https://lvgl.100ask.net/master/details/libs/libpng.html`
-此外，这是libpng的github仓库链接：`https://github.com/pnggroup/libpng`，自己手动引入项目还是有难度。
+此外，这是libpng的github仓库链接：`https://github.com/pnggroup/libpng`，自己手动引入还是有难度。
 
 ## 2.Image Caching（图片缓存）
 LVGL 支持将图像缓存到内存中，以提升图像组件在运行时的加载速度，特别适用于反复绘制的图像场景，如游戏背景、按钮图标等。
 在从外部读入图片过多，会有明显卡顿，可以使用图片缓存的方法，将图片读入内存。具体可以参考：`https://lvgl.100ask.net/master/details/main-components/image.html#overview-image-caching`
 
-#🔊 Audio Handling（音频处理）
+# 🔊 Audio Handling（音频处理）
 引用了packages_demos仓库下的music_player的音频控制文件`audio_ctl.c`和`audio_ctl.h`，通过`audio_ctl_init_nxaudio`加载音频文件，`audio_ctl_start`播放音频，`audio_ctl_stop`暂停音频，`audio_ctl_uninit_nxaudio`释放资源。目前实现了碰撞砖块发出音效，但还存在一些bug。
 
 
@@ -44,6 +45,7 @@ LVGL 支持将图像缓存到内存中，以提升图像组件在运行时的加
 使用`/`键进入搜索模式
 - 配置`LVX_USE_DEMO_BREAKOUT `为 `yes`
 - `LVX_BREAKOUT_DATA_ROOT`的路径设置为`/data `  (Kconfig文件默认预设为 `/data`)
+- `LVX_BREAKOUT_STACKSIZE`设置为65536 
 - `LIB_PNG`和`LV_USE_LIBPNG`配置为`yes`   (读取png图片资源)
 - `AUDIO`和`AUDIOUTILS_NXAUDIO_LIB`配置为`yes`  (读取wav音频文件)
 
@@ -117,8 +119,8 @@ ballgame_start(); // 启动游戏
 
 
 # 素材使用声明
-- 图片素材来源于https://icon.sucai999.com/以及https://craftpix.net
-- 音频素材来源于https://freesound.org/
+- 图片素材来源于`https://icon.sucai999.com/`以及`https://craftpix.net`
+- 音频素材来源于`https://freesound.org/`
 
 **本项目中的图片资源可以在个人作品中使用，并且可以用于商业项目，前提是遵守相应的许可协议。**
 

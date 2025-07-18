@@ -19,7 +19,7 @@ include $(APPDIR)/Make.defs
 ifeq ($(CONFIG_LVX_USE_DEMO_BREAKOUT), y)
 PROGNAME = breakout
 PRIORITY = 100
-STACKSIZE = 32768
+STACKSIZE = $(CONFIG_LVX_BREAKOUT_STACKSIZE)
 MODULE = $(CONFIG_LVX_USE_DEMO_BREAKOUT)
 CSRCS += src/Audio/audio_ctl.c
 CXXFLAGS += -I$(APPDIR)/packages/demos/breakout/src

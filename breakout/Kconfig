@@ -11,4 +11,7 @@ if LVX_USE_DEMO_BREAKOUT
 	config LVX_BREAKOUT_DATA_ROOT
 		string "BREAKOUT Data Root"
 		default "/data"
+	config LVX_BREAKOUT_STACKSIZE
+		int "LVX_BREAKOUT stack size"
+		default 65536
 endif

@@ -172,25 +172,25 @@ bool GameResourceManager::playAudio(int brickHp) {
         // If no audio control is initialized, initialize the audio controller
         m_audioCtl = audio_ctl_init_nxaudio(fullPath.c_str());
         if (!m_audioCtl) {
-            printf("[Audio] Failed to initialize audio: %s\n", fullPath.c_str());
+            //printf("[Audio] Failed to initialize audio: %s\n", fullPath.c_str());
             return false;
         }
     } else {
-        printf("[Audio] Stopping and reinitializing audio controller...\n");
+        //printf("[Audio] Stopping and reinitializing audio controller...\n");
         audio_ctl_stop(m_audioCtl);             // Stop the current audio
         audio_ctl_uninit_nxaudio(m_audioCtl);   // Uninitialize the current audio controller
 
         // Reinitialize the audio controller with the new file
         m_audioCtl = audio_ctl_init_nxaudio(fullPath.c_str());
         if (!m_audioCtl) {
-            printf("[Audio] Failed to reinitialize audio: %s\n", fullPath.c_str());
+            //printf("[Audio] Failed to reinitialize audio: %s\n", fullPath.c_str());
             return false;
         }
     }
 
     if (m_audioCtl) {
         audio_ctl_start(m_audioCtl);  // Start the audio playback
-        printf("[Audio] Playing: %s\n", fullPath.c_str());
+        //printf("[Audio] Playing: %s\n", fullPath.c_str());
         return true;
     }
 
@@ -205,7 +205,7 @@ bool GameResourceManager::playAudio(int brickHp) {
 void GameResourceManager::stopAudio() {
     // Check if the audio controller is initialized
     if (m_audioCtl != nullptr) {
-        printf("[Audio] Stopping and uninitializing audio controller...\n");
+       //printf("[Audio] Stopping and uninitializing audio controller...\n");
 
         // If audio is playing, stop it
         audio_ctl_stop(m_audioCtl);
@@ -214,8 +214,8 @@ void GameResourceManager::stopAudio() {
         audio_ctl_uninit_nxaudio(m_audioCtl);
         m_audioCtl = nullptr;
 
-        printf("[Audio] Audio stopped and cleaned up.\n");
+        //printf("[Audio] Audio stopped and cleaned up.\n");
     } else {
-        printf("[Audio] No audio to stop.\n");
+        //printf("[Audio] No audio to stop.\n");
     }
 }
