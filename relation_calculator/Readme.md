@@ -1,120 +1,177 @@
-# Relative Calculator
+# Relatives Calculator Demo Quick Start
 
 \[ English | [简体中文](Readme_zh-cn.md) \]
 
-## Running Effect
+This document provides a comprehensive guide to building, deploying, and running the **Relatives Calculator** demo application on the `openvela` system. It covers procedures for both the QEMU emulator and the ESP32-S3-BOX development board, as well as how to customize the application by adding new relationships.
 
-![alt text](img/show.gif)
+## I. Build and Run
 
-## Usage Instructions
+This section walks you through the entire process, from project configuration to launching the application on your target platform.
 
-### Running on Emulator
+### Prerequisites
 
-#### Project Configuration
+Before you begin, ensure you are in the root directory of the `openvela` repository. All commands in this guide assume they are executed from this location.
 
-1. Switch to the root directory of the openvela repository and execute the following command to configure the relative calculator.
+### Step 1: Configure the Project
 
-   > The emulator configuration file (defconfig) is located in the `vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap/` directory. Use `build.sh` to configure and compile the development board code.
+Use the `menuconfig` utility to enable the **Relatives Calculator** demo application.
 
-   ```Bash
-   ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
-   ```
+1. Launch `menuconfig` by selecting the command that matches your target platform:
 
-2. Press the `/` key to search and modify the following configuration one by one:
+    - **For the QEMU emulator:**
 
-   ```Bash
-   LVX_USE_DEMO_RELATIVES_CALCULATOR=y
-   ```
+        ```bash
+        ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
+        ```
 
-#### Compiling the Project
-```Bash
-# Clean build artifacts
-./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j$(nproc)
+    - **For the ESP32-S3-BOX development board:**
 
-# Start building
-./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap -j$(nproc)
-```
+        ```bash
+        ./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 menuconfig
+        ```
 
+2. Inside the `menuconfig` interface, press the `/` key to open the search tool. Find and enable the following configuration option:
 
+    ```kconfig
+    LVX_USE_DEMO_RELATIVES_CALCULATOR=y
+    ```
 
-#### Starting the Calculator
-In the emulator's terminal environment `openvela-ap>`, enter the following command:
+3. Save your configuration and exit `menuconfig`.
 
-```Bash
-rel_cal &
-```
+### Step 2: Build the Project
 
-### Running on ESP32S3-box
-#### Project Configuration
+It is recommended to clean previous build artifacts before starting a new compilation to avoid potential conflicts.
 
-1. Switch to the root directory of the openvela repository and execute the following command to configure the relative calculator.
+1. Clean previous build artifacts (distclean):
 
-   > The emulator configuration file (defconfig) is located in the `nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3` directory. Use `build.sh` to configure and compile the development board code.
+    - **For the QEMU emulator:**
 
-   ```Bash
-   ./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 menuconfig
-   ```
+        ```bash
+        ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j8
+        ```
 
-2. Press the `/` key to search and modify the following configuration one by one:
+    - **For the ESP32-S3-BOX development board:**
 
-   ```Bash
-   LVX_USE_DEMO_RELATIVES_CALCULATOR=y
-   ```
+        ```bash
+        ./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 distclean -j8
+        ```
 
-#### Compiling the Project
+2. Execute the build:
 
-```Bash
-# Clean build artifacts
-./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 distclean -j$(nproc)
+    - **For the QEMU emulator:**
 
-# Start building
-./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 -j$(nproc)
-```
+        ```bash
+        ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap -j8
+        ```
 
+    - **For the ESP32-S3-BOX development board:**
 
-#### Flashing Resources
-Switch to the root directory of the nuttx repository and start flashing resources:
+        ```bash
+        ./build.sh nuttx/boards/xtensa/esp32s3/esp32s3-box/configs/lvgl-3 -j8
+        ```
 
-```Bash
-make -j20 flash ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
-```
+### Step 3: Deploy and Run the Application
 
-#### Starting the Serial Terminal
+After a successful build, follow the instructions for your target platform to deploy the firmware and run the calculator.
 
-```Bash
-sudo minicom -D /dev/ttyACM0 -b 115200
-```
+#### Option A: Run on the QEMU Emulator
 
-#### Starting the Calculator
-In the emulator's terminal environment `openvela-ap>`, enter the following command:
+1. From the `openvela` root directory, start the emulator:
 
-```Bash
-rel_cal &
-```
+    ```bash
+    ./emulator.sh vela
+    ```
 
-## Adding Relationships
-If you want to add new relationships, you need to modify the `/demos/relation_calculator/relation_cal.c` file according to the following steps.
+2. Once the `openvela` terminal (`openvela-ap>`) appears, run the following command to start the application in the background:
 
-### Adding Relationship States
-To add a state, simply add a new state to the `static const relation_transformation_t transitions[] = {...}` array, following the format defined by `relation_transformation_t`. The definition of `relation_transformation_t` is as follows:
+    ```bash
+    rel_cal &
+    ```
 
-```C
+#### Option B: Run on the ESP32-S3-BOX Board
+
+1. Flash the Firmware:
+
+    Connect the ESP32-S3-BOX board to your computer via USB. Run the following command to flash the firmware. Remember to replace `/dev/ttyACM0` with your device's actual serial port.
+
+    ```bash
+    pushd nuttx && make -j8 flash ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./ && popd
+    ```
+
+2. Open the Serial Terminal:
+
+    Use a serial terminal tool like `minicom` to monitor the device output and interact with the Shell.
+
+    ```bash
+    sudo minicom -D /dev/ttyACM0 -b 115200
+    ```
+
+3. Start the Calculator:
+
+    In the `minicom` terminal, enter the following command.
+
+    ```bash
+    rel_cal &
+    ```
+
+## II. Customizing the Application
+
+You can extend the calculator's functionality by adding new relationships. All modifications are made within the `demos/relation_calculator/relation_cal.c` file.
+
+The calculator uses a state transition model to determine the final relationship. To add a new relationship, you need to define its transition logic and its corresponding name.
+
+### 1. Define the Relationship Logic
+
+In the `transitions` array, add a new entry to define how relationships combine. Each entry follows the `relation_transformation_t` struct format.
+
+For example, `[Me]` `[Father]` = `[Father]` is defined as: `{ME, FATHER, FATHER}`.
+
+```c
+// Defines the logic for relationship transitions
 typedef struct relation_transformation_s
 {
-    relation_type_t from;
-    relation_type_t to;
-    relation_type_t result;
+    relation_type_t from;   // The current relationship state
+    relation_type_t to;     // The new input relationship (button pressed)
+    relation_type_t result; // The resulting relationship state
 } relation_transformation_t;
+
+// Add new state transitions to this array
+static const relation_transformation_t transitions[] = {
+    // ... existing transitions ...
+    { ME, FATHER, FATHER }, // Example: "My" + "Father" results in "Father"
+    // Add your new transition logic here
+};
 ```
 
-### Adding Supported Relationships
-1. Add the new relationship type to `typedef enum relation_type_e`.
-2. Add the new relationship name to `static const char *relation_names[]`.
+### 2. Define the Relationship Type and Name
 
-**Note:** Relationship names need to correspond one-to-one with relationship types.
+First, add a new enumerator to `relation_type_e`. Then, add the corresponding display name as a string to the `relation_names` array.
 
-## Implementation Description
-The relative calculator is implemented using a state transition approach.
+**Important:** The order of entries in the `relation_names` array must exactly match the order in the `relation_type_e` enum to ensure the calculator displays the correct text.
 
-## Current Shortcomings
-Both the family tree and state transition approaches inevitably require a large amount of code to build the relationships. Currently, no better implementation method has been thought of. We hope everyone can share better ideas for discussion.
+```c
+// 1. Add the new relationship type to the enum
+typedef enum relation_type_e
+{
+    // ... existing types ...
+    NEW_RELATIONSHIP, // Your new relationship type
+} relation_type_t;
+
+// 2. Add the corresponding name to the names array
+static const char *relation_names[] = {
+    // ... existing names ...
+    "New Relationship", // The display name for NEW_RELATIONSHIP
+};
+```
+
+After making these changes, rebuild and deploy the project to see your new relationship in the calculator.
+
+## III. Implementation Overview
+
+The Relatives Calculator is implemented using a state transition system. Each button press triggers a state change, transforming the current relationship (e.g., "Me") into a new one (e.g., "Father") based on a predefined transition table. This model provides a clear and extensible way to manage complex family relationship calculations.
+
+## IV. Contributing and Future Improvements
+
+The current state-transition implementation requires a significant amount of predefined static data to build a complete relationship graph. We are actively seeking more efficient and scalable models to optimize the relationship network.
+
+If you have ideas for a better implementation or want to contribute, we welcome you to open an Issue or submit a Pull Request to discuss your approach with the community.
