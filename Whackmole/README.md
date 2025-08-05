@@ -89,7 +89,7 @@ After a successful compilation, you can deploy the firmware to the target platfo
     ./emulator.sh vela
     ```
 
-2. After the NuttX terminal (`nsh>`) appears, enter the following command to start the game:
+2. After the openvela terminal (`openvela-ap>`) appears, enter the following command to start the game:
 
     ```bash
     Whackmole
@@ -115,7 +115,7 @@ After a successful compilation, you can deploy the firmware to the target platfo
 
 3. Start the game:
 
-    In the `minicom` NuttX terminal (`nsh>`), enter the following command:
+    In the `minicom` terminal, enter the following command:
 
     ```bash
     Whackmole

@@ -89,7 +89,7 @@
     ./emulator.sh vela
     ```
 
-2. 等待 NuttX 终端（`nsh>`）出现后，输入以下命令启动游戏：
+2. 等待 openvela 终端（`openvela-ap>`）出现后，输入以下命令启动游戏：
 
     ```Bash
     Whackmole
@@ -115,7 +115,7 @@
 
 3. 启动游戏：
 
-    在 `minicom` 的 NuttX 终端（`nsh>`）中，输入以下命令：
+    在 `minicom` 的终端中，输入以下命令：
 
     ```Bash
     Whackmole
