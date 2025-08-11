@@ -11,11 +11,11 @@
 #include "lvgl/lvgl.h"
 #endif
 
-#ifndef MISANS-SEMIBOLD
-#define MISANS-SEMIBOLD 1
+#ifndef MISANS_SEMIBOLD
+#define MISANS_SEMIBOLD 1
 #endif
 
-#if MISANS-SEMIBOLD
+#if MISANS_SEMIBOLD
 
 /*-----------------
  *    BITMAPS
@@ -912,5 +912,5 @@ lv_font_t MiSans_Semibold = {
 
 
 
-#endif /*#if MISANS-SEMIBOLD*/
+#endif /*#if MISANS_SEMIBOLD*/
 
