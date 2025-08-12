@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_APPS_WATCH
+	bool "Watch"
+	default n
+	
+if LVX_USE_APPS_WATCH
+	config LVX_WATCH_DATA_ROOT
+		string "Watch Data Root"
+		default "/sdcard"
+endif
