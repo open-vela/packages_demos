@@ -66,7 +66,7 @@ int main(int argc, FAR char* argv[])
         return 1;
     }
 
-    app_create();
+    whackmole_app_create();
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
     // refresh lvgl ui
