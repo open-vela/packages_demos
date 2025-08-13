@@ -5,7 +5,7 @@
 #define ICONS_ROOT RES_ROOT "/icons"
 #define FONTS_ROOT RES_ROOT "/fonts"
 void init_whack_a_mole_game(lv_obj_t* parent);
-void app_create(void);
+void whackmole_app_create(void);
 struct resource_s {
     struct {
         lv_obj_t* time;

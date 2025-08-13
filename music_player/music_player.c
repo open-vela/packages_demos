@@ -104,9 +104,9 @@ static void app_volume_bar_countdown_timer_cb(lv_timer_t* timer);
  **********************/
 
 // clang-format off
-struct resource_s   R;  /**< Resources */
-struct ctx_s        C;  /**< Context */
-struct conf_s       CF; /**< Configuration */
+static struct resource_s   R;  /**< Resources */
+static struct ctx_s        C;  /**< Context */
+static struct conf_s       CF; /**< Configuration */
 // clang-format on
 
 /* Week days mapping */
@@ -129,7 +129,7 @@ const lv_style_prop_t transition_props[] = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-void app_create(void)
+void music_app_create(void)
 {
     // Init resource and context structure
     lv_memzero(&R, sizeof(R));
