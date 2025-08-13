@@ -111,7 +111,7 @@ void init_whack_a_mole_game(lv_obj_t* parent)
     lv_obj_set_style_image_recolor(hammer_cursor, lv_color_black(), 0);
     lv_obj_set_style_image_recolor_opa(hammer_cursor, LV_OPA_30, 0);
     lv_obj_set_size(hammer_cursor, parent_w / 7, parent_w / 7);
-    lv_obj_get_width(hammer_cursor),
+    lv_obj_get_width(hammer_cursor);
     lv_obj_get_height(hammer_cursor);
     lv_image_set_inner_align(hammer_cursor, LV_IMAGE_ALIGN_STRETCH);
     lv_image_set_antialias(hammer_cursor, false);
