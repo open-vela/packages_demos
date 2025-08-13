@@ -126,6 +126,6 @@ struct conf_s {
 #endif
 };
 
-void app_create(void);
+void music_app_create(void);
 
 #endif // LVGL_APP_H

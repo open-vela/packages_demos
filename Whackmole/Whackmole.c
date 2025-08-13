@@ -40,7 +40,7 @@ static void mole_click_event(lv_event_t* e);
 static void update_game_timer(lv_timer_t* timer);
 static void pop_random_mole(lv_timer_t* timer);
 static void pointer_event_cb(lv_event_t* e);
-struct resource_s R;
+static struct resource_s R;
 
 static void end_msg_event_cb(lv_event_t* e)
 {
@@ -347,7 +347,7 @@ static void delete_effect_cb(lv_timer_t* timer)
 }
 
 // create app
-void app_create(void)
+void whackmole_app_create(void)
 {
     LV_FONT_DECLARE(MiSans_Normal);
     lv_obj_t* scr = lv_screen_active();

@@ -51,7 +51,7 @@ int main(int argc, FAR char* argv[])
         return 1;
     }
 
-    app_create();
+    music_app_create();
 
     // refresh lvgl ui
     lv_nuttx_uv_loop(&ui_loop, &result);
