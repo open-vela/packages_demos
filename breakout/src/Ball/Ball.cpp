@@ -3,9 +3,9 @@
 #include <cmath>
 
 // Define gravity
-static const float GRAVITY = 350.0f;
+static const float GRAVITY = 300.0f;
 // Define the maximum ball speed
-static const float MAX_BALL_SPEED = 750.0f; 
+static const float MAX_BALL_SPEED = 800.0f; 
 
 Ball::Ball(lv_obj_t* parent, float radius) : m_state(State::HELD), m_radius(radius), m_gui_object(nullptr) {
     GameResourceManager resourceManager;
@@ -72,7 +72,7 @@ void Ball::stickToPaddle(const Rect& paddleRect) {
 void Ball::launch() { 
     if (m_state == State::HELD) { 
         m_state = State::MOVING; 
-        m_vel = { 150.0f, -750.0f }; 
+        m_vel = { 150.0f, -800.0f }; 
     } 
 }
 

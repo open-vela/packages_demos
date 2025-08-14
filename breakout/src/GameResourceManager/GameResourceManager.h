@@ -28,12 +28,16 @@ public:
 
     const lv_draw_buf_t* getIconSource(const std::string& iconName);
 
+    static int getCurrentLevel();
+    static void setCurrentLevel(int level);
+    
     static void cleanupCache();
 
 private:
 
     static std::map<std::string, lv_draw_buf_t*> s_imageCache;
     audioctl_s* m_audioCtl = nullptr;
+    static int currentLevel; 
 };
 
 #endif // GAME_RESOURCE_MANAGER_H

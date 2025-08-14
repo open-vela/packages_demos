@@ -39,14 +39,12 @@ Brick::Brick(lv_obj_t* parent, float x, float y, float width, char type)
     lv_obj_set_size(m_gui_object, width, width);
 
     // Add black border style
-    static lv_style_t border_style;
-
-    lv_style_init(&border_style);
-    lv_style_set_bg_color(&border_style, lv_color_white());
-    lv_style_set_border_width(&border_style, 1);
-    lv_style_set_border_color(&border_style, lv_color_black());
-    lv_style_set_pad_all(&border_style, 0);
-    lv_obj_add_style(m_gui_object, &border_style, 0);
+    lv_style_init(&m_border_style);
+    lv_style_set_bg_color(&m_border_style, lv_color_white());
+    lv_style_set_border_width(&m_border_style, 1);
+    lv_style_set_border_color(&m_border_style, lv_color_black());
+    lv_style_set_pad_all(&m_border_style, 0);
+    lv_obj_add_style(m_gui_object, &m_border_style, 0);
 }
 
 /***************************************
@@ -54,10 +52,11 @@ Brick::Brick(lv_obj_t* parent, float x, float y, float width, char type)
  * Ensures corresponding UI object is also removed from screen to prevent memory leaks.
  ***************************************/
 Brick::~Brick() { 
-    if (m_gui_object) { 
+    if (m_gui_object) {
         lv_obj_del(m_gui_object); 
         m_gui_object = nullptr; 
     } 
+    lv_style_reset(&m_border_style); 
 }
 
 /**
@@ -111,9 +110,9 @@ void Brick::updateImage() {
         case 1:  image_filename = "brick_A.png"; break;  // HP=1: green
         case 2:  image_filename = "brick_B.png"; break;  // HP=2: orange
         case 3:  image_filename = "brick_C.png"; break;  // HP=3: purple
-        case 4:  image_filename = "brick_D.png"; break;  // HP=6: yellow
+        case 4:  image_filename = "brick_D.png"; break;  // HP=4: yellow
         case 5:  image_filename = "brick_E.png"; break;  // HP=5: blue
-        default: image_filename = "brick_F.png"; break;  // Damaged (blue-green)
+        default: image_filename = "brick_A.png"; break;  // green
     }
 
     GameResourceManager resourceManager;

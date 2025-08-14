@@ -19,5 +19,6 @@ private:
     Rect m_rect;
     lv_obj_t* m_gui_object;
     lv_style_t m_style;
+    lv_style_t m_border_style;
 };
 #endif // BRICK_H

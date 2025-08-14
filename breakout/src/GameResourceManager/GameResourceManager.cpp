@@ -8,9 +8,10 @@
 
 #include "GameResourceManager.h"
 #include <cstdio>
+#include <time.h>
 #include "Brick/Brick.h"
 #include "breakout.h"
-
+int GameResourceManager::currentLevel = 1;
 // Define the static member variable for image caching, now storing lv_draw_buf_t*
 std::map<std::string, lv_draw_buf_t*> GameResourceManager::s_imageCache;
 
@@ -32,6 +33,30 @@ void GameResourceManager::cleanupCache() {
     }
     s_imageCache.clear();
     printf("[ResourceManager] Cache cleanup complete.\n");
+}
+
+
+/**
+ * @brief Get the current game level, ensuring it stays within the valid range (1–7).
+ * If currentLevel is less than 1 or greater than 7, it resets to 1.
+ * @return The current level number.
+ */
+int GameResourceManager::getCurrentLevel() {
+    if (currentLevel < 1) {
+        currentLevel = 1;
+    } else if (currentLevel > 7) {
+        currentLevel = 1;
+    } 
+    return currentLevel;
+}
+
+/**
+ * @brief Set the current game level.
+ * @param level The new level number to set.
+ * Note: The level is not automatically clamped here; getCurrentLevel() enforces valid range.
+ */
+void GameResourceManager::setCurrentLevel(int level) {
+    currentLevel = level;
 }
 
 /**
@@ -69,7 +94,7 @@ const lv_draw_buf_t* GameResourceManager::getIconSource(const std::string& iconN
 
     // 5. Cache and return
     s_imageCache[iconName] = permanent_buf;
-    printf("[ResourceManager] New image cached: %s\n", iconName.c_str());
+    //printf("[ResourceManager] New image cached: %s\n", iconName.c_str());
 
     return permanent_buf;
 }
@@ -152,6 +177,20 @@ void GameResourceManager::loadBackground(lv_obj_t* parent, const std::string& ic
  * @return true if the audio started successfully, false if an error occurred.
  */
 bool GameResourceManager::playAudio(int brickHp) {
+    static struct timespec lastPlayTime = {0, 0};
+    struct timespec now;
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    long diffMs = (now.tv_sec - lastPlayTime.tv_sec) * 1000
+                + (now.tv_nsec - lastPlayTime.tv_nsec) / 1000000;
+    //Set a cooldown time to protect against excessive triggering
+    const int COOLDOWN_MS = 300; 
+    if (diffMs < COOLDOWN_MS) {
+        return false; 
+    }
+    lastPlayTime = now; 
+
     const char* wavFile = nullptr;
     // Select appropriate audio file based on brick's HP
     switch (brickHp) {
@@ -171,29 +210,20 @@ bool GameResourceManager::playAudio(int brickHp) {
     if (!m_audioCtl) {
         // If no audio control is initialized, initialize the audio controller
         m_audioCtl = audio_ctl_init_nxaudio(fullPath.c_str());
+        audio_ctl_start(m_audioCtl);
         if (!m_audioCtl) {
             //printf("[Audio] Failed to initialize audio: %s\n", fullPath.c_str());
             return false;
         }
     } else {
         //printf("[Audio] Stopping and reinitializing audio controller...\n");
-        audio_ctl_stop(m_audioCtl);             // Stop the current audio
-        audio_ctl_uninit_nxaudio(m_audioCtl);   // Uninitialize the current audio controller
-
-        // Reinitialize the audio controller with the new file
+        audio_ctl_stop(m_audioCtl);
+        //audio_ctl_seek(m_audioCtl, 0);
+        audio_ctl_uninit_nxaudio(m_audioCtl);
+        //m_audioCtl = NULL;
         m_audioCtl = audio_ctl_init_nxaudio(fullPath.c_str());
-        if (!m_audioCtl) {
-            //printf("[Audio] Failed to reinitialize audio: %s\n", fullPath.c_str());
-            return false;
-        }
+        audio_ctl_start(m_audioCtl);
     }
-
-    if (m_audioCtl) {
-        audio_ctl_start(m_audioCtl);  // Start the audio playback
-        //printf("[Audio] Playing: %s\n", fullPath.c_str());
-        return true;
-    }
-
     return false;
 }
 /**
@@ -204,7 +234,7 @@ bool GameResourceManager::playAudio(int brickHp) {
  */
 void GameResourceManager::stopAudio() {
     // Check if the audio controller is initialized
-    if (m_audioCtl != nullptr) {
+    if (m_audioCtl) {
        //printf("[Audio] Stopping and uninitializing audio controller...\n");
 
         // If audio is playing, stop it

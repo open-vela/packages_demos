@@ -36,7 +36,7 @@ Game::Game(lv_obj_t* parent)
       m_gameBounds(),
       m_paddle(nullptr),
       m_ball(nullptr),
-      m_resourceManager(nullptr)
+      m_resourceManager(new GameResourceManager()) 
 {
     printf("[Game] Constructor called\n");
     init();
@@ -95,9 +95,13 @@ void Game::init() {
     m_gameBounds = {0, 0, (float)GAME_AREA_WIDTH, (float)GAME_AREA_HEIGHT};
 
     // Load level map
-    m_resourceManager = new GameResourceManager();
-    m_resourceManager->loadBackground(m_game_area,"background_1.png");
-    m_resourceManager->loadMap("level_1.dat", this);
+    //m_resourceManager = new GameResourceManager();
+    char bgFile[32];
+    char mapFile[32];
+    snprintf(bgFile, sizeof(bgFile), "background_%d.png", m_resourceManager->getCurrentLevel());
+    snprintf(mapFile, sizeof(mapFile), "level_%d.dat", m_resourceManager->getCurrentLevel());
+    m_resourceManager->loadBackground(m_game_area, bgFile);
+    m_resourceManager->loadMap(mapFile, this);
 
     // Create game object instances
     m_paddle = new Paddle(m_game_area, (GAME_AREA_WIDTH / 2.0f) - 50.0f, GAME_AREA_HEIGHT - 70.0f, 80.0f, 80.0f, m_gameBounds);
@@ -116,7 +120,9 @@ void Game::init() {
     
     // Create the main game loop timer
     m_game_timer = lv_timer_create(game_timer_cb, GAME_TICK_PERIOD, this);
+
     printf("[Game] Init End\n");
+    
 }
 
 /**
@@ -161,6 +167,18 @@ void Game::game_timer_cb(lv_timer_t* timer) {
 
         // 3. Collision detection with paddle
         game->handleBallPaddleCollision();
+
+        // 4. Check if the level is cleared
+        bool allCleared = true;
+        for (Brick* b : game->m_bricks) {
+            if (b->isActive() && b->getHP() != -1) {
+                allCleared = false;
+                break;
+            }
+        }
+        if (allCleared) {
+            game->trigger_next_level();
+        }
     }
 }
 /**
@@ -257,7 +275,7 @@ void Game::handleBallPaddleCollision() {
         if (newVel.y > 0) newVel.y = -newVel.y;
 
         m_ball->setVelocity(newVel);
-
+        m_ball->boostSpeed(150.0f);
         // Correct ball position to prevent it sticking inside the paddle
         Vec2 correctedPos = ballPos;
         correctedPos.y = paddleRect.y - m_ball->getRadius() - 1.0f;
@@ -288,40 +306,6 @@ void Game::touch_area_event_cb(lv_event_t* e) {
     }
 }
 
-/**
- * "Restart" button click event callback
- */
-void Game::restart_button_event_cb(lv_event_t* e) {
-
-    
-    // If an old game instance exists, delete it first to clean up resources
-    if (g_game_instance != nullptr) {
-        delete g_game_instance;
-        g_game_instance = nullptr;
-    }
- 
-    // Restarting the game just calls the global start function again
-    ballgame_start();
-}
-
-/**
- * @brief Trigger the game over state and display UI
- */
-void Game::trigger_game_over() {
-    m_state = GameState::GAME_OVER;
-    lv_obj_t* game_over_label = lv_label_create(m_parent_screen);
-    lv_label_set_text(game_over_label, "GAME OVER!");
-    lv_obj_set_style_text_color(game_over_label, lv_color_black(), 0);
-    lv_obj_center(game_over_label);
-    
-    lv_obj_t* restart_btn = lv_button_create(m_parent_screen);
-    lv_obj_align_to(restart_btn, game_over_label, LV_ALIGN_OUT_BOTTOM_MID, -23, 20);
-    lv_obj_t* btn_label = lv_label_create(restart_btn);
-    lv_label_set_text(btn_label, "Restart");
-    lv_obj_center(btn_label);
-    
-    lv_obj_add_event_cb(restart_btn, restart_button_event_cb, LV_EVENT_CLICKED, this);
-}
 
 /**
  * Collision detection helper - Ball and Paddle
@@ -349,6 +333,85 @@ bool Game::checkCollision(const Ball* ball, const Brick* brick) {
     float distanceX = ballPos.x - closestX;
     float distanceY = ballPos.y - closestY;
     return (distanceX * distanceX) + (distanceY * distanceY) < (ballRadius * ballRadius);
+}
+/**
+ * "Restart" button click event callback
+ */
+void Game::restart_button_event_cb(lv_event_t* e) {
+    if (g_game_instance != nullptr) {
+        delete g_game_instance;
+        g_game_instance = nullptr;
+    }
+    ballgame_start();
+}
+
+/**
+ * "Next level" button event callback
+ */ 
+void Game::next_level_button_event_cb(lv_event_t* e) {
+    Game* game = static_cast<Game*>(lv_event_get_user_data(e));
+
+    if (game->m_resourceManager) {
+        int level = game->m_resourceManager->getCurrentLevel();
+        level++;
+        if (level > 7) level = 1;
+        game->m_resourceManager->setCurrentLevel(level);
+    }
+
+    if (g_game_instance != nullptr) {
+        delete g_game_instance;
+        g_game_instance = nullptr;
+    }
+    ballgame_start();
+}
+
+/**
+ * "Next level" button
+ */ 
+void Game::trigger_next_level() {
+    m_state = GameState::PAUSED;
+    lv_timer_pause(m_game_timer);
+
+    lv_obj_t* label = lv_label_create(m_parent_screen);
+    lv_label_set_text_fmt(label, "LEVEL %d CLEARED!", m_resourceManager->getCurrentLevel());
+    lv_obj_set_style_text_color(label, lv_color_black(), 0);
+    lv_obj_center(label);
+
+    lv_obj_t* next_btn = lv_button_create(m_parent_screen);
+    lv_obj_align_to(next_btn, label, LV_ALIGN_OUT_BOTTOM_MID, -35, 20);
+    lv_obj_t* btn_label = lv_label_create(next_btn);
+    lv_label_set_text(btn_label, "Next Level");
+    lv_obj_center(btn_label);
+
+    lv_obj_add_event_cb(next_btn, next_level_button_event_cb, LV_EVENT_CLICKED, this);
+}
+
+/**
+ * @brief Trigger the game over state and display UI
+ */
+void Game::trigger_game_over() {
+    m_state = GameState::GAME_OVER;
+    lv_obj_t* game_over_label = lv_label_create(m_parent_screen);
+    lv_label_set_text(game_over_label, "GAME OVER!");
+    lv_obj_set_style_text_color(game_over_label, lv_color_black(), 0);
+    lv_obj_center(game_over_label);
+    
+    lv_obj_t* restart_btn = lv_button_create(m_parent_screen);
+    lv_obj_align_to(restart_btn, game_over_label, LV_ALIGN_OUT_BOTTOM_MID, -23, 20);
+    lv_obj_t* btn_label = lv_label_create(restart_btn);
+    lv_label_set_text(btn_label, "Restart");
+    lv_obj_center(btn_label);
+    
+    lv_obj_add_event_cb(restart_btn, restart_button_event_cb, LV_EVENT_CLICKED, this);
+
+    // "Skip level" button
+    lv_obj_t* skip_btn = lv_button_create(m_parent_screen);
+    lv_obj_align_to(skip_btn, game_over_label, LV_ALIGN_OUT_BOTTOM_MID, -35, 60);
+    //lv_obj_set_size(skip_btn, 100, 40);
+    lv_obj_t* skip_btn_label = lv_label_create(skip_btn);
+    lv_label_set_text(skip_btn_label, "SKIP LEVEL");
+    lv_obj_center(skip_btn_label);
+    lv_obj_add_event_cb(skip_btn, next_level_button_event_cb, LV_EVENT_CLICKED, this);
 }
 
 // #################################################

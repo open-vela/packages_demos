@@ -18,7 +18,7 @@ The Apache 2.0 License requires including copyright notices, the license text, a
 
 3. CraftPix.net Images (CraftPix Custom License)
 
-    Image: background_1.png, bcakground_2.png, bcakground_3.png
+    Image: background_1.png, bcakground_2.png, bcakground_3.png, bcakground_4.png, bcakground_5.png, bcakground_6.png, bcakground_7.png
 
     Author: CraftPix.net
 

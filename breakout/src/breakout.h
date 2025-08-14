@@ -4,67 +4,97 @@
 #pragma once
 
 #include "breakout_types.h"
-#include <vector>    // Include C++ vector container to manage list of bricks
-#include <string>    // Include C++ string class to handle file paths
+#include <vector>    // C++ vector container to store dynamic lists (e.g., bricks)
+#include <string>    // C++ string class to handle file paths and names
 
+// Forward declarations to reduce compile dependencies
 class Paddle;
 class Ball;
 class Brick;
 class GameResourceManager;
 
-// Define core game states: playing or game over
-enum class GameState { PLAYING, GAME_OVER };
-
-// --- Main Game class definition ---
+// --- Game State Enumeration ---
 /**
- * Main Game class (Game)
- * Encapsulates all game states, objects, and core logic.
+ * @brief Core game states
+ */
+enum class GameState {
+    PLAYING,    ///< Game is running
+    PAUSED,
+    GAME_OVER,  ///< Game has ended
+};
+
+// --- Main Game Class ---
+/**
+ * @class Game
+ * @brief Encapsulates all game states, objects, and core logic.
+ * 
  * Creates and initializes a game session in the constructor,
  * and automatically cleans up all resources in the destructor.
  */
 class Game {
 public:
-    // --- Constructor and Destructor ---
-    Game(lv_obj_t* parent); // Constructor to create a game instance
-    ~Game();                // Destructor to destroy game instance and release all resources
+    /**
+     * @brief Construct a new Game instance.
+     * @param parent Pointer to the parent LVGL object (screen/container).
+     */
+    Game(lv_obj_t* parent);
 
-    // Exposed for external modules (e.g., GameResourceManager) to access and modify directly during map loading
-    lv_obj_t* m_game_area;        // Pointer to the UI container for the game area
-    std::vector<Brick*> m_bricks; // Dynamic array holding all brick objects
+    /**
+     * @brief Destroy the Game instance and release all resources.
+     */
+    ~Game();
+
+    // --- Public Members ---
+    /**
+     * @brief Pointer to the UI container for the game area.
+     * Exposed for access by GameResourceManager during map loading.
+     */
+    lv_obj_t* m_game_area;
+
+    /**
+     * @brief Dynamic array holding all brick objects.
+     * Exposed for access by GameResourceManager during map loading.
+     */
+    std::vector<Brick*> m_bricks;
 
 private:
-    // State and core UI pointers
-    lv_obj_t* m_parent_screen;    // Pointer to the parent screen where the game resides
-    GameState m_state;            // Current game state (PLAYING or GAME_OVER)
-    lv_timer_t* m_game_timer;     // Game main loop timer
+    // --- Core State and UI ---
+    lv_obj_t* m_parent_screen;    ///< Parent screen where the game resides
+    GameState m_state;            ///< Current game state
+    lv_timer_t* m_game_timer;     ///< Main game loop timer
 
-    // Game area and boundaries
-    Rect m_gameBounds;            // Logical bounds of the game area
+    // --- Game Boundaries ---
+    Rect m_gameBounds;            ///< Logical bounds of the game area
 
-    // Game logic objects
-    Paddle* m_paddle;             // Paddle object
-    Ball* m_ball;                 // Ball object
-    GameResourceManager* m_resourceManager; // Resource manager object
+    // --- Game Objects ---
+    Paddle* m_paddle;             ///< Paddle object
+    Ball* m_ball;                 ///< Ball object
+    GameResourceManager* m_resourceManager; ///< Resource manager
+    int m_currentLevel;
 
 private:
-    // --- Internal helper functions ---
-    void init();                                               // Initialize the game
-    void trigger_game_over();                                  // Handle game over state
-    bool checkCollision(const Ball* ball, const Brick* brick);   // Collision detection (ball-brick)
-    bool checkCollision(const Ball* ball, const Paddle* paddle); // Collision detection (ball-paddle)
-    void handleBallBrickCollision(); 
-    void handleBallPaddleCollision();
+    // --- Internal Methods ---
+    void init();                                               ///< Initialize game objects and state
+    void trigger_game_over();                                  ///< Handle game over logic
+    void trigger_next_level();
 
-    // --- Static callback functions ---
-    static void game_timer_cb(lv_timer_t* timer);              // Main loop timer callback
-    static void touch_area_event_cb(lv_event_t* e);            // Touch input event callback
-    static void restart_button_event_cb(lv_event_t* e);        // Restart button click callback
+    bool checkCollision(const Ball* ball, const Brick* brick); ///< Detect collision between ball and brick
+    bool checkCollision(const Ball* ball, const Paddle* paddle); ///< Detect collision between ball and paddle
+    void handleBallBrickCollision();                           ///< Handle ball-brick collision events
+    void handleBallPaddleCollision();                          ///< Handle ball-paddle collision events
+
+    // --- Static Callbacks ---
+    static void game_timer_cb(lv_timer_t* timer);              ///< Main game loop callback
+    static void touch_area_event_cb(lv_event_t* e);            ///< Touch input callback
+    static void restart_button_event_cb(lv_event_t* e);        ///< Restart button callback
+    static void next_level_button_event_cb(lv_event_t* e);
 };
 
-// --- Global start function prototype ---
+// --- Global Function ---
 /**
- * Global game start/restart function interface
- * The only external entry point to start or restart the entire game.
+ * @brief Start or restart the ball game.
+ * 
+ * This is the only external entry point to start/restart the game.
  */
 void ballgame_start();
 
