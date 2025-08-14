@@ -1,0 +1,14 @@
+config LVX_USE_DEMO_BANDX
+	bool "Smart Band demo"
+	depends on GRAPHICS_LVGL && LV_USE_FRAGMENT && LV_USE_LIBPNG
+	default n
+	---help---
+		Enable build bandx Demo programs
+
+if LVX_USE_DEMO_BANDX
+
+config BANDX_BASE_PATH
+	string "Base path in bandx example"
+	default "/data"
+
+endif # LVX_USE_DEMO_BANDX
