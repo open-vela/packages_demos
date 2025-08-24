@@ -1,0 +1,17 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_BREAKOUT
+	bool "breakout"
+	default n
+	
+if LVX_USE_DEMO_BREAKOUT
+	config LVX_BREAKOUT_DATA_ROOT
+		string "BREAKOUT Data Root"
+		default "/data"
+	config LVX_BREAKOUT_STACKSIZE
+		int "LVX_BREAKOUT stack size"
+		default 65536
+endif
