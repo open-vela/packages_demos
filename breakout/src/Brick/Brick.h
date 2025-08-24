@@ -12,6 +12,7 @@ public:
     bool isActive() const;
     Rect getBoundingBox() const;
     int getHP() const;
+    lv_obj_t* getGUIObject() const { return m_gui_object; }
 private:
     void updateImage();
     int m_hp;

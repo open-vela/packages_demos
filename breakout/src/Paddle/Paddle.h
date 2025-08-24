@@ -2,33 +2,36 @@
 #define PADDLE_H
 
 #include "lvgl.h"
-
 #include "breakout_types.h"
+
 class Paddle {
 public:
-    // 构造函数
+    // Constructor
     Paddle(lv_obj_t* parent, float startX, float startY, float width, float height, Rect screenBounds);
     
-    // 析构函数
+    // Destructor
     ~Paddle(); 
 
-    // 关键修复：添加之前缺失的所有成员函数的声明
-    void update(float deltaTime);
-    Rect getBoundingBox() const;
-    void moveTo(float targetX);
-    void stopMovement();
-    float getX() const;
-    float getY() const;
+    // Member function declarations
+    void update(float deltaTime);            // Update paddle position based on movement
+    Rect getBoundingBox() const;             // Get the paddle's bounding rectangle
+    void moveTo(float targetX);              // Move paddle to target X position
+    void stopMovement();                      // Stop paddle movement
+    float getX() const;                      // Get current X position
+    float getY() const;                      // Get current Y position
+    float getWidth() const;                  // Get current width
+    void setWidth(float w);                  // Set paddle width
 
 private:
-    float m_x;
-    float m_y;
-    float m_width;
-    float m_height;
-    float m_targetX;
-    bool m_isMoving;
-    Rect m_screenBounds;
-    lv_obj_t* m_gui_object; // 指向LVGL图片对象的指针
+    float m_x;                               // Current X position
+    float m_y;                               // Current Y position
+    float m_width;                           // Paddle width
+    float m_height;                          // Paddle height
+    float m_targetX;                          // Target X position for movement
+    bool m_isMoving;                          // Whether paddle is moving
+    lv_obj_t* m_parent;                       // Pointer to parent LVGL object
+    Rect m_screenBounds;                      // Boundaries of the game screen
+    lv_obj_t* m_gui_object;                   // Pointer to LVGL image object representing the paddle
 };
 
 #endif // PADDLE_H

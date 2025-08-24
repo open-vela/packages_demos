@@ -37,14 +37,14 @@ void GameResourceManager::cleanupCache() {
 
 
 /**
- * @brief Get the current game level, ensuring it stays within the valid range (1–7).
- * If currentLevel is less than 1 or greater than 7, it resets to 1.
+ * @brief Get the current game level, ensuring it stays within the valid range (1–6).
+ * If currentLevel is less than 1 or greater than 6, it resets to 1.
  * @return The current level number.
  */
 int GameResourceManager::getCurrentLevel() {
     if (currentLevel < 1) {
         currentLevel = 1;
-    } else if (currentLevel > 7) {
+    } else if (currentLevel > 6) {
         currentLevel = 1;
     } 
     return currentLevel;
@@ -185,7 +185,7 @@ bool GameResourceManager::playAudio(int brickHp) {
     long diffMs = (now.tv_sec - lastPlayTime.tv_sec) * 1000
                 + (now.tv_nsec - lastPlayTime.tv_nsec) / 1000000;
     //Set a cooldown time to protect against excessive triggering
-    const int COOLDOWN_MS = 300; 
+    const int COOLDOWN_MS = 500; 
     if (diffMs < COOLDOWN_MS) {
         return false; 
     }

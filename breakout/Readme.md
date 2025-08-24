@@ -1,11 +1,20 @@
-# 🎮 Breakout Game 《打砖块游戏》
+# 🎮 Breakout Game 《打砖块游戏v3.0》
 `“KUN生是旷野,不是轨道!”` 拥有对篮球无限热爱的KUN，在家族中独树一帜，正挥洒着汗水，勤奋努力的击打篮球撞碎砖块，缔造属于自己的篮球哲学。 
+
 
 🧱 开发时长不足`两年半`的作品，是基于OpenVela和LVGL开发的触屏打砖块游戏，将篮球和鸡融合到一起，已实现了基本游戏逻辑，增加了图片素材并实现了打击音效。
 <img src="./screenshot/kun.gif" alt="Kun" width="75%">
 **本项目中的图片及音频资源已按要求遵守相应的许可协议，可用于个人作品及商业用途。**
 在对应素材文件夹下，已通过`readme`和`LICENSE`文件详细标明了作者出处等信息，满足了相应的license协议要求，允许个人在作品及商业中使用，但不得对素材进行单独售卖。
 
+
+**本次更新增加了三个充满激情的buff道具**
+- 可以呼朋引伴的友情魔法
+- 让篮球无丝分裂的奇妙技艺
+- 与朋友们一起发射篮球的友谊力量
+好好运用，相信你一定能战胜砖块(๑•̀ㅂ•́)و✧ 
+以下是实机画面：
+<img src="./screenshot/game.gif" alt="game" width="75%">
 以下是第三版游戏部分界面：
 <img src="./screenshot/level1.png" alt="" width="75%">
 <img src="./screenshot/level2.png" alt="" width="75%">
@@ -17,7 +26,9 @@
 - **砖块系统**：砖块具有血量，可被破坏，支持不同类型砖块的行为。
 - **音效反馈**：根据砖块的血量播放不同的音效。
 - **触摸输入**：支持触摸屏输入来控制挡板移动。
+- **道具系统**: 支持增长挡板，分裂小球等功能。
 - **游戏状态管理**：管理游戏状态（例如：PLAYING、GAME_OVER、PAUSED）以控制游戏流程。
+
 
 
 # 🖼️ Image Handling（图片处理）
@@ -48,7 +59,8 @@ LVGL 支持将图像缓存到内存中，以提升图像组件在运行时的加
 - `LVX_BREAKOUT_STACKSIZE`设置为65536 
 - `LIB_PNG`和`LV_USE_LIBPNG`配置为`yes`   (读取png图片资源)
 - `AUDIO`和`AUDIOUTILS_NXAUDIO_LIB`配置为`yes`  (读取wav音频文件)
-
+- `Default image header cache count`配置为`18`   （缓存图片数）
+- `Default image cache size`配置为`32768`   （图片内存）
 ## 2.构建和清除构建文件
 ### 开始构建
 ```bash
@@ -119,7 +131,8 @@ ballgame_start(); // 启动游戏
 
 
 # 素材使用说明
-- 图片素材来源于`https://icon.sucai999.com/`以及`https://craftpix.net`
+- 素材来源于`https://icon.sucai999.com/`以及`https://craftpix.net`
+- 道具图标来源于`game-icons.net`
 - 音频素材来源于`https://freesound.org/`
 
 **本项目中的图片及音频资源已按要求遵守相应的许可协议，可用于个人作品及商业用途，但不得对素材单独进行售卖。**
@@ -127,5 +140,6 @@ ballgame_start(); // 启动游戏
 - **Microsoft 图片**：可在个人及商业项目中使用，需遵守 **MIT** 许可协议。
 - **Google 图片**：可在个人及商业项目中使用，需遵守 **Apache 2.0** 许可协议，并附带版权声明、许可证文本及修改声明。
 - **CraftPix.net 图片**：可用于个人及商业项目，但需遵守 **CraftPix 自定义许可协议**，保留版权信息并不得单独转售源文件。
+- **game-icons.net图标**：可用于个人及商业项目，但必须 署名原作者，并标明许可协议；允许修改、分发和再使用，但不得去除作者署名。
 - **freesound音频**：本作品使用的音频文件皆为 **CC0（Creative Commons 0）** 授权的资源，表示该资源已被作者明确放弃所有版权及相关权利，可自由复制、修改、分发，亦可用于个人或商业用途，无需署名、无需许可、无任何限制。
  

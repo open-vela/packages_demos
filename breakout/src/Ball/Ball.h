@@ -9,8 +9,9 @@
 
 class Ball {
 public:
-    enum class State { HELD, MOVING };
-    Ball(lv_obj_t* parent, float radius);
+    enum class State { HELD, MOVING, STATIC};
+    Ball(lv_obj_t* parent, float radius,Ball::State);
+    void limitSpeed(float maxSpeed);
     void update(float deltaTime);
     void stickToPaddle(const Rect& paddleRect);
     void launch();
@@ -23,6 +24,10 @@ public:
     State getState() const;
     Vec2 getPosition() const;
     float getRadius() const;
+    void setState(State state) { m_state = state;}
+    lv_obj_t* getGuiObject() const;
+    void setRadius(float r);
+
 private:
     State m_state;
     Vec2 m_pos, m_vel;

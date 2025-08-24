@@ -2,17 +2,14 @@
 #define BREAKOUT_H
 
 #pragma once
-
 #include "breakout_types.h"
 #include <vector>    // C++ vector container to store dynamic lists (e.g., bricks)
 #include <string>    // C++ string class to handle file paths and names
-
-// Forward declarations to reduce compile dependencies
-class Paddle;
-class Ball;
-class Brick;
-class GameResourceManager;
-
+#include "Paddle/Paddle.h"
+#include "Ball/Ball.h"
+#include "Brick/Brick.h" 
+#include "PowerUp/PowerUp.h" 
+#include "GameResourceManager/GameResourceManager.h"
 // --- Game State Enumeration ---
 /**
  * @brief Core game states
@@ -68,9 +65,12 @@ private:
 
     // --- Game Objects ---
     Paddle* m_paddle;             ///< Paddle object
-    Ball* m_ball;                 ///< Ball object
     GameResourceManager* m_resourceManager; ///< Resource manager
     int m_currentLevel;
+    std::vector<PowerUp*> m_powerUps;
+    int m_totalHpReduced = 0;
+    std::vector<Ball*> m_balls;        // Active balls
+    
 
 private:
     // --- Internal Methods ---
@@ -78,10 +78,15 @@ private:
     void trigger_game_over();                                  ///< Handle game over logic
     void trigger_next_level();
 
-    bool checkCollision(const Ball* ball, const Brick* brick); ///< Detect collision between ball and brick
-    bool checkCollision(const Ball* ball, const Paddle* paddle); ///< Detect collision between ball and paddle
-    void handleBallBrickCollision();                           ///< Handle ball-brick collision events
-    void handleBallPaddleCollision();                          ///< Handle ball-paddle collision events
+    bool checkBallBrickCollision(const Ball* ball, const Brick* brick); ///< Detect collision between ball and brick
+    bool checkBallPaddleCollision(const Ball* ball, const Paddle* paddle); ///< Detect collision between ball and paddle
+    bool checkPowerUpPaddleCollision(const PowerUp* pu, const Paddle* paddle);
+    void handleBallBrickCollision(Ball* ball);    ///< Handle ball-brick collision events
+    void handleBallPaddleCollision(Ball* ball);   ///< Handle ball-paddle collision events
+    Ball* getMainBall();
+    Ball* getFreeBall(float radius);
+    void activatePowerUp(PowerUp::Type type);
+
 
     // --- Static Callbacks ---
     static void game_timer_cb(lv_timer_t* timer);              ///< Main game loop callback

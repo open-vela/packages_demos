@@ -12,16 +12,16 @@
          EEE  EEE    EEEEE      BB BB      BBBB      DDD DD D    DDDDD          
                                                                                 
                                                                                 
-   AAA  AAA                              AA                      EEE     EEEEE  
-    A    A           CC                  AA         AA          E   E   E    E  
-    A    A            C                              A         E     E  E    E  
-    A    A            C                              A         E     E  E       
-    A    A  AAA  AAA  C CC    CCC CCC   AAA      AAAAA         E     E   E      
-    AAAAAA   A    A   CC  C     CC  C     A     A    A         E     E    EE    
-    A    A    A  A    C    C    C         A     A    A         E     E      E   
-    A    A    A  A    C    C    C         A     A    A         E     E       E  
-    A    A     AA     C    C    C         A     A    A         E     E  E    E  
-    A    A     AA     CC  C     C         A     A   AA          E   E   E    E  
-   AAA  AAA    A      C CC    CCCCC     AAAAA    AAA AA          EEE    EEEEE   
-               A                                                            
-             AA                                                                 
+   AAA  AAA                                                    EEE     EEEEE    
+    A    A                                                    E   E   E    E    
+    A    A                                                   E     E  E    E    
+    A    A                                                   E     E  E         
+    A    A   AAA  AAA   CC CC       CCCC     BBB BBB         E     E   E        
+    AAAAAA    A    A     CC  C     C    C      BB  B         E     E    EE      
+    A    A     A  A      C    C    C    C      B             E     E      E     
+    A    A     A  A      C    C    CCCCCC      B             E     E       E    
+    A    A      AA       C    C    C           B             E     E  E    E    
+    A    A      AA       CC  C     C    C      B              E   E   E    E    
+   AAA  AAA     A        C CC       CCCC     BBBBB             EEE    EEEEE     
+                A        C                                                      
+              AA        CCC                                                     

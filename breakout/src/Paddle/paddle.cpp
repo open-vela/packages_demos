@@ -18,19 +18,20 @@ Paddle::Paddle(lv_obj_t* parent, float startX, float startY, float width, float 
       m_height(height),
       m_targetX(0.0f),
       m_isMoving(false),
+      m_parent(parent),
       m_screenBounds(screenBounds),
       m_gui_object(nullptr)
 {
-    printf("DEBUG: Paddle constructor called.\n");
+    //printf("DEBUG: Paddle constructor called.\n");
 
     // Image data and descriptor must remain static to ensure their lifetime
 
     GameResourceManager resourceManager;
     auto paddle_src = resourceManager.getIconSource("KUN.png"); 
 
-    printf("DEBUG: Paddle image requested from cache/file.\n");
+    //printf("DEBUG: Paddle image requested from cache/file.\n");
     
-    m_gui_object = lv_img_create(parent);
+    m_gui_object = lv_img_create(m_parent);
     if (!m_gui_object) {
         printf("Failed to create lv_img object\n");
         return;
@@ -96,3 +97,38 @@ void Paddle::stopMovement() {
 float Paddle::getX() const { return m_x; }
 
 float Paddle::getY() const { return m_y; }
+float Paddle::getWidth() const { return m_width; }
+void Paddle::setWidth(float w) {
+    m_width = w;
+
+    // Each KUN.png is 80 pixels wide
+    const int baseWidth = 80.0f;
+    // Ensure w is a multiple of 80
+    int repeatCount = static_cast<int>(w / baseWidth);
+    
+    if (m_gui_object) {
+        lv_obj_del(m_gui_object);
+        m_gui_object = nullptr;
+    }
+
+    
+    m_gui_object = lv_obj_create(m_parent);
+    lv_obj_set_size(m_gui_object, (lv_coord_t)repeatCount * baseWidth, (lv_coord_t)m_height);
+    lv_obj_set_pos(m_gui_object,(lv_coord_t)m_x, (lv_coord_t)m_y);
+    lv_obj_clear_flag(m_gui_object, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(m_gui_object, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(m_gui_object, 0, 0);
+    GameResourceManager resourceManager;
+    const void* paddle_src = resourceManager.getIconSource("KUN.png");
+    if (!paddle_src) {
+        printf("Failed to load KUN.png\n");
+        return;
+    }
+
+    for (int i = 0; i < repeatCount; ++i) {
+        lv_obj_t* img = lv_img_create(m_gui_object); 
+        lv_img_set_src(img, paddle_src);
+        lv_obj_set_size(img, (lv_coord_t)baseWidth, (lv_coord_t)m_height);
+        lv_obj_set_pos(img, (lv_coord_t)i * (baseWidth-10), (lv_coord_t)(-20)); 
+    }
+}

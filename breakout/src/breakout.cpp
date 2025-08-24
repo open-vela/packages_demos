@@ -7,17 +7,10 @@
  ********************************************************************/
 
 #include "breakout.h"
-#include "Paddle/Paddle.h"
-#include "Ball/Ball.h"
-#include "Brick/Brick.h" 
-#include "GameResourceManager/GameResourceManager.h"
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <stdio.h> 
-
-// Global pointer holding and managing the current unique game instance
-Game* g_game_instance = nullptr;
 
 // #################################################
 // ## Implementation of Game class member functions
@@ -35,12 +28,9 @@ Game::Game(lv_obj_t* parent)
       m_game_timer(nullptr),
       m_gameBounds(),
       m_paddle(nullptr),
-      m_ball(nullptr),
       m_resourceManager(new GameResourceManager()) 
 {
-    printf("[Game] Constructor called\n");
     init();
-    printf("[Game] Init finished\n");
 }
 
 /**
@@ -50,7 +40,7 @@ Game::Game(lv_obj_t* parent)
 Game::~Game() {
     printf("[Game] Destructor called, starting resource cleanup.\n");
     
-    // 1. First, clean up the static resource cache
+    // Clean up static resource cache
     GameResourceManager::cleanupCache();
     if (m_resourceManager) {
         m_resourceManager->stopAudio();
@@ -58,29 +48,52 @@ Game::~Game() {
         m_resourceManager = nullptr;
     }
     printf("[Game] Stopped audio\n");
-    // 2. Delete the game timer
+    
+    // Delete all PowerUp
+    for (PowerUp* pu : m_powerUps) {
+        pu->remove();
+        delete pu;
+    }
+    m_powerUps.clear();
+    printf("[Game] Deleted all PowerUp\n");
+    // Delete all balls
+    for (Ball* ball : m_balls) {
+        if (ball->getGuiObject()) {
+            lv_obj_del(ball->getGuiObject());
+        }
+        delete ball;  // free Ball itself
+    }
+    m_balls.clear();
+    printf("[Game] Deleted all balls\n");
+    // Delete the game timer
     if (m_game_timer) {
         lv_timer_del(m_game_timer);
         m_game_timer = nullptr;
     }
-
-    // 3. Delete all brick objects
-    for (Brick* brick : m_bricks) {
-        delete brick;
+    printf("[Game] Deleted game timer\n");
+    // Delete all bricks
+    for (Brick* b : m_bricks) {
+        if (b->getGUIObject()) {
+            lv_obj_del(b->getGUIObject());  // delete LVGL object
+        }
+        delete b; 
     }
     m_bricks.clear();
     printf("[Game] Deleted bricks\n");
-    // 4. Delete the paddle, ball, and resource manager instance
-    delete m_paddle;
-    delete m_ball;
 
+    // Delete the paddle
+    delete m_paddle;
+    printf("[Game] Deleted paddle\n");
+    
     printf("[Game] Resource cleanup completed.\n");
 }
+
 /**
  * @brief Initialize all game elements, UI, and timers
  */
 void Game::init() {
     printf("[Game] Init Start\n");
+    //lv_img_cache_set_size(18);
     // Create the UI object serving as game background and container
     m_game_area = lv_obj_create(m_parent_screen);
     lv_obj_set_size(m_game_area, GAME_AREA_WIDTH, GAME_AREA_HEIGHT);
@@ -94,8 +107,7 @@ void Game::init() {
     // Define game logic boundaries (relative to m_game_area)
     m_gameBounds = {0, 0, (float)GAME_AREA_WIDTH, (float)GAME_AREA_HEIGHT};
 
-    // Load level map
-    //m_resourceManager = new GameResourceManager();
+    // Load level map and background
     char bgFile[32];
     char mapFile[32];
     snprintf(bgFile, sizeof(bgFile), "background_%d.png", m_resourceManager->getCurrentLevel());
@@ -103,214 +115,183 @@ void Game::init() {
     m_resourceManager->loadBackground(m_game_area, bgFile);
     m_resourceManager->loadMap(mapFile, this);
 
-    // Create game object instances
-    m_paddle = new Paddle(m_game_area, (GAME_AREA_WIDTH / 2.0f) - 50.0f, GAME_AREA_HEIGHT - 70.0f, 80.0f, 80.0f, m_gameBounds);
+    // Create paddle
+    m_paddle = new Paddle(m_game_area,
+                          (GAME_AREA_WIDTH / 2.0f) - 50.0f,
+                          GAME_AREA_HEIGHT - 70.0f,
+                          80.0f, 80.0f, m_gameBounds);
     printf("[Game] Paddle created\n");
-    m_ball = new Ball(m_game_area, 16.0f);
+
+    // Create first ball
+    Ball* newBall = new Ball(m_game_area, 16.0f, Ball::State::HELD);
+    m_balls.push_back(newBall);
+
+
     printf("[Game] Ball created\n");
 
-    // Create a transparent touch layer overlaying the game area to receive player input
+    // Create transparent touch layer to capture input
     lv_obj_t* touch_area = lv_obj_create(m_game_area);
     lv_obj_set_size(touch_area, GAME_AREA_WIDTH, GAME_AREA_HEIGHT);
     lv_obj_set_pos(touch_area, 0, 0);
     lv_obj_set_style_bg_opa(touch_area, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(touch_area, 0, 0);
     lv_obj_add_event_cb(touch_area, touch_area_event_cb, LV_EVENT_ALL, this);
-    lv_obj_move_background(touch_area); // Move touch layer to the back to avoid covering other objects
+    lv_obj_move_background(touch_area);
     
-    // Create the main game loop timer
+    // Create game loop timer
     m_game_timer = lv_timer_create(game_timer_cb, GAME_TICK_PERIOD, this);
 
     printf("[Game] Init End\n");
-    
 }
 
 /**
  * Game main loop timer callback
+ * Updates paddle, balls, collisions, and checks win/lose conditions
  * @param timer Pointer to the LVGL timer
  */
 void Game::game_timer_cb(lv_timer_t* timer) {
-    // Retrieve the Game instance pointer from user data
     Game* game = static_cast<Game*>(timer->user_data);
-    // State protection: do nothing if game is not in PLAYING state
     if (game->m_state != GameState::PLAYING) return;
 
     const float deltaTime = (float)GAME_TICK_PERIOD / 1000.0f;
-    
-    // Update paddle position (reacting to player input)
+
+    // --- Update paddle position ---
     game->m_paddle->update(deltaTime);
 
-    // Handle ball states separately
-    if (game->m_ball->getState() == Ball::State::HELD) {
-        // HELD state: ball follows the paddle movement
-        game->m_ball->stickToPaddle(game->m_paddle->getBoundingBox());
-    } else {
-        // MOVING state: update ball physics and perform collision detection
-        game->m_ball->update(deltaTime);
-        Vec2 ballPos = game->m_ball->getPosition();
+    // --- Iterate through all balls ---
+    for (auto it = game->m_balls.begin(); it != game->m_balls.end();) {
+        Ball* ball = *it;
+        Vec2 ballPos = ball->getPosition();
 
-        // 1. Boundary collision detection
-        if (ballPos.x - game->m_ball->getRadius() < game->m_gameBounds.x || ballPos.x + game->m_ball->getRadius() > game->m_gameBounds.x + game->m_gameBounds.width) {
-            game->m_ball->bounceX();
-        }
-        if (ballPos.y - game->m_ball->getRadius() < game->m_gameBounds.y) {
-            game->m_ball->bounceY();
-            game->m_ball->boostSpeed(4.0f);
-        }
-        if (ballPos.y + game->m_ball->getRadius() > game->m_gameBounds.y + game->m_gameBounds.height) {
-            game->trigger_game_over();
-            return;
+        // Check if the ball has fallen below the bottom boundary
+        if (ballPos.y - ball->getRadius() >= game->m_gameBounds.y + game->m_gameBounds.height) {
+            // >>> If ball’s bottom edge is at or below the game area's bottom
+            ball->setState(Ball::State::STATIC);  // Mark as STATIC instead of deleting
+            ball->setVelocity({0.0f, 0.0f});       
         }
 
-        // 2. Collision detection with bricks
-        game->handleBallBrickCollision();
+        // HELD state: ball follows the paddle
+        if (ball->getState() == Ball::State::HELD) {
+            ball->stickToPaddle(game->m_paddle->getBoundingBox());
+            ++it;
+            continue;
+        }
 
-        // 3. Collision detection with paddle
-        game->handleBallPaddleCollision();
+        // STATIC state: do nothing (ball stays in place)
+        if (ball->getState() == Ball::State::STATIC) {
 
-        // 4. Check if the level is cleared
-        bool allCleared = true;
-        for (Brick* b : game->m_bricks) {
-            if (b->isActive() && b->getHP() != -1) {
-                allCleared = false;
-                break;
+            delete ball;  
+            it = game->m_balls.erase(it);
+
+            continue;
+        }
+
+        // MOVING state: update ball physics
+        ball->update(deltaTime);
+
+        // Horizontal walls
+        if (ballPos.x - ball->getRadius() < game->m_gameBounds.x) {
+            ball->bounceX();
+            ball->setPosition({game->m_gameBounds.x + ball->getRadius(), ballPos.y});
+        } else if (ballPos.x + ball->getRadius() > game->m_gameBounds.x + game->m_gameBounds.width) {
+            ball->bounceX();
+            ball->setPosition({game->m_gameBounds.x + game->m_gameBounds.width - ball->getRadius(), ballPos.y});
+        }
+
+        // Top wall
+        if (ballPos.y - ball->getRadius() < game->m_gameBounds.y) {
+            ball->bounceY();
+            ball->boostSpeed(4.0f);
+            ball->setPosition({ballPos.x, game->m_gameBounds.y + ball->getRadius()});
+        }
+
+        // Ball-brick collision
+        game->handleBallBrickCollision(ball);
+
+        // Ball-paddle collision
+        game->handleBallPaddleCollision(ball);
+
+        ++it;
+    }
+
+    // --- Update all power-ups ---
+    for (auto it = game->m_powerUps.begin(); it != game->m_powerUps.end();) {
+        PowerUp* pu = *it;
+        
+        // Update power-up position and state
+        pu->update(deltaTime);
+
+        // Check if the power-up collides with the paddle
+        if (game->checkPowerUpPaddleCollision(pu, game->m_paddle)) {
+            // Activate the corresponding effect
+            game->activatePowerUp(pu->getType());
+
+            // Remove and delete the power-up
+            pu->remove();
+            delete pu;
+
+            // Erase from the container and continue iteration
+            it = game->m_powerUps.erase(it);
+            continue;
+        }
+
+        // Remove power-ups that fall below the game area
+        if (pu->getPosition().y > game->m_gameBounds.y + game->m_gameBounds.height) {
+            pu->remove();
+            delete pu;
+            it = game->m_powerUps.erase(it);
+            continue;
+        }
+
+        ++it; // Move to the next power-up
+    }
+
+
+    // check pass level
+    bool allCleared = true;
+    for (Brick* b : game->m_bricks) {
+        if (b->isActive() && b->getHP() != -1) {
+            allCleared = false;
+            break;
+        }
+    }
+    if (allCleared) {
+        game->trigger_next_level();
+    }
+
+    // check game over
+    bool allStatic = true;   // Assume all balls are STATIC
+    for (Ball* ball : game->m_balls) {
+        if (ball->getState() != Ball::State::STATIC) {
+            allStatic = false;
+            break;  // No need to check further
+        }
+    }
+
+    if (allStatic) {
+        game->trigger_game_over();
+    }
+}
+
+Ball* Game::getMainBall() {
+    Ball* mainBall = nullptr;
+    float minY = std::numeric_limits<float>::max();
+
+    for (Ball* ball : m_balls) {
+        if (ball->getState() == Ball::State::MOVING || ball->getState() == Ball::State::HELD) {
+            float y = ball->getPosition().y;
+            if (y < minY) {
+                minY = y;
+                mainBall = ball;
             }
         }
-        if (allCleared) {
-            game->trigger_next_level();
-        }
     }
+    return mainBall;
 }
 /**
- * Handle collision between the ball and the bricks.
- * Checks each active brick for collision with the ball.
- * If a collision occurs, bounce the ball appropriately and apply damage or special logic.
+ * Collision detection helper - Ball vs Paddle
  */
-void Game::handleBallBrickCollision() {
-    Vec2 ballPos = m_ball->getPosition();
-
-    for (auto it = m_bricks.begin(); it != m_bricks.end(); ++it) {
-        Brick* brick = *it;
-        if (!brick->isActive()) continue;            // Skip inactive bricks
-        if (!checkCollision(m_ball, brick)) continue; // Skip if no collision
-
-        Rect brickRect = brick->getBoundingBox();
-        Vec2 brickCenter = {
-            brickRect.x + brickRect.width / 2.0f,
-            brickRect.y + brickRect.height / 2.0f
-        };
-        Vec2 offset = {
-            ballPos.x - brickCenter.x,
-            ballPos.y - brickCenter.y
-        };
-
-        // Calculate overlap distances on X and Y axes
-        float overlapX = m_ball->getRadius() + (brickRect.width / 2.0f) - fabsf(offset.x);
-        float overlapY = m_ball->getRadius() + (brickRect.height / 2.0f) - fabsf(offset.y);
-
-        // Special case: Wall bricks (hp == -1) only bounce ball, do not get destroyed
-        if (brick->getHP() == -1) {
-            if (overlapX < overlapY) {
-                m_ball->bounceX(); // Bounce horizontally
-                // Correct ball position to avoid sticking inside the brick
-                ballPos.x = offset.x > 0
-                    ? brickRect.x + brickRect.width + m_ball->getRadius()
-                    : brickRect.x - m_ball->getRadius();
-            } else {
-                m_ball->bounceY(); // Bounce vertically
-                ballPos.y = offset.y > 0
-                    ? brickRect.y + brickRect.height + m_ball->getRadius()
-                    : brickRect.y - m_ball->getRadius();
-            }
-            m_ball->setPosition(ballPos);
-            m_ball->boostSpeed(4.0f);  // Slightly increase ball speed after bounce
-            break;                     // Exit after first collision handled
-        }
-        m_resourceManager->playAudio(brick->getHP());
-        // Normal brick logic: apply damage and bounce ball
-        brick->onHit();  // Reduce brick HP or mark as destroyed
-
-        if (overlapX < overlapY) {
-            m_ball->bounceX();
-            ballPos.x = offset.x > 0
-                ? brickRect.x + brickRect.width + m_ball->getRadius()
-                : brickRect.x - m_ball->getRadius();
-        } else {
-            m_ball->bounceY();
-            ballPos.y = offset.y > 0
-                ? brickRect.y + brickRect.height + m_ball->getRadius()
-                : brickRect.y - m_ball->getRadius();
-        }
-        m_ball->setPosition(ballPos);
-        m_ball->boostSpeed(4.0f);
-        break;
-    }
-}
-
-
-
-
-/**
- * Handle collision between the ball and the paddle.
- * When collision is detected, the ball bounces off the paddle with an angle
- * depending on the hit position on the paddle.
- */
-void Game::handleBallPaddleCollision() {
-    if (!m_ball || !m_paddle) return;
-
-    Vec2 ballPos = m_ball->getPosition();
-
-    if (checkCollision(m_ball, m_paddle)) {
-        Rect paddleRect = m_paddle->getBoundingBox();
-        float paddleCenter = paddleRect.x + paddleRect.width / 2.0f;
-
-        // Calculate hit factor relative to paddle center (-1 to 1)
-        float hitFactor = (ballPos.x - paddleCenter) / (paddleRect.width / 2.0f);
-        const float maxAngleFactor = 350.0f;  // Max horizontal velocity factor
-
-        Vec2 newVel = m_ball->getVelocity();
-        newVel.x = hitFactor * maxAngleFactor;  // Modify horizontal velocity based on hit position
-
-        // Ensure the ball always bounces upward
-        if (newVel.y > 0) newVel.y = -newVel.y;
-
-        m_ball->setVelocity(newVel);
-        m_ball->boostSpeed(150.0f);
-        // Correct ball position to prevent it sticking inside the paddle
-        Vec2 correctedPos = ballPos;
-        correctedPos.y = paddleRect.y - m_ball->getRadius() - 1.0f;
-        m_ball->setPosition(correctedPos);
-    }
-}
-/**
- * Touch event callback, handles player touch input (static member function)
- */
-void Game::touch_area_event_cb(lv_event_t* e) {
-    Game* game = static_cast<Game*>(lv_event_get_user_data(e));
-    if (game->m_state != GameState::PLAYING) return;
-    
-    lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_PRESSED || code == LV_EVENT_PRESSING) {
-        // On press or drag, move the paddle
-        lv_point_t screen_point;
-        lv_indev_get_point(lv_event_get_indev(e), &screen_point);
-        lv_coord_t game_area_x = lv_obj_get_x(game->m_game_area);
-        lv_coord_t local_x = screen_point.x - game_area_x;
-        game->m_paddle->moveTo(local_x);
-    } else if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
-        // On release, stop paddle movement and launch the ball
-        game->m_paddle->stopMovement();
-        if (game->m_ball->getState() == Ball::State::HELD) {
-            game->m_ball->launch();
-        }
-    }
-}
-
-
-/**
- * Collision detection helper - Ball and Paddle
- */
-bool Game::checkCollision(const Ball* ball, const Paddle* paddle) {
+bool Game::checkBallPaddleCollision(const Ball* ball, const Paddle* paddle) {
     Vec2 ballPos = ball->getPosition();
     float ballRadius = ball->getRadius();
     Rect paddleRect = paddle->getBoundingBox();
@@ -322,9 +303,9 @@ bool Game::checkCollision(const Ball* ball, const Paddle* paddle) {
 }
 
 /**
- * Collision detection helper - Ball and Brick
+ * Collision detection helper - Ball vs Brick
  */
-bool Game::checkCollision(const Ball* ball, const Brick* brick) {
+bool Game::checkBallBrickCollision(const Ball* ball, const Brick* brick) {
     Vec2 ballPos = ball->getPosition();
     float ballRadius = ball->getRadius();
     Rect brickRect = brick->getBoundingBox();
@@ -334,39 +315,280 @@ bool Game::checkCollision(const Ball* ball, const Brick* brick) {
     float distanceY = ballPos.y - closestY;
     return (distanceX * distanceX) + (distanceY * distanceY) < (ballRadius * ballRadius);
 }
+
+bool Game::checkPowerUpPaddleCollision(const PowerUp* pu, const Paddle* paddle) {
+    Vec2 pos = pu->getPosition();
+    Rect paddleRect = paddle->getBoundingBox();
+    return (pos.x >= paddleRect.x && pos.x <= paddleRect.x + paddleRect.width &&
+            pos.y >= paddleRect.y && pos.y <= paddleRect.y + paddleRect.height);
+}
 /**
- * "Restart" button click event callback
+ * Handle collision between a ball and all bricks
  */
-void Game::restart_button_event_cb(lv_event_t* e) {
-    if (g_game_instance != nullptr) {
-        delete g_game_instance;
-        g_game_instance = nullptr;
+void Game::handleBallBrickCollision(Ball* ball) {
+    Vec2 ballPos = ball->getPosition();
+
+    for (Brick* brick : m_bricks) {
+        if (!brick->isActive()) continue;
+        if (!checkBallBrickCollision(ball, brick)) continue;
+
+        Rect brickRect = brick->getBoundingBox();
+        Vec2 brickCenter = {brickRect.x + brickRect.width / 2.0f,
+                            brickRect.y + brickRect.height / 2.0f};
+        Vec2 offset = {ballPos.x - brickCenter.x,
+                       ballPos.y - brickCenter.y};
+
+        float overlapX = ball->getRadius() + (brickRect.width / 2.0f) - fabsf(offset.x);
+        float overlapY = ball->getRadius() + (brickRect.height / 2.0f) - fabsf(offset.y);
+
+        if (brick->getHP() == -1) {
+            // Indestructible brick
+            if (overlapX < overlapY) {
+                ball->bounceX();
+                ballPos.x = offset.x > 0 ? brickRect.x + brickRect.width + ball->getRadius()
+                                         : brickRect.x - ball->getRadius();
+            } else {
+                ball->bounceY();
+                ballPos.y = offset.y > 0 ? brickRect.y + brickRect.height + ball->getRadius()
+                                         : brickRect.y - ball->getRadius();
+            }
+            ball->setPosition(ballPos);
+            ball->boostSpeed(4.0f);
+            break;
+        }
+        int hpBefore = brick->getHP();
+        // Normal brick: damage and bounce
+        m_resourceManager->playAudio(hpBefore);
+        brick->onHit();
+        int hpReduced = hpBefore - brick->getHP();
+        m_totalHpReduced += hpReduced; // accumulate total HP reduced
+
+        if (overlapX < overlapY) {
+            ball->bounceX();
+            ballPos.x = offset.x > 0 ? brickRect.x + brickRect.width + ball->getRadius()
+                                     : brickRect.x - ball->getRadius();
+        } else {
+            ball->bounceY();
+            ballPos.y = offset.y > 0 ? brickRect.y + brickRect.height + ball->getRadius()
+                                     : brickRect.y - ball->getRadius();
+        }
+        ball->setPosition(ballPos);
+        ball->boostSpeed(4.0f);
+
+        // Only drop a power-up every 10 brick hits
+        if (!brick->isActive()) {
+            if (m_totalHpReduced >= 5) {
+                m_totalHpReduced = 0;
+
+                // >>> Limit: max 3 power-ups on screen
+                if (m_powerUps.size() < 3) {
+                    // Randomly choose a power-up type
+                    int randVal = rand() % 3;
+                    PowerUp::Type type;
+                    if (randVal == 0) type = PowerUp::Type::SPLIT_BALL;
+                    else if (randVal == 1){
+                        if(m_paddle->getWidth()/80 >= 5){
+                            type = PowerUp::Type::SPLIT_BALL;
+                        }
+                        else{
+                            type = PowerUp::Type::EXTRA_PADDLE;
+                        }
+                    }
+                    else{
+                        if(m_paddle->getWidth()/80 >= 3){
+                            type = PowerUp::Type::UP_BALLS;
+                        }
+                        else{
+                            type = PowerUp::Type::EXTRA_PADDLE;
+                        }
+                    } 
+
+                    // Drop position: center-top of the destroyed brick
+                    Vec2 dropPos = { brickRect.x + brickRect.width / 2.0f, brickRect.y };
+                    PowerUp* pu = new PowerUp(m_game_area, type, dropPos);
+                    m_powerUps.push_back(pu);
+
+                    //printf("[Game] Power-up dropped after 3 HP reduced, current count = %zu\n", m_powerUps.size());
+                } else {
+                    //printf("[Game] Power-up limit reached (3), no new drop.\n");
+                }
+            }
+        }
+        break;
     }
-    ballgame_start();
 }
 
 /**
- * "Next level" button event callback
+ * Handle collision between a ball and the paddle
+ */
+void Game::handleBallPaddleCollision(Ball* ball) {
+    if (!ball || !m_paddle) return;
+
+    Vec2 ballPos = ball->getPosition();
+
+    if (checkBallPaddleCollision(ball, m_paddle)) {
+        Rect paddleRect = m_paddle->getBoundingBox();
+        float paddleCenter = paddleRect.x + paddleRect.width / 2.0f;
+
+        // Compute hit factor (-1 left, +1 right)
+        float hitFactor = (ballPos.x - paddleCenter) / (paddleRect.width / 2.0f);
+        const float maxAngleFactor = 350.0f;
+
+        Vec2 newVel = ball->getVelocity();
+        newVel.x = hitFactor * maxAngleFactor;
+
+        // Always bounce upward
+        if (newVel.y > 0) newVel.y = -newVel.y;
+
+        ball->setVelocity(newVel);
+        ball->boostSpeed(150.0f);
+
+        // Correct position to stay above paddle
+        Vec2 correctedPos = ballPos;
+        correctedPos.y = paddleRect.y - ball->getRadius() - 1.0f;
+        ball->setPosition(correctedPos);
+    }
+}
+
+Ball* Game::getFreeBall(float radius) {
+    //printf("m_balls.size():%d",m_balls.size());
+    if (m_balls.size() > 10) {
+        return nullptr; 
+    }
+    // create a new one and add to m_balls
+    Ball* newBall = new Ball(m_game_area, radius, Ball::State::HELD);
+    m_balls.push_back(newBall);
+    return newBall;
+}
+
+/**
+ * @brief Activate a power-up effect in the game.
+ * @param type Type of the power-up to activate
+ */
+void Game::activatePowerUp(PowerUp::Type type) {
+    switch (type) {
+        case PowerUp::Type::SPLIT_BALL: {
+            Ball* original = getMainBall();
+            if (original) {
+                Vec2 pos = original->getPosition();
+                float r = original->getRadius();
+                // Get two free balls from the m_balls
+                Ball* left = getFreeBall(r);
+                if(left!=nullptr){ 
+                left->setPosition(pos);
+                left->setVelocity({-200.0f, -300.0f});
+                left->launch();
+                }
+                Ball* right = getFreeBall(r);
+                if(right!=nullptr){     
+                right->setPosition(pos);
+                right->setVelocity({200.0f, -300.0f});
+                right->launch();
+                }
+                // Original ball remains in play
+            }
+            break;
+        }
+        case PowerUp::Type::EXTRA_PADDLE: {
+            // Double the paddle width
+            if (m_paddle) {
+                if(m_paddle->getWidth()/80 <= 4)
+                {
+                    float newWidth = m_paddle->getWidth() + 80;
+                    m_paddle->setWidth(newWidth); // Adjust LVGL object width
+                }
+            }
+            break;
+        }
+        case PowerUp::Type::UP_BALLS: {
+            // Determine number of new balls based on paddle width
+            int numBalls = m_paddle->getWidth() / 80; // example: 80 width per ball
+            if (numBalls < 1) numBalls = 1;
+
+            float paddleX = m_paddle->getX();
+            float paddleY = m_paddle->getY();
+            float paddleWidth = m_paddle->getWidth();
+            float ballRadius = 16.0f;
+
+            // Horizontal spacing for evenly distributed balls
+            float spacing = paddleWidth / (numBalls + 1);
+
+            for (int i = 0; i < numBalls; ++i) {
+                Ball* newBall = getFreeBall(ballRadius);
+                if(newBall!=nullptr){
+                float x = paddleX + spacing * (i + 1); // evenly spaced across paddle
+                float y = paddleY - ballRadius;       // just above paddle
+                newBall->setPosition({x, y});
+                float vx = (rand() % 2 == 0 ? -1.0f : 1.0f) * (50.0f + rand() % 100);
+                float vy = -650.0f;
+                newBall->setVelocity({vx, vy});
+
+                newBall->launch();
+                }
+            }
+            break;
+        }
+
+    }
+}
+
+/**
+ * Touch event callback
+ * Controls paddle movement and ball launching
+ */
+void Game::touch_area_event_cb(lv_event_t* e) {
+    Game* game = static_cast<Game*>(lv_event_get_user_data(e));
+    if (game->m_state != GameState::PLAYING) return;
+    
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_PRESSED || code == LV_EVENT_PRESSING) {
+        // Drag: move paddle
+        lv_point_t screen_point;
+        lv_indev_get_point(lv_event_get_indev(e), &screen_point);
+        lv_coord_t game_area_x = lv_obj_get_x(game->m_game_area);
+        lv_coord_t local_x = screen_point.x - game_area_x;
+        game->m_paddle->moveTo(local_x);
+    } else if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
+        // Release: stop paddle and launch any held balls
+        game->m_paddle->stopMovement();
+        for (Ball* ball : game->m_balls) {
+            if (ball->getState() == Ball::State::HELD) {
+                ball->launch();
+            }
+        }
+    }
+}
+
+/**
+ * Restart button callback
+ */
+void Game::restart_button_event_cb(lv_event_t* e) {
+    Game* game = static_cast<Game*>(lv_event_get_user_data(e));
+    if (!game) return;
+
+    delete game;          
+    ballgame_start();     
+}
+/**
+ * Next level button callback
  */ 
 void Game::next_level_button_event_cb(lv_event_t* e) {
     Game* game = static_cast<Game*>(lv_event_get_user_data(e));
+    if (!game) return;
 
     if (game->m_resourceManager) {
         int level = game->m_resourceManager->getCurrentLevel();
         level++;
-        if (level > 7) level = 1;
+        if (level > 6) level = 1;
         game->m_resourceManager->setCurrentLevel(level);
     }
 
-    if (g_game_instance != nullptr) {
-        delete g_game_instance;
-        g_game_instance = nullptr;
-    }
-    ballgame_start();
+    delete game;          
+    ballgame_start();    
 }
 
 /**
- * "Next level" button
+ * Trigger next level screen
  */ 
 void Game::trigger_next_level() {
     m_state = GameState::PAUSED;
@@ -387,7 +609,7 @@ void Game::trigger_next_level() {
 }
 
 /**
- * @brief Trigger the game over state and display UI
+ * Trigger game over screen
  */
 void Game::trigger_game_over() {
     m_state = GameState::GAME_OVER;
@@ -407,7 +629,6 @@ void Game::trigger_game_over() {
     // "Skip level" button
     lv_obj_t* skip_btn = lv_button_create(m_parent_screen);
     lv_obj_align_to(skip_btn, game_over_label, LV_ALIGN_OUT_BOTTOM_MID, -35, 60);
-    //lv_obj_set_size(skip_btn, 100, 40);
     lv_obj_t* skip_btn_label = lv_label_create(skip_btn);
     lv_label_set_text(skip_btn_label, "SKIP LEVEL");
     lv_obj_center(skip_btn_label);
@@ -424,10 +645,7 @@ void Game::trigger_game_over() {
  */
 void ballgame_start() {
     lv_obj_t* screen = lv_screen_active();
-    // Clean all old LVGL objects from the screen
     lv_obj_clean(screen);
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
-    // Create a new game instance
-    g_game_instance = new Game(screen);
+    new Game(screen);   
 }
-
