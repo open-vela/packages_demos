@@ -41,8 +41,7 @@ LVGL 支持将图像缓存到内存中，以提升图像组件在运行时的加
 在从外部读入图片过多，会有明显卡顿，可以使用图片缓存的方法，将图片读入内存。具体可以参考：`https://lvgl.100ask.net/master/details/main-components/image.html#overview-image-caching`
 
 # 🔊 Audio Handling（音频处理）
-引用了packages_demos仓库下的music_player的音频控制文件`audio_ctl.c`和`audio_ctl.h`，通过`audio_ctl_init_nxaudio`加载音频文件，`audio_ctl_start`播放音频，`audio_ctl_stop`暂停音频，`audio_ctl_uninit_nxaudio`释放资源。目前实现了碰撞砖块发出音效，但还存在一些bug。
-
+引用了`packages_demos`仓库下的`music_player`的音频控制文件`audio_ctl.c`和`audio_ctl.h`，通过`audio_ctl_init_nxaudio`加载音频文件，`audio_ctl_start`播放音频，`audio_ctl_stop`暂停音频，`audio_ctl_uninit_nxaudio`释放资源，实现了碰撞砖块发出音效。
 
 
 # 🚀 Getting Started 快速开始
@@ -60,7 +59,7 @@ LVGL 支持将图像缓存到内存中，以提升图像组件在运行时的加
 - `LIB_PNG`和`LV_USE_LIBPNG`配置为`yes`   (读取png图片资源)
 - `AUDIO`和`AUDIOUTILS_NXAUDIO_LIB`配置为`yes`  (读取wav音频文件)
 - `Default image header cache count`配置为`18`   （缓存图片数）
-- `Default image cache size`配置为`32768`   （图片内存）
+- `Default image cache size`配置为`8388608` ，这一步设定图片内存8MB，实测只用了大概3648003，不到4MB，设为8MB这样保险一些。**在配置后，一定要先`清理构建产物`，再`重新构建`，否则`image cache max size`不会更新。**
 ## 2.构建和清除构建文件
 ### 开始构建
 ```bash

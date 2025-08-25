@@ -93,7 +93,6 @@ Game::~Game() {
  */
 void Game::init() {
     printf("[Game] Init Start\n");
-    //lv_img_cache_set_size(18);
     // Create the UI object serving as game background and container
     m_game_area = lv_obj_create(m_parent_screen);
     lv_obj_set_size(m_game_area, GAME_AREA_WIDTH, GAME_AREA_HEIGHT);
