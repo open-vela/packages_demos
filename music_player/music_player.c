@@ -1024,7 +1024,7 @@ static void reload_music_config(void)
         R.albums[i].total_time = total_time;
         R.albums[i].color = color;
 
-        LV_LOG_USER("Album %d: %s - %s | %s %s %llu", i, R.albums[i].name, R.albums[i].artist, R.albums[i].path, R.albums[i].cover, total_time);
+        LV_LOG_USER("Album %d: %s - %s | %s %s" "%" PRIu64, i, R.albums[i].name, R.albums[i].artist, R.albums[i].path, R.albums[i].cover, total_time);
     }
 
     cJSON_Delete(json);
