@@ -4,7 +4,11 @@
 
 This document provides a comprehensive guide to building, deploying, and running the **Relatives Calculator** demo application on the `openvela` system. It covers procedures for both the QEMU emulator and the ESP32-S3-BOX development board, as well as how to customize the application by adding new relationships.
 
-## I. Build and Run
+## I. Demonstration
+
+![img](./img/show.gif)
+
+## II. Build and Run
 
 This section walks you through the entire process, from project configuration to launching the application on your target platform.
 
@@ -114,7 +118,7 @@ After a successful build, follow the instructions for your target platform to de
     rel_cal &
     ```
 
-## II. Customizing the Application
+## III. Customizing the Application
 
 You can extend the calculator's functionality by adding new relationships. All modifications are made within the `demos/relation_calculator/relation_cal.c` file.
 
@@ -166,11 +170,11 @@ static const char *relation_names[] = {
 
 After making these changes, rebuild and deploy the project to see your new relationship in the calculator.
 
-## III. Implementation Overview
+## IV. Implementation Overview
 
 The Relatives Calculator is implemented using a state transition system. Each button press triggers a state change, transforming the current relationship (e.g., "Me") into a new one (e.g., "Father") based on a predefined transition table. This model provides a clear and extensible way to manage complex family relationship calculations.
 
-## IV. Contributing and Future Improvements
+## V. Contributing and Future Improvements
 
 The current state-transition implementation requires a significant amount of predefined static data to build a complete relationship graph. We are actively seeking more efficient and scalable models to optimize the relationship network.
 
