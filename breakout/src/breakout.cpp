@@ -58,9 +58,6 @@ Game::~Game() {
     printf("[Game] Deleted all PowerUp\n");
     // Delete all balls
     for (Ball* ball : m_balls) {
-        if (ball->getGuiObject()) {
-            lv_obj_del(ball->getGuiObject());
-        }
         delete ball;  // free Ball itself
     }
     m_balls.clear();
@@ -139,6 +136,14 @@ void Game::init() {
     
     // Create game loop timer
     m_game_timer = lv_timer_create(game_timer_cb, GAME_TICK_PERIOD, this);
+    static uint8_t cbuf[LV_CANVAS_BUF_SIZE(GAME_AREA_WIDTH, GAME_AREA_HEIGHT, 32, LV_DRAW_BUF_STRIDE_ALIGN)];
+    
+    // Add a canvas where all the balls will be drawn, and update their positions together.
+    m_canvas = lv_canvas_create(m_game_area);
+    lv_canvas_set_buffer(m_canvas, cbuf, GAME_AREA_WIDTH, GAME_AREA_HEIGHT, LV_COLOR_FORMAT_ARGB8888);
+    lv_obj_set_style_bg_opa(m_canvas, LV_OPA_TRANSP, 0);
+    lv_obj_align(m_canvas, LV_ALIGN_CENTER, 0, 0);
+
 
     printf("[Game] Init End\n");
 }
@@ -164,24 +169,19 @@ void Game::game_timer_cb(lv_timer_t* timer) {
 
         // Check if the ball has fallen below the bottom boundary
         if (ballPos.y - ball->getRadius() >= game->m_gameBounds.y + game->m_gameBounds.height) {
-            // >>> If ball’s bottom edge is at or below the game area's bottom
-            ball->setState(Ball::State::STATIC);  // Mark as STATIC instead of deleting
+            ball->setState(Ball::State::STATIC);  
             ball->setVelocity({0.0f, 0.0f});       
         }
 
-        // HELD state: ball follows the paddle
         if (ball->getState() == Ball::State::HELD) {
             ball->stickToPaddle(game->m_paddle->getBoundingBox());
             ++it;
             continue;
         }
 
-        // STATIC state: do nothing (ball stays in place)
         if (ball->getState() == Ball::State::STATIC) {
-
             delete ball;  
             it = game->m_balls.erase(it);
-
             continue;
         }
 
@@ -216,25 +216,16 @@ void Game::game_timer_cb(lv_timer_t* timer) {
     // --- Update all power-ups ---
     for (auto it = game->m_powerUps.begin(); it != game->m_powerUps.end();) {
         PowerUp* pu = *it;
-        
-        // Update power-up position and state
         pu->update(deltaTime);
 
-        // Check if the power-up collides with the paddle
         if (game->checkPowerUpPaddleCollision(pu, game->m_paddle)) {
-            // Activate the corresponding effect
             game->activatePowerUp(pu->getType());
-
-            // Remove and delete the power-up
             pu->remove();
             delete pu;
-
-            // Erase from the container and continue iteration
             it = game->m_powerUps.erase(it);
             continue;
         }
 
-        // Remove power-ups that fall below the game area
         if (pu->getPosition().y > game->m_gameBounds.y + game->m_gameBounds.height) {
             pu->remove();
             delete pu;
@@ -242,11 +233,10 @@ void Game::game_timer_cb(lv_timer_t* timer) {
             continue;
         }
 
-        ++it; // Move to the next power-up
+        ++it;
     }
 
-
-    // check pass level
+    // --- Check pass level ---
     bool allCleared = true;
     for (Brick* b : game->m_bricks) {
         if (b->isActive() && b->getHP() != -1) {
@@ -258,19 +248,49 @@ void Game::game_timer_cb(lv_timer_t* timer) {
         game->trigger_next_level();
     }
 
-    // check game over
-    bool allStatic = true;   // Assume all balls are STATIC
+    // --- Check game over ---
+    bool allStatic = true;
     for (Ball* ball : game->m_balls) {
         if (ball->getState() != Ball::State::STATIC) {
             allStatic = false;
-            break;  // No need to check further
+            break;
         }
     }
-
     if (allStatic) {
         game->trigger_game_over();
     }
+
+    // --- Render all balls on canvas ---
+    lv_layer_t layer;
+    lv_canvas_init_layer(game->m_canvas, &layer);
+
+    // Eliminate the trailing effect of the balls.
+    lv_canvas_fill_bg(game->m_canvas, lv_color_black(), LV_OPA_TRANSP);
+
+    for (Ball* ball : game->m_balls) {
+        Vec2 pos = ball->getPosition();
+        auto ballImg = ball->get_ball_src();
+        if (!ballImg) continue;
+
+        lv_draw_image_dsc_t dsc;
+        lv_draw_image_dsc_init(&dsc);
+        dsc.src = ballImg;
+
+        lv_area_t coords;
+        coords.x1 = static_cast<int>(pos.x - ballImg->header.w / 2);
+        coords.y1 = static_cast<int>(pos.y - ballImg->header.h / 2);
+        coords.x2 = coords.x1 + ballImg->header.w - 1;
+        coords.y2 = coords.y1 + ballImg->header.h - 1;
+
+        lv_draw_image(&layer, &dsc, &coords);
+        
+    }
+
+    lv_canvas_finish_layer(game->m_canvas, &layer);
+    lv_obj_invalidate(game->m_canvas);
+
 }
+
 
 Ball* Game::getMainBall() {
     Ball* mainBall = nullptr;
@@ -374,7 +394,7 @@ void Game::handleBallBrickCollision(Ball* ball) {
         ball->setPosition(ballPos);
         ball->boostSpeed(4.0f);
 
-        // Only drop a power-up every 10 brick hits
+        // Only drop a power-up every 5 brick hits
         if (!brick->isActive()) {
             if (m_totalHpReduced >= 5) {
                 m_totalHpReduced = 0;
@@ -384,24 +404,37 @@ void Game::handleBallBrickCollision(Ball* ball) {
                     // Randomly choose a power-up type
                     int randVal = rand() % 3;
                     PowerUp::Type type;
-                    if (randVal == 0) type = PowerUp::Type::SPLIT_BALL;
-                    else if (randVal == 1){
-                        if(m_paddle->getWidth()/80 >= 5){
-                            type = PowerUp::Type::SPLIT_BALL;
-                        }
-                        else{
-                            type = PowerUp::Type::EXTRA_PADDLE;
+                    int activeBricks = 0;
+                    for (Brick* b : m_bricks) {
+                        if (b->isActive() && b->getHP() != -1) {
+                            activeBricks++;
+                            if (activeBricks > 15) {
+                                break; 
+                            }
                         }
                     }
-                    else{
-                        if(m_paddle->getWidth()/80 >= 3){
-                            type = PowerUp::Type::UP_BALLS;
+                    // When the number of bricks is less than 15, only TROPHY will drop.
+                    if (activeBricks < 15) {
+                        type = PowerUp::Type::TROPHY;
+                    } else {
+                        if (randVal == 0) type = PowerUp::Type::SPLIT_BALL;
+                        else if (randVal == 1){
+                            if(m_paddle->getWidth()/80 >= 5){
+                                type = PowerUp::Type::SPLIT_BALL;
+                            }
+                            else{
+                                type = PowerUp::Type::EXTRA_PADDLE;
+                            }
                         }
                         else{
-                            type = PowerUp::Type::EXTRA_PADDLE;
+                            if(m_paddle->getWidth()/80 >= 3){
+                                type = PowerUp::Type::UP_BALLS;
+                            }
+                            else{
+                                type = PowerUp::Type::EXTRA_PADDLE;
+                            }
                         }
-                    } 
-
+                    }
                     // Drop position: center-top of the destroyed brick
                     Vec2 dropPos = { brickRect.x + brickRect.width / 2.0f, brickRect.y };
                     PowerUp* pu = new PowerUp(m_game_area, type, dropPos);
@@ -451,9 +484,9 @@ void Game::handleBallPaddleCollision(Ball* ball) {
 
 Ball* Game::getFreeBall(float radius) {
     //printf("m_balls.size():%d",m_balls.size());
-    if (m_balls.size() > 10) {
-        return nullptr; 
-    }
+    //if (m_balls.size() > 10) {
+    //   return nullptr; 
+    //}
     // create a new one and add to m_balls
     Ball* newBall = new Ball(m_game_area, radius, Ball::State::HELD);
     m_balls.push_back(newBall);
@@ -475,14 +508,14 @@ void Game::activatePowerUp(PowerUp::Type type) {
                 Ball* left = getFreeBall(r);
                 if(left!=nullptr){ 
                 left->setPosition(pos);
-                left->setVelocity({-200.0f, -300.0f});
-                left->launch();
+                left->setVelocity({-200.0f, -700.0f});
+                left->setState(Ball::State::MOVING);
                 }
                 Ball* right = getFreeBall(r);
                 if(right!=nullptr){     
                 right->setPosition(pos);
-                right->setVelocity({200.0f, -300.0f});
-                right->launch();
+                right->setVelocity({200.0f, -700.0f});
+                right->setState(Ball::State::MOVING);
                 }
                 // Original ball remains in play
             }
@@ -518,11 +551,21 @@ void Game::activatePowerUp(PowerUp::Type type) {
                 float x = paddleX + spacing * (i + 1); // evenly spaced across paddle
                 float y = paddleY - ballRadius;       // just above paddle
                 newBall->setPosition({x, y});
-                float vx = (rand() % 2 == 0 ? -1.0f : 1.0f) * (50.0f + rand() % 100);
-                float vy = -650.0f;
+                float vx = (rand() % 2 == 0 ? -1.0f : 1.0f) * (100.0f);
+                float vy = -900.0f;
                 newBall->setVelocity({vx, vy});
-
-                newBall->launch();
+                newBall->setState(Ball::State::MOVING);
+                }
+            }
+            break;
+        }
+        case PowerUp::Type::TROPHY: {
+            // >>> Force clear all bricks
+            for (Brick* brick : m_bricks) {
+                if (brick->isActive() && brick->getHP() != -1) {
+                    while (brick->isActive()) {
+                        brick->onHit(); 
+                    }
                 }
             }
             break;

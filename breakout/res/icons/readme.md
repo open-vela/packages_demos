@@ -30,7 +30,7 @@ The CraftPix license generally requires retaining copyright information, prohibi
 
 4. game-icons.net Images (CC BY 3.0)
 
-   Images: three_balls.png, friends.png, up_balls.png
+   Images: three_balls.png, friends.png, up_balls.png, trophy.png
    
    Author: Lorc, Delapouite,
    

@@ -10,7 +10,8 @@ public:
     enum class Type {
         SPLIT_BALL,     // Split the ball into multiple balls
         EXTRA_PADDLE,   // Enlarge the paddle
-        UP_BALLS       //  Make all balls move upward
+        UP_BALLS,       //  Make all balls move upward
+        TROPHY          // Level complete
     };
 
     PowerUp(lv_obj_t* parent, Type type, const Vec2& pos);

@@ -70,6 +70,7 @@ private:
     std::vector<PowerUp*> m_powerUps;
     int m_totalHpReduced = 0;
     std::vector<Ball*> m_balls;        // Active balls
+    lv_obj_t* m_canvas;
     
 
 private:

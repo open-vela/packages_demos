@@ -24,6 +24,11 @@ PowerUp::PowerUp(lv_obj_t* parent, Type type, const Vec2& pos)
             lv_img_set_src(m_obj, src);
             break;
         }
+        case Type::TROPHY: {
+            auto src = resourceManager.getIconSource("trophy.png");
+            lv_img_set_src(m_obj, src);
+            break;
+        }
     }
 
     lv_obj_set_pos(m_obj, (lv_coord_t)pos.x, (lv_coord_t)pos.y);

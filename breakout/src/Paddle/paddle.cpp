@@ -60,7 +60,7 @@ Paddle::~Paddle() {
 void Paddle::update(float deltaTime) {
     if (m_isMoving) {
         float diff = m_targetX - (m_x + m_width / 2.0f);
-        float speed = 700.0f; // Movement speed, can be adjusted as needed
+        float speed = 950.0f; // Movement speed, can be adjusted as needed
         if (std::abs(diff) > 1.0f) {
             float move = speed * deltaTime;
             if (diff > 0) {
