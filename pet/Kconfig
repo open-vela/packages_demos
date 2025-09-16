@@ -10,5 +10,5 @@ config LVX_USE_DEMO_PET
 if LVX_USE_DEMO_PET
 	config LVX_PET_DATA_ROOT
 		string "Pet Demo Data Root"
-		default "/sdcard"
+		default "/data"
 endif
