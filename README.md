@@ -8,9 +8,9 @@ This repository implements examples of openvela native application code. Develop
 
 ## Usage Instructions  
 
-- [Music Player](../../../docs/blob/dev/en/demo/Music_Player_Example.md)  
-- [Smart Band](../../../docs/blob/dev/en/demo/Smart_Band_Example.md)  
-- [Bicycle Computer](../../../docs/blob/dev/en/demo/X_Track.md)
+- [Music Player](music_player/)  
+- [Smart Band](bandx/)  
+- [Bicycle Computer](x_track/)
 - [Calculator](calculator/Readme.md)
 - [Relation Calculator](relation_calculator/Readme.md)
-- [Whackmole](Whackmole/Readme.md)
+- [Whackmole](Whackmole/README.md)

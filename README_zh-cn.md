@@ -8,9 +8,9 @@
 
 ## 使用说明
 
-- [音乐播放器](../../../docs/blob/dev/zh-cn/demo/Music_Player_Example_zh-cn.md)
-- [智能手环](../../../docs/blob/dev/zh-cn/demo/Smart_Band_Example_zh-cn.md)
-- [自行车码表](../../../docs/blob/dev/zh-cn/demo/X_Track_zh-cn.md)
+- [音乐播放器](music_player/)
+- [智能手环](bandx/)
+- [自行车码表](x_track/)
 - [计算器](calculator/Readme.md)
-- [亲戚计算器](relation_calculator/Readme.md)
-- [打地鼠](Whackmole/Readme.md)
+- [亲戚计算器](relation_calculator/Readme_zh-cn.md)
+- [打地鼠](Whackmole/README_zh-cn.md)
