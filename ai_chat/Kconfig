@@ -1,0 +1,80 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config AI_CONVERSATION_DEMO
+	bool "AI-chat"
+	depends on MEDIA
+	depends on MEDIA_SERVER
+	depends on LIBUV_EXTENSION
+	depends on LIB_JSONC
+	depends on CRYPTO_MBEDTLS
+	depends on OPENSSL_MBEDTLS_WRAPPER
+	depends on NETUTILS_LIBWEBSOCKETS
+	default n
+
+if AI_CONVERSATION_DEMO
+
+config AI_VOLC_PLUGIN
+	bool "AI chat volc plugin"
+	default n
+
+if AI_VOLC_PLUGIN
+
+config VOLC_PULGIN_API_KEY
+	string "volc plugin api key"
+	default "API_KEY"
+
+endif # AI_VOLC_PLUGIN
+
+config AI_CONVERSATION_RECORDER_STREAM
+	string "AI conversation recorder stream"
+	default "Capture"
+
+config AI_CONVERSATION_GUI_ROOT
+	string "AI conversation GUI root"
+	default "/data"
+
+config AI_CONVERSATION_GUI_RES_PATH
+	string "AI conversation GUI resource path"
+	default "/res"
+
+config AI_CONVERSATION_GUI_FONT_PATH
+	string "AI conversation GUI font path"
+	default "/fonts"
+
+config AI_CONVERSATION_GUI_ICONS_PATH
+	string "AI conversation GUI image path"
+	default "/icons"
+
+config AI_CONVERSATION_GUI_STACKSIZE
+	int "AI conversation GUI stack size"
+	default 32768
+
+config AI_CONVERSATION_GUI_PRIORITY
+	int "AI conversation GUI priority"
+	default 100
+
+choice
+	prompt "Conversation log level"
+	default CONVERSATION_LOG_INFO
+
+config CONVERSATION_LOG_DEBUG
+	bool "CONVERSATION_LOG_DEBUG"
+
+config CONVERSATION_LOG_INFO
+	bool "CONVERSATION_LOG_INFO"
+
+config CONVERSATION_LOG_WARN
+	bool "CONVERSATION_LOG_WARN"
+
+config CONVERSATION_LOG_ERR
+	bool "CONVERSATION_LOG_ERR"
+
+config CONVERSATION_LOG_SLIENT
+	bool "CONVERSATION_LOG_SLIENT"
+
+endchoice
+
+endif # AI_CONVERSATION_DEMO
