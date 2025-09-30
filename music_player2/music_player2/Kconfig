@@ -1,0 +1,105 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_MUSIC_PLAYER
+	bool "Professional Music Player for STM32H750"
+	default n
+	help
+	  Professional music player for STM32H750B-DK development board.
+	  Features: MP3/WAV playback, LVGL 9.x UI, I2S audio, DMA transfer,
+	  SD card file management, gesture control, and optimized performance.
+	
+if LVX_USE_DEMO_MUSIC_PLAYER
+	config LVX_MUSIC_PLAYER_DATA_ROOT
+		string "Music Player Data Root"
+		default "/data"
+		help
+		  Root directory for music player data and configuration files.
+		  Should point to SD card mount point for STM32H750.
+
+	config LVX_MUSIC_PLAYER_MP3_SUPPORT
+		bool "Enable MP3 audio format support"
+		default y
+		depends on LIB_MAD
+		help
+		  Enable MP3 audio format support using libmad decoder.
+		  Essential for professional music player functionality.
+
+	config LVX_MUSIC_PLAYER_MP3_BUFFER_SIZE
+		int "MP3 decode buffer size"
+		default 8192
+		range 4096 16384
+		depends on LVX_MUSIC_PLAYER_MP3_SUPPORT
+		help
+		  Size of the buffer used for MP3 decoding in bytes.
+		  Optimized for STM32H750 with 1MB RAM. Larger buffers 
+		  improve performance but use more memory.
+
+	config LVX_MUSIC_PLAYER_WAV_SUPPORT
+		bool "Enable WAV audio format support"
+		default y
+		help
+		  Enable WAV audio format support for uncompressed audio.
+		  Required for basic audio playback functionality.
+
+	config LVX_MUSIC_PLAYER_I2S_SUPPORT
+		bool "Enable I2S audio interface"
+		default y
+		depends on STM32H7_I2S
+		help
+		  Enable I2S audio interface for STM32H750 hardware.
+		  Required for audio output on STM32H750B-DK board.
+
+	config LVX_MUSIC_PLAYER_DMA_SUPPORT
+		bool "Enable DMA audio transfer"
+		default y
+		depends on STM32H7_DMA
+		help
+		  Enable DMA for efficient audio data transfer.
+		  Optimizes CPU usage and reduces audio latency.
+
+	config LVX_MUSIC_PLAYER_SDCARD_SUPPORT
+		bool "Enable SD card file management"
+		default y
+		depends on FS_FAT
+		help
+		  Enable SD card file browser and management.
+		  Required for loading music files from SD card.
+
+	config LVX_MUSIC_PLAYER_GESTURE_SUPPORT
+		bool "Enable gesture control"
+		default y
+		depends on SENSORS
+		help
+		  Enable gesture control using accelerometer sensor.
+		  Provides advanced user interaction for STM32H750B-DK.
+
+	config LVX_MUSIC_PLAYER_LCD_WIDTH
+		int "LCD display width"
+		default 480
+		help
+		  Width of LCD display in pixels (STM32H750B-DK: 480px).
+
+	config LVX_MUSIC_PLAYER_LCD_HEIGHT
+		int "LCD display height"  
+		default 272
+		help
+		  Height of LCD display in pixels (STM32H750B-DK: 272px).
+
+	config LVX_MUSIC_PLAYER_MEMORY_OPTIMIZATION
+		bool "Enable memory optimization"
+		default y
+		help
+		  Enable memory optimization for embedded system.
+		  Target: ≤8MB total memory usage.
+
+	config LVX_MUSIC_PLAYER_PERFORMANCE_MONITORING
+		bool "Enable performance monitoring"
+		default y
+		help
+		  Enable performance monitoring and statistics.
+		  Target: ≤40% CPU usage, ≤50ms audio latency.
+
+endif

@@ -1,0 +1,46 @@
+# 草稿
+ignore.md
+
+# 编译产物
+*.o
+*.d
+*.elf
+*.bin
+*.map
+.built
+.depend
+Make.dep
+
+# 构建目录
+build/
+out/
+nuttx/
+apps/builtin/registry/
+
+# 临时文件
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+
+# IDE/编辑器文件
+.vscode/
+.idea/
+*.code-workspace
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试输出
+test_results/
+coverage/
+
+# 文档草稿
+*.draft.md
+*.bak
+
+# 个人配置
+.env
+config.local.json
