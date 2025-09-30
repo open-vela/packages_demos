@@ -14,3 +14,4 @@ This repository implements examples of openvela native application code. Develop
 - [Calculator](calculator/Readme.md)
 - [Relation Calculator](relation_calculator/Readme.md)
 - [Whackmole](Whackmole/Readme.md)
+- [Music Player 2](music_player2/README.md)

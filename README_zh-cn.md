@@ -14,3 +14,4 @@
 - [计算器](calculator/Readme.md)
 - [亲戚计算器](relation_calculator/Readme.md)
 - [打地鼠](Whackmole/Readme.md)
+- [音乐播放器2](music_player2/README.md)
