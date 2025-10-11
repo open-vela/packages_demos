@@ -57,8 +57,15 @@ static void auto_knock_timer_cb(lv_timer_t *timer) {
     
     // 自动敲击
     app->knock_count++;
-    lv_label_set_text_fmt(app->ui.counter, "功德: %lu", (unsigned long)app->knock_count);
-    lv_label_set_text_fmt(app->ui.today_label, "今日功德: %lu", (unsigned long)app->knock_count);
+    
+    // 根据模式更新文本
+    if (is_coder_mode) {
+        lv_label_set_text_fmt(app->ui.counter, "pr: %lu", (unsigned long)app->knock_count);
+        lv_label_set_text_fmt(app->ui.today_label, "今日pr: %lu", (unsigned long)app->knock_count);
+    } else {
+        lv_label_set_text_fmt(app->ui.counter, "功德: %lu", (unsigned long)app->knock_count);
+        lv_label_set_text_fmt(app->ui.today_label, "今日功德: %lu", (unsigned long)app->knock_count);
+    }
     
     // 播放敲击音效
     play_wooden_fish_sound();
@@ -79,7 +86,12 @@ static void auto_knock_timer_cb(lv_timer_t *timer) {
     int32_t center_x = fish_area.x1 + (fish_area.x2 - fish_area.x1) / 2;
     int32_t center_y = fish_area.y1 + (fish_area.y2 - fish_area.y1) / 2;
     
-    create_merit_animation(app, center_x, center_y);
+    // 根据模式创建对应动画
+    if (is_coder_mode) {
+        create_pr_animation(app, center_x, center_y);
+    } else {
+        create_merit_animation(app, center_x, center_y);
+    }
 }
 
 // 木鱼点击事件回调
@@ -94,7 +106,7 @@ static void fish_click_cb(lv_event_t *e) {
         lv_label_set_text_fmt(app->ui.counter, "功德: %lu", (unsigned long)app->knock_count);
         lv_label_set_text_fmt(app->ui.today_label, "今日功德: %lu", (unsigned long)app->knock_count);
     }
-    // 播放敲击音效（已恢复）
+    // 播放敲击音效
     play_wooden_fish_sound();
     // 添加木鱼图片动画
     lv_anim_t anim;
@@ -273,10 +285,7 @@ void wooden_fish_app_create(void) {
     g_wooden_fish.knock_count = 0;
     g_wooden_fish.auto_timer = NULL;
     
-    // 初始化FreeType引擎 - 与music_player一致
-    lv_freetype_init(1);
-    
-    // 字体加载 - 完全模仿music_player方式
+    // 字体加载 
     g_wooden_fish.font = lv_freetype_font_create(
         FONTS_ROOT "/MiSans-Normal.ttf",  // 使用FONTS_ROOT宏
         LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 
@@ -284,7 +293,7 @@ void wooden_fish_app_create(void) {
         LV_FREETYPE_FONT_STYLE_NORMAL
     );
     
-    // 错误处理 - 与music_player完全一致
+    // 错误处理
     if (g_wooden_fish.font == NULL) {
         // 如果加载失败，输出错误信息
         LV_LOG_ERROR("字体加载失败: %s", FONTS_ROOT "/MiSans-Normal.ttf");
@@ -321,13 +330,13 @@ void wooden_fish_audio_complete_cb(void) {
 }
 
 static void create_merit_animation(wooden_fish_t *app, int32_t x, int32_t y){
-    // 确保字体可用 - 遵循字体规范（内存ID ea6b8790）
+    // 确保字体可用 - 遵循字体规范
     if (app->font == NULL) {
         LV_LOG_ERROR("字体不可用，无法创建功德+1动画");
         return;
     }
     
-    // 创建"功德+1"标签 - 使用顶层确保可见（遵循动画开发规范 ID 41be772e）
+    // 创建"功德+1"标签
     lv_obj_t *label = lv_label_create(lv_layer_top());
     if (label == NULL) {
         LV_LOG_ERROR("创建功德+1标签失败");
@@ -347,17 +356,17 @@ static void create_merit_animation(wooden_fish_t *app, int32_t x, int32_t y){
     lv_point_t text_size;
     lv_text_get_size(&text_size, "功德+1", app->font, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
     
-    // 设置标签位置（居中） - 遵循动画位置规范（ID 41be772e）
+    // 设置标签位置（居中）
     int32_t label_x = x - text_size.x / 2;
     int32_t label_y = y - text_size.y / 2;
     lv_obj_set_size(label, text_size.x, text_size.y);
     lv_obj_set_pos(label, label_x, label_y);
     
-    // 调试日志 - 记录关键位置信息
+    // 调试日志
     LV_LOG_INFO("创建功德+1动画: 位置(%d,%d) 尺寸(%d,%d)", 
                 label_x, label_y, text_size.x, text_size.y);
     
-    // 创建移动动画 - 遵循动画最佳实践（内存ID fb50420d）
+    // 创建移动动画
     lv_anim_t move_anim;
     lv_anim_init(&move_anim);
     lv_anim_set_var(&move_anim, label);
@@ -366,7 +375,7 @@ static void create_merit_animation(wooden_fish_t *app, int32_t x, int32_t y){
     lv_anim_set_time(&move_anim, 1500);
     lv_anim_set_path_cb(&move_anim, lv_anim_path_ease_out);
     
-    // 创建淡出动画 - 控制文字透明度
+    // 创建淡出动画
     lv_anim_t fade_anim;
     lv_anim_init(&fade_anim);
     lv_anim_set_var(&fade_anim, label);
