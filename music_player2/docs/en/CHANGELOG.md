@@ -1,4 +1,4 @@
-# Vela Audio Changelog
+# music_player2 Changelog
 
 - All code comments converted from Chinese to English
 - Separated troubleshooting and changelog into independent documents

@@ -1,6 +1,6 @@
-# Vela Audio
+# music_player2
 
-Vela Audio is an embedded music player designed based on the openvela system. It provides a modern UI interface with support for audio playback, intelligent playlist management, splash screen, volume control, and other features. Built with a modular architecture design for easy extension and maintenance.
+music_player2 is an embedded music player designed based on the openvela system. It provides a UI interface with support for audio playback, playlist management, splash screen, volume control, and other features. Built with a modular architecture design for easy extension and maintenance.
 
 ## Table of Contents
 
@@ -177,8 +177,6 @@ make CFLAGS="-DDEBUG"
 
 #### 1. Prepare Audio Files
 ```bash
-# Ensure audio files are in supported format (MP3/WAV)
-# Prepare album cover
 convert cover.jpg -resize 300x300 cover.png
 ```
 
@@ -258,9 +256,10 @@ This project is licensed under the Apache License 2.0 open source license.
 
 ## Acknowledgments
 
-- **openvela**: Providing excellent embedded operating system platform
+- **openvela**: Providing embedded operating system platform
 - **LVGL Community**: Providing graphics library and UI component support
 
 ---
 
-*Last updated: 2025-09-29*  
+*Last updated: 2025-10-29*  
+*Current version: v2.3.3*  
