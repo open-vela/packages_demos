@@ -1,0 +1,18 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_VELA_AUDIO
+	bool "Music_player2"
+	default n
+	help
+	 Vela Audio Music Player 2.
+
+if LVX_USE_DEMO_VELA_AUDIO
+config LVX_MUSIC_PLAYER_DATA_ROOT
+	string "Music Player2 Data Root"
+	default "/data"
+	help
+	 Root directory for music player data and assets.
+endif
