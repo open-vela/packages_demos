@@ -148,7 +148,7 @@ adb -s emulator-5554 shell "music_player2 &"
       "path": "test.mp3",
       "name": "Test Song",
       "artist": "Demo Artist", 
-      "cover": "test.jpg",
+      "cover": "test.png",
       "total_time": 180000,
       "color": "#4A90E2"
     }
@@ -179,7 +179,7 @@ make CFLAGS="-DDEBUG"
 ```bash
 # Ensure audio files are in supported format (MP3/WAV)
 # Prepare album cover
-convert cover.jpg -resize 300x300 cover.jpg
+convert cover.jpg -resize 300x300 cover.png
 ```
 
 #### 2. Update Configuration File
@@ -190,7 +190,7 @@ convert cover.jpg -resize 300x300 cover.jpg
       "path": "new_song.mp3",
       "name": "New Song Title",
       "artist": "Artist Name",
-      "cover": "new_cover.jpg",
+      "cover": "new_cover.png",
       "total_time": 240000,
       "color": "#FF5722"
     }
@@ -202,7 +202,7 @@ convert cover.jpg -resize 300x300 cover.jpg
 ```bash
 # Copy files to resource directory
 cp new_song.mp3 res/musics/
-cp new_cover.jpg res/musics/
+cp new_cover.png res/musics/
 
 # Push to device
 adb push res/musics/ /data/res/musics/
