@@ -1,4 +1,4 @@
-# Vela Audio Technical Documentation
+# music_player2 Technical Documentation
 
 ## Table of Contents
 
@@ -10,7 +10,7 @@
 
 ### System Overview
 
-Vela Audio adopts a modular layered architecture design to ensure code maintainability, scalability, and high performance. The entire system is based on an event-driven model, separating functional modules through clear interfaces.
+music_player2 adopts a modular layered architecture design to ensure code maintainability, scalability, and high performance. The entire system is based on an event-driven model, separating functional modules through clear interfaces.
 
 **Core Design Principles**:
 - **Modularity**: Each functional module is independently designed with clear responsibilities
@@ -25,7 +25,7 @@ The system adopts a six-layer architecture design, from bottom to top including:
 
 ```
 ┌─────────────────────────────────────────┐
-│           User Interface Layer (LVGL 9.x) │  ← Graphics rendering and touch interaction
+│         User Interface Layer (LVGL 9.x) │  ← Graphics rendering and touch interaction
 ├─────────────────────────────────────────┤
 │             UI Module Layer             │  ← Splash screen, main interface, playlist manager
 ├─────────────────────────────────────────┤
