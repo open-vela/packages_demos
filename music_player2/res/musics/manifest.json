@@ -4,7 +4,7 @@
       "path": "test.mp3",
       "name": "Test Song",
       "artist": "Demo Artist",
-      "cover": "test.jpg",
+      "cover": "test.png",
       "total_time": 180000,
       "color": "#4A90E2"
     }
