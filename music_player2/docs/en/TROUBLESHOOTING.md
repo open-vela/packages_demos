@@ -1,6 +1,6 @@
-# Vela Audio Troubleshooting Guide
+# music_player2 Troubleshooting Guide
 
-This document provides common problem solutions, debugging techniques, and performance optimization suggestions for the Vela Audio music player.
+This document provides common problem solutions, debugging techniques, and performance optimization suggestions for the music_player2 music player.
 
 ## Table of Contents
 
