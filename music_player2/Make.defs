@@ -14,5 +14,5 @@
 # limitations under the License.
 #
 ifneq ($(CONFIG_LVX_USE_DEMO_VELA_AUDIO),)
-CONFIGURED_APPS += $(APPDIR)/packages/demos/music_player
+CONFIGURED_APPS += $(APPDIR)/packages/demos/music_player2
 endif

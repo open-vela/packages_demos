@@ -19,19 +19,15 @@
 ifeq ($(CONFIG_LVX_USE_DEMO_VELA_AUDIO), y)
 PROGNAME = music_player2
 PRIORITY = 100
-STACKSIZE = 16384  # Reduce stack size from 40KB to 16KB
+STACKSIZE = 32768 
 MODULE = $(CONFIG_LVX_USE_DEMO_VELA_AUDIO)
 
-# Music player source files - using simulator compatible version
 CSRCS = music_player2.c audio_ctl.c wifi.c splash_screen.c playlist_manager.c font_config.c
 
-# Main entry file
 MAINSRC = music_player2_main.c
 
-# Simulator environment configuration
 CFLAGS += -DUSING_SIMULATOR_AUDIO=1
 
-# Basic library linking
 LDLIBS += -lm -lpthread
 
 endif
