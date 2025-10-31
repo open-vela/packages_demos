@@ -114,17 +114,10 @@ echo 'CONFIG_LVX_MUSIC_PLAYER_DATA_ROOT="/data"' >> vendor/openvela/boards/vela/
 
 ### Startup and Deployment
 ```bash
-# Start emulator
 cd nuttx && ln -sf vela_ap.elf nuttx && cd ..
 ./emulator.sh vela
-
-# Wait for startup and connect ADB
 sleep 15 && adb connect 127.0.0.1:5555
-
-# Deploy resource files
 adb -s emulator-5554 push apps/packages/demos/music_player2/res /data/
-
-# Start music player
 adb -s emulator-5554 shell "music_player2 &"
 ```
 
