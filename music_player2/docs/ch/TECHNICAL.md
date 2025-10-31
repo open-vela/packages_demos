@@ -69,50 +69,43 @@ UI更新        列表显示        播放控制
 #### 运行时上下文
 ```c
 struct ctx_s {
-    bool resource_healthy_check;          // 资源健康检查标志
-    album_info_t* current_album;          // 当前播放的专辑信息
+    bool resource_healthy_check;
+    album_info_t* current_album;
     
-    // 播放状态
-    uint16_t volume;                      // 当前音量 (0-100)
-    play_status_t play_status_prev;       // 上一次播放状态
-    play_status_t play_status;            // 当前播放状态
-    uint64_t current_time;                // 当前播放时间 (毫秒)
+    uint16_t volume;
+    play_status_t play_status_prev;
+    play_status_t play_status;
+    uint64_t current_time;
     
-    // 定时器管理
     struct {
-        lv_timer_t* volume_bar_countdown;      // 音量条自动隐藏倒计时
-        lv_timer_t* playback_progress_update;  // 播放进度更新定时器
-        lv_timer_t* refresh_date_time;         // 时间日期刷新定时器
+        lv_timer_t* volume_bar_countdown;
+        lv_timer_t* playback_progress_update;
+        lv_timer_t* refresh_date_time;
     } timers;
     
-    audioctl_s* audioctl;                 // 音频控制句柄
+    audioctl_s* audioctl;
 };
 ```
 
 #### 资源管理结构
 ```c
 struct resource_s {
-    // UI组件管理
     struct {
-        lv_obj_t* time;                    // 时间显示标签
-        lv_obj_t* date;                    // 日期显示标签
-        lv_obj_t* player_group;            // 播放器控件组
-        lv_obj_t* album_cover_container;   // 圆形封面容器
-        lv_obj_t* volume_bar;              // 音量条组件
-        // ... 更多UI组件
+        lv_obj_t* time;
+        lv_obj_t* date;
+        lv_obj_t* player_group;
+        lv_obj_t* album_cover_container;
+        lv_obj_t* volume_bar;
     } ui;
     
-    // 字体资源管理
     struct {
         struct { const lv_font_t* normal; } size_16;
         struct { const lv_font_t* bold; } size_22;
         struct { const lv_font_t* normal; } size_24;
-        // ... 更多字体
     } fonts;
     
-    // 音乐数据
-    album_info_t* albums;                  // 专辑信息数组
-    uint8_t album_count;                   // 专辑总数
+    album_info_t* albums;
+    uint8_t album_count;
 };
 ```
 
@@ -121,28 +114,65 @@ struct resource_s {
 #### 播放状态定义
 ```c
 typedef enum {
-    PLAY_STATUS_STOP,    // 停止状态
-    PLAY_STATUS_PLAY,    // 播放状态
-    PLAY_STATUS_PAUSE,   // 暂停状态
+    PLAY_STATUS_STOP,
+    PLAY_STATUS_PLAY,
+    PLAY_STATUS_PAUSE,
 } play_status_t;
 ```
 
-#### 状态转换表
-```c
-typedef struct {
-    play_status_t from_state;     // 源状态
-    play_status_t to_state;       // 目标状态
-    void (*action)(void);         // 转换动作
-} state_transition_t;
+#### 状态转换逻辑
 
-// 状态转换表
-static const state_transition_t transitions[] = {
-    {PLAY_STATUS_STOP,  PLAY_STATUS_PLAY,  action_start_playback},
-    {PLAY_STATUS_PLAY,  PLAY_STATUS_PAUSE, action_pause_playback},
-    {PLAY_STATUS_PAUSE, PLAY_STATUS_PLAY,  action_resume_playback},
-    {PLAY_STATUS_PLAY,  PLAY_STATUS_STOP,  action_stop_playback},
-    {PLAY_STATUS_PAUSE, PLAY_STATUS_STOP,  action_stop_playback},
-};
+状态转换通过 `switch` 语句实现，主要在两个函数中处理：
+
+**1. 播放按钮点击事件处理**（状态切换逻辑）：
+```c
+play_status_t new_status;
+switch (C.play_status) {
+    case PLAY_STATUS_STOP:
+        new_status = PLAY_STATUS_PLAY;
+        break;
+    case PLAY_STATUS_PLAY:
+        new_status = PLAY_STATUS_PAUSE;
+        break;
+    case PLAY_STATUS_PAUSE:
+        new_status = PLAY_STATUS_PLAY;
+        break;
+    default:
+        return;
+}
+app_set_play_status(new_status);
+```
+
+**2. 状态刷新函数**（状态动作执行）：
+```c
+static void app_refresh_play_status(void) {
+    switch (C.play_status) {
+    case PLAY_STATUS_STOP:
+        audio_ctl_stop(C.audioctl);
+        audio_ctl_uninit_nxaudio(C.audioctl);
+        C.audioctl = NULL;
+        break;
+    case PLAY_STATUS_PLAY:
+        if (C.play_status_prev == PLAY_STATUS_PAUSE) {
+            audio_ctl_resume(C.audioctl);
+        } else if (C.play_status_prev == PLAY_STATUS_STOP) {
+            C.audioctl = audio_ctl_init_nxaudio(audio_path);
+            audio_ctl_start(C.audioctl);
+        }
+        break;
+    case PLAY_STATUS_PAUSE:
+        audio_ctl_pause(C.audioctl);
+        break;
+    }
+}
+```
+
+**状态转换图**：
+```
+STOP ──[点击播放]──> PLAY ──[点击暂停]──> PAUSE
+  ↑                                        │
+  └────────[播放结束/错误]─────────────────┘
+       PAUSE ──[点击播放]──> PLAY
 ```
 
 ## API 参考
@@ -282,30 +312,19 @@ void set_label_utf8_text(lv_obj_t* label, const char* text, const lv_font_t* fon
 ### 错误代码
 
 ```c
-// 成功码
-#define MUSIC_ERROR_OK              0    // 操作成功
-
-// 通用错误码
-#define MUSIC_ERROR_INVALID_PARAM  -1    // 无效参数
-#define MUSIC_ERROR_NO_MEMORY      -2    // 内存不足
-#define MUSIC_ERROR_TIMEOUT        -3    // 操作超时
-
-// 文件相关错误码
-#define MUSIC_ERROR_FILE_NOT_FOUND -10   // 文件未找到
-#define MUSIC_ERROR_FILE_READ      -11   // 文件读取失败
-#define MUSIC_ERROR_FILE_WRITE     -12   // 文件写入失败
-
-// 音频相关错误码
-#define MUSIC_ERROR_AUDIO_INIT     -20   // 音频初始化失败
-#define MUSIC_ERROR_AUDIO_PLAY     -21   // 音频播放失败
-
-// 网络相关错误码
-#define MUSIC_ERROR_NETWORK        -30   // 网络错误
-#define MUSIC_ERROR_WIFI_CONNECT   -31   // Wi-Fi连接失败
-
-// UI相关错误码
-#define MUSIC_ERROR_UI_INIT        -50   // UI初始化失败
-#define MUSIC_ERROR_FONT_LOAD      -51   // 字体加载失败
+#define MUSIC_ERROR_OK              0
+#define MUSIC_ERROR_INVALID_PARAM  -1
+#define MUSIC_ERROR_NO_MEMORY      -2
+#define MUSIC_ERROR_TIMEOUT        -3
+#define MUSIC_ERROR_FILE_NOT_FOUND -10
+#define MUSIC_ERROR_FILE_READ      -11
+#define MUSIC_ERROR_FILE_WRITE     -12
+#define MUSIC_ERROR_AUDIO_INIT     -20
+#define MUSIC_ERROR_AUDIO_PLAY     -21
+#define MUSIC_ERROR_NETWORK        -30
+#define MUSIC_ERROR_WIFI_CONNECT   -31
+#define MUSIC_ERROR_UI_INIT        -50
+#define MUSIC_ERROR_FONT_LOAD      -51
 ```
 
 ## 开发指南
@@ -314,19 +333,15 @@ void set_label_utf8_text(lv_obj_t* label, const char* text, const lv_font_t* fon
 
 #### C 代码风格
 ```c
-// 函数命名：snake_case
 static void app_create_main_page(void);
 static bool init_audio_system(void);
 
-// 变量命名：snake_case
 static bool resource_healthy_check = false;
 static uint32_t current_playback_time = 0;
 
-// 常量命名：UPPER_CASE
 #define MAX_ALBUM_COUNT 100
 #define DEFAULT_VOLUME 50
 
-// 结构体命名：snake_case_t
 typedef struct album_info_s {
     const char* name;
     const char* artist;
@@ -344,20 +359,16 @@ typedef struct album_info_s {
  */
 int function_name(int param1, const char* param2);
 
-// 单行注释用于简单说明
-int volume = 50; // Default volume level
+int volume = 50;
 ```
 
 #### 错误处理规范
 ```c
-// 统一的错误处理模式
 int audio_operation(audioctl_s* ctl) {
-    // 参数验证
     if (!ctl) {
         return MUSIC_ERROR_INVALID_PARAM;
     }
     
-    // 执行操作
     int result = low_level_operation(ctl);
     if (result < 0) {
         return MUSIC_ERROR_AUDIO_PLAY;
@@ -371,7 +382,6 @@ int audio_operation(audioctl_s* ctl) {
 
 #### 单元测试
 ```c
-// test/test_audio_ctl.c
 #include "unity.h"
 #include "audio_ctl.h"
 
@@ -391,27 +401,23 @@ void test_audio_ctl_init_invalid_file(void) {
 
 #### 内存管理
 ```c
-// 内存池管理
 static uint8_t audio_buffer_pool[AUDIO_BUFFER_SIZE * 4];
 
 static void* allocate_audio_buffer(size_t size) {
-    // 简单的内存池分配逻辑
     return audio_buffer_pool;
 }
 ```
 
 #### UI性能优化
 ```c
-// 减少重绘频率
 static uint32_t last_ui_update = 0;
 
 void update_ui_if_needed(void) {
     uint32_t now = lv_tick_get();
     if (now - last_ui_update < UI_UPDATE_INTERVAL_MS) {
-        return; // 跳过本次更新
+        return;
     }
     
-    // 执行UI更新
     app_refresh_playback_status();
     last_ui_update = now;
 }
