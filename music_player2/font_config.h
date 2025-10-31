@@ -46,11 +46,11 @@
 #endif
 
 #if LV_USE_FREETYPE
-extern lv_font_t *misans_font_16;
-extern lv_font_t *misans_font_20;
-extern lv_font_t *misans_font_24;
-extern lv_font_t *misans_font_28;
-extern lv_font_t *misans_font_32;
+extern lv_font_t* misans_font_16;
+extern lv_font_t* misans_font_20;
+extern lv_font_t* misans_font_24;
+extern lv_font_t* misans_font_28;
+extern lv_font_t* misans_font_32;
 
 #define CHINESE_FONT_16 misans_font_16
 #define CHINESE_FONT_20 misans_font_20
@@ -65,12 +65,12 @@ extern lv_font_t *misans_font_32;
 #define CHINESE_FONT_32 FONT_DEFAULT_32
 #endif
 
-const lv_font_t *get_font_by_size(int size);
-void set_label_utf8_text(lv_obj_t *label, const char *text,
-                         const lv_font_t *font);
+const lv_font_t* get_font_by_size(int size);
+void set_label_utf8_text(lv_obj_t* label, const char* text,
+    const lv_font_t* font);
 int font_system_init(void);
-const lv_font_t *get_playlist_font(const char *font_type);
-void optimize_text_display(lv_obj_t *label, const char *text,
-                           const char *font_type);
+const lv_font_t* get_playlist_font(const char* font_type);
+void optimize_text_display(lv_obj_t* label, const char* text,
+    const char* font_type);
 
 #endif

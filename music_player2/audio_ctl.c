@@ -27,362 +27,362 @@
 #endif
 
 static uint32_t estimate_mp3_duration(off_t file_size);
-static void *monitor_thread_func(void *arg);
-static void *playback_simulation_thread(void *arg) __attribute__((unused));
+static void* monitor_thread_func(void* arg);
+static void* playback_simulation_thread(void* arg) __attribute__((unused));
 
 static uint32_t estimate_mp3_duration(off_t file_size) {
-  const uint32_t avg_bitrate = 128000;
-  const uint32_t bytes_per_sec = avg_bitrate / 8;
+    const uint32_t avg_bitrate = 128000;
+    const uint32_t bytes_per_sec = avg_bitrate / 8;
 
-  if (bytes_per_sec > 0) {
-    return (uint32_t)(file_size / bytes_per_sec);
-  }
-
-  return 240;
-}
-
-static void *monitor_thread_func(void *arg) {
-  audioctl_s *ctl = (audioctl_s *)arg;
-  if (!ctl) {
-    AUDIO_LOG("Monitor thread: null parameter");
-    return NULL;
-  }
-
-  AUDIO_LOG("Monitor thread started");
-
-  while (ctl->monitor_running) {
-    usleep(100000);
-
-    pthread_mutex_lock(&ctl->control_mutex);
-
-    if (ctl->is_playing && !ctl->is_paused) {
-      ctl->current_position_ms += 100;
-
-      if (ctl->current_position_ms >= ctl->total_duration_ms * 1000) {
-        AUDIO_LOG("Playback completed");
-        ctl->is_playing = false;
-        ctl->state = AUDIO_CTL_STATE_STOP;
-      }
+    if (bytes_per_sec > 0) {
+        return (uint32_t)(file_size / bytes_per_sec);
     }
 
-    pthread_mutex_unlock(&ctl->control_mutex);
-  }
-
-  AUDIO_LOG("Monitor thread exited");
-  return NULL;
+    return 240;
 }
 
-static void *playback_simulation_thread(void *arg) {
-  audioctl_s *ctl = (audioctl_s *)arg;
-  if (!ctl) {
-    return NULL;
-  }
-
-  AUDIO_LOG("Simulation thread started: %s", ctl->file_path);
-
-  while (ctl->is_playing && !ctl->should_stop) {
-    usleep(1000000);
-
-    pthread_mutex_lock(&ctl->control_mutex);
-    if (ctl->is_playing && !ctl->is_paused) {
+static void* monitor_thread_func(void* arg) {
+    audioctl_s* ctl = (audioctl_s*)arg;
+    if (!ctl) {
+        AUDIO_LOG("Monitor thread: null parameter");
+        return NULL;
     }
-    pthread_mutex_unlock(&ctl->control_mutex);
-  }
 
-  AUDIO_LOG("Simulation thread ended");
-  return NULL;
+    AUDIO_LOG("Monitor thread started");
+
+    while (ctl->monitor_running) {
+        usleep(100000);
+
+        pthread_mutex_lock(&ctl->control_mutex);
+
+        if (ctl->is_playing && !ctl->is_paused) {
+            ctl->current_position_ms += 100;
+
+            if (ctl->current_position_ms >= ctl->total_duration_ms * 1000) {
+                AUDIO_LOG("Playback completed");
+                ctl->is_playing = false;
+                ctl->state = AUDIO_CTL_STATE_STOP;
+            }
+        }
+
+        pthread_mutex_unlock(&ctl->control_mutex);
+    }
+
+    AUDIO_LOG("Monitor thread exited");
+    return NULL;
 }
 
-int audio_ctl_detect_format(const char *path) {
-  if (!path) {
-    AUDIO_LOG("Null file path");
-    return AUDIO_FORMAT_UNKNOWN;
-  }
+static void* playback_simulation_thread(void* arg) {
+    audioctl_s* ctl = (audioctl_s*)arg;
+    if (!ctl) {
+        return NULL;
+    }
 
-  size_t len = strlen(path);
-  if (len < 4) {
-    AUDIO_LOG("File path too short: %s", path);
-    return AUDIO_FORMAT_UNKNOWN;
-  }
+    AUDIO_LOG("Simulation thread started: %s", ctl->file_path);
 
-  const char *ext = path + len - 4;
-  AUDIO_LOG("Detecting format: %s", ext);
+    while (ctl->is_playing && !ctl->should_stop) {
+        usleep(1000000);
 
-  if (strcasecmp(ext, ".mp3") == 0) {
-    AUDIO_LOG("MP3 format detected: %s", path);
-    return AUDIO_FORMAT_MP3;
-  } else if (strcasecmp(ext, ".wav") == 0) {
-    AUDIO_LOG("WAV format detected: %s", path);
-    return AUDIO_FORMAT_WAV;
-  }
+        pthread_mutex_lock(&ctl->control_mutex);
+        if (ctl->is_playing && !ctl->is_paused) {
+        }
+        pthread_mutex_unlock(&ctl->control_mutex);
+    }
 
-  AUDIO_LOG("Unknown audio format: %s", path);
-  return AUDIO_FORMAT_UNKNOWN;
+    AUDIO_LOG("Simulation thread ended");
+    return NULL;
 }
 
-audioctl_s *audio_ctl_init_nxaudio(const char *path) {
-  if (!path) {
-    AUDIO_LOG("Init failed: null path");
-    return NULL;
-  }
+int audio_ctl_detect_format(const char* path) {
+    if (!path) {
+        AUDIO_LOG("Null file path");
+        return AUDIO_FORMAT_UNKNOWN;
+    }
 
-  AUDIO_LOG("Initializing audio controller: %s", path);
+    size_t len = strlen(path);
+    if (len < 4) {
+        AUDIO_LOG("File path too short: %s", path);
+        return AUDIO_FORMAT_UNKNOWN;
+    }
 
-  audioctl_s *ctl = (audioctl_s *)calloc(1, sizeof(audioctl_s));
-  if (!ctl) {
-    return NULL;
-  }
+    const char* ext = path + len - 4;
+    AUDIO_LOG("Detecting format: %s", ext);
 
-  strncpy(ctl->file_path, path, sizeof(ctl->file_path) - 1);
-  ctl->file_path[sizeof(ctl->file_path) - 1] = '\0';
+    if (strcasecmp(ext, ".mp3") == 0) {
+        AUDIO_LOG("MP3 format detected: %s", path);
+        return AUDIO_FORMAT_MP3;
+    } else if (strcasecmp(ext, ".wav") == 0) {
+        AUDIO_LOG("WAV format detected: %s", path);
+        return AUDIO_FORMAT_WAV;
+    }
 
-  ctl->audio_format = audio_ctl_detect_format(path);
-  if (ctl->audio_format == AUDIO_FORMAT_UNKNOWN) {
-    AUDIO_LOG("Unsupported audio format");
-    free(ctl);
-    return NULL;
-  }
+    AUDIO_LOG("Unknown audio format: %s", path);
+    return AUDIO_FORMAT_UNKNOWN;
+}
 
-  struct stat st;
-  if (stat(path, &st) == 0) {
-    ctl->file_size = st.st_size;
-    AUDIO_LOG("File size: %lld bytes", (long long)ctl->file_size);
+audioctl_s* audio_ctl_init_nxaudio(const char* path) {
+    if (!path) {
+        AUDIO_LOG("Init failed: null path");
+        return NULL;
+    }
 
-    if (ctl->audio_format == AUDIO_FORMAT_MP3) {
-      uint32_t duration_sec = estimate_mp3_duration(ctl->file_size);
-      ctl->total_duration_ms = duration_sec * 1000;
-      AUDIO_LOG("Estimated MP3 duration: %lu seconds",
+    AUDIO_LOG("Initializing audio controller: %s", path);
+
+    audioctl_s* ctl = (audioctl_s*)calloc(1, sizeof(audioctl_s));
+    if (!ctl) {
+        return NULL;
+    }
+
+    strncpy(ctl->file_path, path, sizeof(ctl->file_path) - 1);
+    ctl->file_path[sizeof(ctl->file_path) - 1] = '\0';
+
+    ctl->audio_format = audio_ctl_detect_format(path);
+    if (ctl->audio_format == AUDIO_FORMAT_UNKNOWN) {
+        AUDIO_LOG("Unsupported audio format");
+        free(ctl);
+        return NULL;
+    }
+
+    struct stat st;
+    if (stat(path, &st) == 0) {
+        ctl->file_size = st.st_size;
+        AUDIO_LOG("File size: %lld bytes", (long long)ctl->file_size);
+
+        if (ctl->audio_format == AUDIO_FORMAT_MP3) {
+            uint32_t duration_sec = estimate_mp3_duration(ctl->file_size);
+            ctl->total_duration_ms = duration_sec * 1000;
+            AUDIO_LOG("Estimated MP3 duration: %lu seconds",
                 (unsigned long)duration_sec);
+        } else {
+            ctl->total_duration_ms = 240 * 1000;
+        }
     } else {
-      ctl->total_duration_ms = 240 * 1000;
+        AUDIO_LOG("Cannot get file info: %s", strerror(errno));
+        free(ctl);
+        return NULL;
     }
-  } else {
-    AUDIO_LOG("Cannot get file info: %s", strerror(errno));
-    free(ctl);
-    return NULL;
-  }
 
-  ctl->nxplayer = (struct nxplayer_s *)0x12345678;
-  AUDIO_LOG("Created virtual NxPlayer instance: %p", ctl->nxplayer);
+    ctl->nxplayer = (struct nxplayer_s*)0x12345678;
+    AUDIO_LOG("Created virtual NxPlayer instance: %p", ctl->nxplayer);
 
-  if (pthread_mutex_init(&ctl->control_mutex, NULL) != 0) {
-    AUDIO_LOG("Failed to init mutex");
-    free(ctl);
-    return NULL;
-  }
+    if (pthread_mutex_init(&ctl->control_mutex, NULL) != 0) {
+        AUDIO_LOG("Failed to init mutex");
+        free(ctl);
+        return NULL;
+    }
 
-  ctl->state = AUDIO_CTL_STATE_STOP;
-  ctl->is_playing = false;
-  ctl->is_paused = false;
-  ctl->should_stop = false;
-  ctl->current_position_ms = 0;
-  ctl->monitor_running = 0;
-
-  AUDIO_LOG("Audio controller initialized");
-  return ctl;
-}
-
-int audio_ctl_start(audioctl_s *ctl) {
-  if (!ctl) {
-    AUDIO_LOG("Start failed: null controller");
-    return -1;
-  }
-
-  if (!ctl->nxplayer) {
-    AUDIO_LOG("Start failed: null NxPlayer");
-    return -1;
-  }
-
-  AUDIO_LOG("Starting simulation: %s", ctl->file_path);
-  AUDIO_LOG("Audio format: %d", ctl->audio_format);
-
-  pthread_mutex_lock(&ctl->control_mutex);
-
-  if (ctl->is_playing) {
-    AUDIO_LOG("Stopping current playback");
+    ctl->state = AUDIO_CTL_STATE_STOP;
     ctl->is_playing = false;
-    ctl->should_stop = true;
-  }
-
-  if (access(ctl->file_path, R_OK) != 0) {
-    AUDIO_LOG("File access failed: %s, errno: %d (%s)", ctl->file_path, errno,
-              strerror(errno));
-    pthread_mutex_unlock(&ctl->control_mutex);
-    return -1;
-  }
-
-  AUDIO_LOG("File access OK, starting simulation...");
-
-  ctl->state = AUDIO_CTL_STATE_START;
-  ctl->is_playing = true;
-  ctl->is_paused = false;
-  ctl->should_stop = false;
-  ctl->current_position_ms = 0;
-
-  if (!ctl->monitor_running) {
-    ctl->monitor_running = 1;
-    if (pthread_create(&ctl->monitor_thread, NULL, monitor_thread_func, ctl) !=
-        0) {
-      AUDIO_LOG("Failed to create monitoring thread");
-    } else {
-      AUDIO_LOG("Monitoring thread started");
-    }
-  }
-
-  pthread_mutex_unlock(&ctl->control_mutex);
-
-  AUDIO_LOG("Simulation playback started successfully");
-  return 0;
-}
-
-int audio_ctl_pause(audioctl_s *ctl) {
-  if (!ctl || !ctl->nxplayer) {
-    AUDIO_LOG("Pause failed: controller or NxPlayer is null");
-    return -1;
-  }
-
-  AUDIO_LOG("Pausing simulation playback");
-
-  pthread_mutex_lock(&ctl->control_mutex);
-
-  if (!ctl->is_playing || ctl->is_paused) {
-    AUDIO_LOG("Currently not playing or already paused");
-    pthread_mutex_unlock(&ctl->control_mutex);
-    return 0;
-  }
-
-  ctl->state = AUDIO_CTL_STATE_PAUSE;
-  ctl->is_paused = true;
-  AUDIO_LOG("Simulation pause successful");
-
-  pthread_mutex_unlock(&ctl->control_mutex);
-  return 0;
-}
-
-int audio_ctl_resume(audioctl_s *ctl) {
-  if (!ctl || !ctl->nxplayer) {
-    AUDIO_LOG("Resume playback failed: controller or NxPlayer is null");
-    return -1;
-  }
-
-  AUDIO_LOG("Resuming simulation playback");
-
-  pthread_mutex_lock(&ctl->control_mutex);
-
-  if (!ctl->is_playing || !ctl->is_paused) {
-    AUDIO_LOG("Currently not paused");
-    pthread_mutex_unlock(&ctl->control_mutex);
-    return 0;
-  }
-
-  ctl->state = AUDIO_CTL_STATE_START;
-  ctl->is_paused = false;
-  AUDIO_LOG("Resume simulation playback successful");
-
-  pthread_mutex_unlock(&ctl->control_mutex);
-  return 0;
-}
-
-int audio_ctl_stop(audioctl_s *ctl) {
-  if (!ctl || !ctl->nxplayer) {
-    AUDIO_LOG("Stop playback failed: controller or NxPlayer is null");
-    return -1;
-  }
-
-  AUDIO_LOG("Stopping simulation playback");
-
-  pthread_mutex_lock(&ctl->control_mutex);
-
-  if (ctl->monitor_running) {
+    ctl->is_paused = false;
+    ctl->should_stop = false;
+    ctl->current_position_ms = 0;
     ctl->monitor_running = 0;
-    ctl->should_stop = true;
+
+    AUDIO_LOG("Audio controller initialized");
+    return ctl;
+}
+
+int audio_ctl_start(audioctl_s* ctl) {
+    if (!ctl) {
+        AUDIO_LOG("Start failed: null controller");
+        return -1;
+    }
+
+    if (!ctl->nxplayer) {
+        AUDIO_LOG("Start failed: null NxPlayer");
+        return -1;
+    }
+
+    AUDIO_LOG("Starting simulation: %s", ctl->file_path);
+    AUDIO_LOG("Audio format: %d", ctl->audio_format);
+
+    pthread_mutex_lock(&ctl->control_mutex);
+
+    if (ctl->is_playing) {
+        AUDIO_LOG("Stopping current playback");
+        ctl->is_playing = false;
+        ctl->should_stop = true;
+    }
+
+    if (access(ctl->file_path, R_OK) != 0) {
+        AUDIO_LOG("File access failed: %s, errno: %d (%s)", ctl->file_path, errno,
+            strerror(errno));
+        pthread_mutex_unlock(&ctl->control_mutex);
+        return -1;
+    }
+
+    AUDIO_LOG("File access OK, starting simulation...");
+
+    ctl->state = AUDIO_CTL_STATE_START;
+    ctl->is_playing = true;
+    ctl->is_paused = false;
+    ctl->should_stop = false;
+    ctl->current_position_ms = 0;
+
+    if (!ctl->monitor_running) {
+        ctl->monitor_running = 1;
+        if (pthread_create(&ctl->monitor_thread, NULL, monitor_thread_func, ctl) != 0) {
+            AUDIO_LOG("Failed to create monitoring thread");
+        } else {
+            AUDIO_LOG("Monitoring thread started");
+        }
+    }
+
     pthread_mutex_unlock(&ctl->control_mutex);
 
-    if (ctl->monitor_thread != 0) {
-      pthread_join(ctl->monitor_thread, NULL);
-      ctl->monitor_thread = 0;
-      AUDIO_LOG("Monitoring thread stopped");
+    AUDIO_LOG("Simulation playback started successfully");
+    return 0;
+}
+
+int audio_ctl_pause(audioctl_s* ctl) {
+    if (!ctl || !ctl->nxplayer) {
+        AUDIO_LOG("Pause failed: controller or NxPlayer is null");
+        return -1;
+    }
+
+    AUDIO_LOG("Pausing simulation playback");
+
+    pthread_mutex_lock(&ctl->control_mutex);
+
+    if (!ctl->is_playing || ctl->is_paused) {
+        AUDIO_LOG("Currently not playing or already paused");
+        pthread_mutex_unlock(&ctl->control_mutex);
+        return 0;
+    }
+
+    ctl->state = AUDIO_CTL_STATE_PAUSE;
+    ctl->is_paused = true;
+    AUDIO_LOG("Simulation pause successful");
+
+    pthread_mutex_unlock(&ctl->control_mutex);
+    return 0;
+}
+
+int audio_ctl_resume(audioctl_s* ctl) {
+    if (!ctl || !ctl->nxplayer) {
+        AUDIO_LOG("Resume playback failed: controller or NxPlayer is null");
+        return -1;
+    }
+
+    AUDIO_LOG("Resuming simulation playback");
+
+    pthread_mutex_lock(&ctl->control_mutex);
+
+    if (!ctl->is_playing || !ctl->is_paused) {
+        AUDIO_LOG("Currently not paused");
+        pthread_mutex_unlock(&ctl->control_mutex);
+        return 0;
+    }
+
+    ctl->state = AUDIO_CTL_STATE_START;
+    ctl->is_paused = false;
+    AUDIO_LOG("Resume simulation playback successful");
+
+    pthread_mutex_unlock(&ctl->control_mutex);
+    return 0;
+}
+
+int audio_ctl_stop(audioctl_s* ctl) {
+    if (!ctl || !ctl->nxplayer) {
+        AUDIO_LOG("Stop playback failed: controller or NxPlayer is null");
+        return -1;
+    }
+
+    AUDIO_LOG("Stopping simulation playback");
+
+    pthread_mutex_lock(&ctl->control_mutex);
+
+    if (ctl->monitor_running) {
+        ctl->monitor_running = 0;
+        ctl->should_stop = true;
+        pthread_mutex_unlock(&ctl->control_mutex);
+
+        if (ctl->monitor_thread != 0) {
+            pthread_join(ctl->monitor_thread, NULL);
+            ctl->monitor_thread = 0;
+            AUDIO_LOG("Monitoring thread stopped");
+        }
+
+        pthread_mutex_lock(&ctl->control_mutex);
+    }
+
+    ctl->state = AUDIO_CTL_STATE_STOP;
+    ctl->is_playing = false;
+    ctl->is_paused = false;
+    ctl->current_position_ms = 0;
+    AUDIO_LOG("Stop simulation playback successful");
+
+    pthread_mutex_unlock(&ctl->control_mutex);
+    return 0;
+}
+
+int audio_ctl_set_volume(audioctl_s* ctl, uint16_t vol) {
+    if (!ctl || !ctl->nxplayer) {
+        AUDIO_LOG("Set volume failed: controller or NxPlayer is null");
+        return -1;
+    }
+
+    if (vol > 100) {
+        vol = 100;
+    }
+
+    AUDIO_LOG("Set simulation volume: %d", vol);
+    return 0;
+}
+
+int audio_ctl_get_position(audioctl_s* ctl) {
+    if (!ctl) {
+        return 0;
     }
 
     pthread_mutex_lock(&ctl->control_mutex);
-  }
-
-  ctl->state = AUDIO_CTL_STATE_STOP;
-  ctl->is_playing = false;
-  ctl->is_paused = false;
-  ctl->current_position_ms = 0;
-  AUDIO_LOG("Stop simulation playback successful");
-
-  pthread_mutex_unlock(&ctl->control_mutex);
-  return 0;
-}
-
-int audio_ctl_set_volume(audioctl_s *ctl, uint16_t vol) {
-  if (!ctl || !ctl->nxplayer) {
-    AUDIO_LOG("Set volume failed: controller or NxPlayer is null");
-    return -1;
-  }
-
-  if (vol > 100) {
-    vol = 100;
-  }
-
-  AUDIO_LOG("Set simulation volume: %d", vol);
-  return 0;
-}
-
-int audio_ctl_get_position(audioctl_s *ctl) {
-  if (!ctl) {
-    return 0;
-  }
-
-  pthread_mutex_lock(&ctl->control_mutex);
-  uint32_t position_sec = ctl->current_position_ms / 1000;
-  pthread_mutex_unlock(&ctl->control_mutex);
-
-  return (int)position_sec;
-}
-
-int audio_ctl_seek(audioctl_s *ctl, unsigned ms) {
-  if (!ctl) {
-    AUDIO_LOG("Seek failed: controller is null");
-    return -1;
-  }
-
-  AUDIO_LOG("Simulation seek to position: %lu ms", (unsigned long)ms);
-
-  pthread_mutex_lock(&ctl->control_mutex);
-
-  if (ms <= ctl->total_duration_ms) {
-    ctl->current_position_ms = ms;
-    AUDIO_LOG("Simulation position update successful: %lu ms",
-              (unsigned long)ms);FF
-  } else {
-    AUDIO_LOG("Seek position exceeds file length: %lu ms > %lu ms",
-              (unsigned long)ms, (unsigned long)ctl->total_duration_ms);
+    uint32_t position_sec = ctl->current_position_ms / 1000;
     pthread_mutex_unlock(&ctl->control_mutex);
-    return -1;
-  }
 
-  pthread_mutex_unlock(&ctl->control_mutex);
-  return 0;
+    return (int)position_sec;
 }
 
-int audio_ctl_uninit_nxaudio(audioctl_s *ctl) {
-  if (!ctl) {
+int audio_ctl_seek(audioctl_s* ctl, unsigned ms) {
+    if (!ctl) {
+        AUDIO_LOG("Seek failed: controller is null");
+        return -1;
+    }
+
+    AUDIO_LOG("Simulation seek to position: %lu ms", (unsigned long)ms);
+
+    pthread_mutex_lock(&ctl->control_mutex);
+
+    if (ms <= ctl->total_duration_ms) {
+        ctl->current_position_ms = ms;
+        AUDIO_LOG("Simulation position update successful: %lu ms",
+            (unsigned long)ms);
+        FF
+    } else {
+        AUDIO_LOG("Seek position exceeds file length: %lu ms > %lu ms",
+            (unsigned long)ms, (unsigned long)ctl->total_duration_ms);
+        pthread_mutex_unlock(&ctl->control_mutex);
+        return -1;
+    }
+
+    pthread_mutex_unlock(&ctl->control_mutex);
     return 0;
-  }
+}
 
-  AUDIO_LOG("Releasing simulator audio controller");
+int audio_ctl_uninit_nxaudio(audioctl_s* ctl) {
+    if (!ctl) {
+        return 0;
+    }
 
-  audio_ctl_stop(ctl);
+    AUDIO_LOG("Releasing simulator audio controller");
 
-  ctl->nxplayer = NULL;
+    audio_ctl_stop(ctl);
 
-  pthread_mutex_destroy(&ctl->control_mutex);
+    ctl->nxplayer = NULL;
 
-  free(ctl);
+    pthread_mutex_destroy(&ctl->control_mutex);
 
-  AUDIO_LOG("Simulator audio controller release completed");
-  return 0;
+    free(ctl);
+
+    AUDIO_LOG("Simulator audio controller release completed");
+    return 0;
 }
