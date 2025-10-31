@@ -114,18 +114,8 @@ echo 'CONFIG_LVX_MUSIC_PLAYER_DATA_ROOT="/data"' >> vendor/openvela/boards/vela/
 
 ### 启动和部署
 ```bash
-# 启动模拟器
-cd nuttx && ln -sf vela_ap.elf nuttx && cd ..
 ./emulator.sh vela
-
-# 等待启动并连接 ADB
-sleep 15 && adb connect 127.0.0.1:5555
-
-# 部署资源文件
 adb -s emulator-5554 push apps/packages/demos/music_player2/res /data/
-
-# 启动音乐播放器
-adb -s emulator-5554 shell "music_player2 &"
 ```
 
 ### 配置文件说明
