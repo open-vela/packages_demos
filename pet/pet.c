@@ -74,11 +74,8 @@ pet_ctx_t   C;  /**< Context */
 pet_conf_t  CF; /**< Configuration */
 // clang-format on
 
-/* Week days mapping */
-const char* WEEK_DAYS[] = { "Sun.", "Mon.", "Tues.", "Wed.", "Thur.", "Fri.", "Sat." };
-
 /* Transition properties for the objects */
-const lv_style_prop_t transition_props[] = {
+static const lv_style_prop_t transition_props[] = {
     LV_STYLE_OPA,
     LV_STYLE_BG_OPA,
     LV_STYLE_Y,
