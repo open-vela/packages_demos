@@ -30,9 +30,7 @@
 static bool init_resource(void);
 static void app_create_error_page(void);
 static void app_create_main_page(void);
-static void app_create_top_layer(void);
 static void init_pet_data(void);
-static void load_images(void);
 
 /* UI Creation functions */
 static void create_status_bar(void);
@@ -751,7 +749,7 @@ void exercise_pet(lv_event_t *e)
             lv_msgbox_add_title(msg, "Can't exercise");
             lv_msgbox_add_text(msg, "The pet is too thirsty, can't exercise!\nPlease drink first.");
         }
-        lv_obj_t* btn = lv_msgbox_add_footer_button(msg, "OK");
+        lv_msgbox_add_footer_button(msg, "OK");
         lv_obj_center(msg);
         
         // 自动关闭消息框
@@ -843,7 +841,7 @@ void add_achievement(uint32_t achievement)
         }
         
         lv_msgbox_add_text(achievement_msg, achievement_text);
-        lv_obj_t* btn = lv_msgbox_add_footer_button(achievement_msg, "OK");
+        lv_msgbox_add_footer_button(achievement_msg, "OK");
         lv_obj_center(achievement_msg);
         
         // 自动关闭消息框
@@ -938,15 +936,3 @@ static void app_start_updating_timers(void)
     R.timers.update_timer = lv_timer_create(update_pet_status, TIMER_UPDATE_PERIOD, NULL);
     R.timers.time_update_timer = lv_timer_create(update_time_display, 1000, NULL);
 }
-
-/**
- * 加载图片资源
- */
-static void load_images(void)
-{
-    // 图片已经在init_resource中作为路径字符串加载，
-    // 不需要实际加载图片到内存，LVGL会直接显示图片文件
-    LV_LOG_INFO("Using image paths instead of loading images to memory");
-}
-
-
