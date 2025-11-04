@@ -356,7 +356,6 @@ int audio_ctl_seek(audioctl_s* ctl, unsigned ms) {
         ctl->current_position_ms = ms;
         AUDIO_LOG("Simulation position update successful: %lu ms",
             (unsigned long)ms);
-        FF
     } else {
         AUDIO_LOG("Seek position exceeds file length: %lu ms > %lu ms",
             (unsigned long)ms, (unsigned long)ctl->total_duration_ms);
