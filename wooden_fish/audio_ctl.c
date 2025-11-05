@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -50,13 +51,35 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
         return;
     }
 
+    // 如果文件已关闭，不再尝试读取
+    if (ctl->fd < 0)
+    {
+        apb->nbytes = 0;
+        return;
+    }
+
     if (ctl->seek) {
-        lseek(ctl->fd, ctl->seek_position, SEEK_SET);
+        off_t pos = lseek(ctl->fd, ctl->seek_position, SEEK_SET);
+
+        if (pos < 0) {
+
+            printf("lseek failed: %s\n", strerror(errno));
+
+            return;
+
+        }
         ctl->file_position = ctl->seek_position;
         ctl->seek = false;
     }
 
-    apb->nbytes = read(ctl->fd, apb->samp, apb->nmaxbytes);
+    ssize_t bytes_read = read(ctl->fd, apb->samp, apb->nmaxbytes);
+    if (bytes_read < 0) {
+        printf("read audio data failed: %s\n", strerror(errno));
+        apb->nbytes = 0;
+        return;
+    }
+    
+    apb->nbytes = (size_t)bytes_read;
     apb->curbyte = 0;
     apb->flags = 0;
 
@@ -130,11 +153,19 @@ FAR audioctl_s *audio_ctl_init_nxaudio(FAR const char *arg)
 
     ctl->fd = open(arg, O_RDONLY);
     if (ctl->fd < 0) {
-       printf("can't open audio file\n");
+       printf("can't open audio file: %s, error: %s\n", arg, strerror(errno));
+       free(ctl);
        return NULL;
     }
 
-    read(ctl->fd, &ctl->wav, sizeof(ctl->wav));
+    ssize_t read_ret = read(ctl->fd, &ctl->wav, sizeof(ctl->wav));
+    if (read_ret < (ssize_t)sizeof(ctl->wav)) {
+       printf("can't read WAV header from %s, read %zd bytes, expected %zu bytes, error: %s\n", 
+              arg, read_ret, sizeof(ctl->wav), strerror(errno));
+       close(ctl->fd);
+       free(ctl);
+       return NULL;
+    }
 
     ret = init_nxaudio(&ctl->nxaudio, ctl->wav.fmt.samplerate,
                        ctl->wav.fmt.bitspersample,
@@ -142,6 +173,8 @@ FAR audioctl_s *audio_ctl_init_nxaudio(FAR const char *arg)
     if (ret < 0)
     {
         printf("init_nxaudio() return with error!!\n");
+        close(ctl->fd);
+        free(ctl);
         return NULL;
     }
 
