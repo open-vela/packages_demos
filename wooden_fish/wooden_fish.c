@@ -119,11 +119,14 @@ static void fish_click_cb(lv_event_t *e) {
     lv_anim_start(&anim);
     // 获取点击位置并创建动画
     lv_point_t point;
-    lv_indev_get_point(lv_indev_active(), &point);
-    if (is_coder_mode) {
-        create_pr_animation(app, point.x, point.y);
-    } else {
-        create_merit_animation(app, point.x, point.y);
+    lv_indev_t *indev = lv_indev_active();
+    if (indev != NULL) {
+        lv_indev_get_point(indev, &point);
+        if (is_coder_mode) {
+            create_pr_animation(app, point.x, point.y);
+        } else {
+            create_merit_animation(app, point.x, point.y);
+        }
     }
 }
 
