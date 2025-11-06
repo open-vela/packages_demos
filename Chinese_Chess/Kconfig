@@ -1,0 +1,14 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_CHINESE_CHESS
+	bool "chess"
+	default n
+	
+if LVX_USE_DEMO_CHINESE_CHESS
+	config LVX_CHINESE_CHESS_DATA_ROOT
+		string "Chess Data Root"
+		default "/sdcard"
+endif
