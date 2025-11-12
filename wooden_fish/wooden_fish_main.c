@@ -12,10 +12,8 @@
 
 #include "wooden_fish.h"
 
-// 全局退出标志
 static volatile bool g_exit_flag = false;
 
-// 信号处理函数
 static void signal_handler(int sig) {
     if (sig == SIGTERM || sig == SIGINT) {
         g_exit_flag = true;
@@ -65,11 +63,12 @@ int main(int argc, FAR char *argv[])
 
     lv_init();
 
-    // 设置信号处理
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
+    lv_memzero(&info, sizeof(lv_nuttx_dsc_t));
     lv_nuttx_dsc_init(&info);
+    lv_memzero(&result, sizeof(lv_nuttx_result_t));
     lv_nuttx_init(&info, &result);
 
     if (result.disp == NULL)
@@ -96,7 +95,6 @@ int main(int argc, FAR char *argv[])
         usleep(idle * 1000);
     }
 
-    // 程序退出前清理资源
     wooden_fish_cleanup();
     
     lv_nuttx_deinit(&result);

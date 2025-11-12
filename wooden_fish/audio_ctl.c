@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #include "audio_ctl.h"
-#include "wooden_fish.h" // 声明回调
+#include "wooden_fish.h"
 
 #include <audioutils/nxaudio.h>
 
@@ -51,7 +51,6 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
         return;
     }
 
-    // 如果文件已关闭，不再尝试读取
     if (ctl->fd < 0)
     {
         apb->nbytes = 0;
@@ -72,13 +71,19 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
         ctl->seek = false;
     }
 
+    if (apb->nmaxbytes > SSIZE_MAX) {
+        printf("nmaxbytes too large: %u\n", apb->nmaxbytes);
+        apb->nbytes = 0;
+        return;
+    }
+
     ssize_t bytes_read = read(ctl->fd, apb->samp, apb->nmaxbytes);
     if (bytes_read < 0) {
         printf("read audio data failed: %s\n", strerror(errno));
         apb->nbytes = 0;
         return;
     }
-    
+
     apb->nbytes = (size_t)bytes_read;
     apb->curbyte = 0;
     apb->flags = 0;
@@ -86,6 +91,11 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
     while (0 < apb->nbytes && apb->nbytes < apb->nmaxbytes)
     {
         int n = apb->nmaxbytes - apb->nbytes;
+
+        if (n <= 0 || n > SSIZE_MAX || apb->nbytes > apb->nmaxbytes) {
+            break;
+        }
+
         int ret = read(ctl->fd, &apb->samp[apb->nbytes], n);
 
         if (0 >= ret)
@@ -190,6 +200,8 @@ FAR audioctl_s *audio_ctl_init_nxaudio(FAR const char *arg)
 
 int audio_ctl_start(FAR audioctl_s *ctl)
 {
+    int ret;
+
     if (ctl == NULL)
         return -EINVAL;
 
@@ -208,10 +220,18 @@ int audio_ctl_start(FAR audioctl_s *ctl)
     pthread_attr_setschedparam(&tattr, &sparam);
     pthread_attr_setstacksize(&tattr, 4096);
 
-    pthread_create(&ctl->pid, &tattr, audio_loop_thread,
-                                (pthread_addr_t)ctl);
+    ret = pthread_create(&ctl->pid, &tattr, audio_loop_thread,
+                         (pthread_addr_t)ctl);
 
     pthread_attr_destroy(&tattr);
+
+    if (ret != 0)
+    {
+        printf("pthread_create failed: %s\n", strerror(ret));
+        ctl->state = AUDIO_CTL_STATE_INIT;
+        return -1;
+    }
+
     pthread_setname_np(ctl->pid, "audioctl_thread");
 
     return 0;
