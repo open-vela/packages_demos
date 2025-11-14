@@ -38,6 +38,7 @@
 #include <uv_async_queue.h>
 
 #include "builtin/builtin.h"
+#include "service_agent.h"
 #include "ai_log.h"
 #include "ai_circular_buffer.h"
 #include "ai_conversation.h"
@@ -70,25 +71,20 @@ typedef struct mcp_server_s {
     mcp_call_data_t mcp_call_data;// tool_name|call_id|arguments|
 } mcp_server_t;
 
-typedef struct mcp_tool_s {
-    //TBD
-
-} mcp_tool_t;
-
 typedef struct {
     const char* name;
     const char* url;
 } music_mapping_t;
 
 static const music_mapping_t g_music_mapping[] = {
-    {"鼓楼", 
-    "/data/res/music/gulou.mp3"},
+    {"稻香", 
+    "/data/res/music/daoxiang.mp3"},
     {"同桌的你",
     "/data/res/music/tongzhuodeni.mp3"},
-    {"我记得",
-    "/data/res/music/wojide.mp3"},
-    {"悟空",
-    "/data/res/music/wukong.mp3"},
+    {"晴天",
+    "/data/res/music/qingtian.mp3"},
+    {"青花瓷",
+    "/data/res/music/qinghuaci.mp3"},
     {NULL,NULL}
 };
 
@@ -199,6 +195,7 @@ static int conversation_mcp_destroy_thread(conversation_context_t* ctx);
 static const char* find_music_url(const char* music_name);
 static const char* get_random_music_url(void);
 static int function_call_music_play(conversation_context_t* ctx);
+static int set_system_volume(int vol, int req_id);
 static int function_call_adjust_volume(conversation_context_t* ctx);
 //launch app tools
 static const char* find_app_url(const char* app_name);
@@ -306,21 +303,34 @@ static int function_call_music_play(conversation_context_t* ctx)
 
     const char *music_url = find_music_url(music_name);
 
-    int ret = asprintf(&result, "正在播放%s", music_url ? music_name : "音乐");
+    if (strcmp(music_name, "随机音乐") == 0) {
+        music_url = get_random_music_url();
+    }
+
+    if (music_url == NULL) {
+        int ret = asprintf(&result, "没有找到该音乐,你可以听“稻香”、“同桌的你”、“晴天”、“青花瓷");
+        if (ret < 0) {
+            CON_ERR("asprintf failed");
+            return -1;
+        }
+        ctx->plugin->mcp_response(ctx->engine, result);
+        sem_wait(&ctx->media_lock);
+        return -1;
+    }
+
+    int ret = asprintf(&result, "好的，正在播放%s", music_url ? music_name : "音乐");
     if (ret < 0) {
         CON_ERR("asprintf failed");
         return -1;
     }
 
-    if (music_url == NULL) {
-        music_url = get_random_music_url();
-    }
-
-    CON_INFO("mcp_tool_aysync_cb::music_play\n");
+    CON_INFO("music_name: %s  music_url: %s", music_name, music_url);
 
     ctx->plugin->mcp_response(ctx->engine, result);
 
     sem_wait(&ctx->media_lock);
+
+    usleep(500 * 1000); // delay 500ms to wait for player handle
 
     if (!ctx->player_handle) {
         CON_ERR("mcp_tool::player_handle is NULL");
@@ -350,6 +360,15 @@ static int function_call_music_play(conversation_context_t* ctx)
     return ret;
 }
 
+static int set_system_volume(int vol, int req_id)
+{
+    char params[96];
+    int n = snprintf(params, sizeof(params),
+    "{\"key\":\"persist.global.settings.sound.volume\",\"value\":\"%d\"}", vol);
+    if (n <= 0 || n >= (int)sizeof(params)) return -1;
+    return service_agent_send_cmd_to_client(req_id, "utils.kvdbchanged", params);
+}
+
 static int function_call_adjust_volume(conversation_context_t* ctx)
 {
     if (!ctx->plugin->mcp_response || !ctx->mcp_server.mcp_call_data.argument) {
@@ -359,7 +378,7 @@ static int function_call_adjust_volume(conversation_context_t* ctx)
     int ret = 0;
     char* result = NULL;
     CON_INFO("mcp_tool_aysync_cb::adjust_volume\n");
-    float volume = 0;
+    int volume = 0;
     char *endptr;
     long res = strtol(ctx->mcp_server.mcp_call_data.argument, &endptr, 10);
     if (*endptr != '\0') {
@@ -368,12 +387,12 @@ static int function_call_adjust_volume(conversation_context_t* ctx)
         ctx->plugin->mcp_response(ctx->engine, result);
         return -1;
     } else {
-        volume = (float)res/100.0f;
+        volume = (int)res;
     }
     CON_INFO("mcp_tool_aysync_cb::volume: %s\n", ctx->mcp_server.mcp_call_data.argument);
-    ret = media_player_set_volume(ctx->player_handle, volume);
+    ret = set_system_volume(volume, 10086); // 10086 is the temporary req_id
     if (ret < 0) {
-        CON_ERR("mcp_tool::media_player_set_volume failed");
+        CON_ERR("mcp_tool::set_system_volume failed");
         result = strdup("音量调整失败");
         ctx->plugin->mcp_response(ctx->engine, result);
         return ret;
@@ -406,7 +425,7 @@ static int function_call_launch_app(conversation_context_t* ctx)
     char* result = NULL;
     const char *app_url = find_app_url(app_name);
     if (app_url == NULL) {
-        result = strdup("没有这个应用，打开失败");
+        result = strdup("没有这个应用，你可以看看页面上有什么能打开的应用");
         return ctx->plugin->mcp_response(ctx->engine, result);
     }
 
@@ -416,13 +435,16 @@ static int function_call_launch_app(conversation_context_t* ctx)
                     (char*)app_url, 
                     NULL};
     int pid = exec_builtin("am", argv, NULL);
-    result = strdup("正在打开应用");
-    int ret = ctx->plugin->mcp_response(ctx->engine, result);
+    
+    
     if (pid < 0) {
         CON_INFO("launch_app::exec_builtin failed");
+        result = strdup("打开应用失败");
     } else {
         CON_INFO("launch_app::exec_builtin succeed");
+        result = strdup("应用已打开");
     }
+    int ret = ctx->plugin->mcp_response(ctx->engine, result);
     return ret;
 }
 
@@ -437,11 +459,6 @@ static int function_call_unknown_tool(conversation_context_t* ctx)
     return ctx->plugin->mcp_response(ctx->engine, result);
 }
 
-//TBD:mdia_tool 的调用也需要进行优化，优化的点
-//1. 通过mcp_tool工具来调用mcp函数
-//2. 可以参考message_cb_handler函数，将mcp_tool的调用放在message_cb_handler中
-
-//TBD:先实现再优化！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 static void mcp_tool_aysync_cb(uv_async_queue_t* asyncq, void* data)
 {
     conversation_context_t* ctx = (conversation_context_t*)asyncq->data;
@@ -560,9 +577,6 @@ static void conversation_engine_event_cb(conversation_engine_event_t event,
             break;
         case conversation_engine_event_audio:
             user_event = conversation_event_response_audio;
-            if (result && result->result && result->len > 0) {
-                ai_conversation_play_audio(ctx, result->result, result->len);
-            }
             break;
         case conversation_engine_event_text:
             user_event = conversation_event_response_text;
@@ -585,12 +599,7 @@ static void conversation_engine_event_cb(conversation_engine_event_t event,
             user_event = conversation_event_unknown;
             break;
     }
-    /*
-        TBD:这里需要做修改
-        1. 直接删除这个user_asyncq
-        2. user_asyncq 只在这里进行调用，基本没有场景用的上这个user_asyncq
-        3......
-    */
+
     message_data_cb_t* cb_data = calloc(1, sizeof(message_data_cb_t));
     if (!cb_data) {
         CON_ERR("Failed to allocate callback message data");
@@ -639,7 +648,6 @@ static void conversation_engine_event_cb(conversation_engine_event_t event,
         return;
     }
 
-    //TBD:这里执行的是用户线程的回调，看情况需不需要进行优化
     message->message_id = CONVERSATION_MESSAGE_CB;
     message->message_handler = conversation_message_cb_handler;
     message->message_data = cb_data;
@@ -749,6 +757,8 @@ static int conversation_message_start_handler(void* message_data)
             goto failed;
         }
     }
+
+    ctx->plugin->start(ctx->engine);
 
     ctx->state = CONVERSATION_STATE_START;
 
@@ -933,6 +943,8 @@ static int conversation_message_close_handler(void* message_data)
         ctx->mcp_server.loop = NULL;
     }
 
+    sem_post(&ctx->media_lock);
+
     sem_destroy(&ctx->media_lock);
 
     CON_INFO("ai_conversation_close_handler");
@@ -942,8 +954,6 @@ static int conversation_message_close_handler(void* message_data)
 
 static void conversation_uvasyncq_close_cb(uv_handle_t* handle)
 {
-    // conversation_context_t* ctx = uv_handle_get_data((const uv_handle_t*)handle);
-
     uv_async_queue_t* async_queue = (uv_async_queue_t*)handle;
 
     conversation_context_t* ctx = (conversation_context_t*)async_queue->data;
@@ -963,6 +973,11 @@ static int conversation_message_cb_handler(void* message_data)
 
     if (!data || !data->ctx || !data->ctx->cb) {
         return -EINVAL;
+    }
+
+    if (data->event == conversation_event_response_audio && 
+        data->result.result && data->result.len > 0) {
+        ai_conversation_play_audio(data->ctx, data->result.result, data->result.len);
     }
 
     data->ctx->cb(data->event, &data->result, data->ctx->cookie);
@@ -1052,15 +1067,13 @@ static int ai_conversation_init_player(conversation_context_t* ctx)
 
     ctx->player_handle = handle;
 
-    ctx->frame_buf = malloc(4096);
+    ctx->frame_buf = malloc(10240);
     if (!ctx->frame_buf) {
         CON_ERR("Failed to allocate audio frame buffer");
         media_uv_player_close(handle, 0, media_player_close_cb);
         goto failed;
     }
 
-    //media circular buffer 目前是在堆上直接malloc的，可能会因为内存碎片导致失败
-    // 后期可以优化circular buffer的逻辑让他在栈上
     char* buffer_data = malloc(CONVERSATION_BUFFER_MAX_SIZE);
     if (!buffer_data) {
         CON_ERR("Failed to allocate audio buffer");
@@ -1091,13 +1104,19 @@ static int ai_conversation_play_audio(conversation_context_t* ctx, const void* d
         return -ENOSPC;
     }
 
+    CON_INFO("ai_conversation_play_audio %p, %d", ctx->player_handle, length);
+
     ai_circular_buffer_queue_arr(&ctx->buffer, (const char*)data, length);
 
     if (ai_circular_buffer_num_items(&ctx->buffer) > 0 && !ctx->write_req.data) {
         size_t available = ai_circular_buffer_num_items(&ctx->buffer);
-        size_t to_write = available > 4096 ? 4096 : available;
+        size_t to_write = available > 10240 ? 10240 : available;
 
         ai_circular_buffer_dequeue_arr(&ctx->buffer, ctx->frame_buf, to_write);
+        if (to_write & 1) to_write--; /* 保证 16-bit 对齐 */
+        if (to_write == 0) {
+            return 0;
+        }
 
         uv_buf_t buf = uv_buf_init(ctx->frame_buf, to_write);
         ctx->write_req.data = ctx;
@@ -1114,6 +1133,9 @@ static int ai_conversation_play_audio(conversation_context_t* ctx, const void* d
 
 static void alloc_read_buffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 {
+    if (!handle || !buf) {
+        return;
+    }
     buf->base = (char*)calloc(1, suggested_size);
     buf->len = suggested_size;
 }
@@ -1136,6 +1158,10 @@ static void media_recorder_prepare_connect_cb(void* cookie, int ret, void* obj)
 {
     conversation_context_t* ctx = cookie;
 
+    if (!ctx || !obj) {
+        return;
+    }
+        
     if (ret < 0) {
         CON_ERR("conversation recorder prepare connect cb error:%d\n", ret);
         return;
@@ -1150,7 +1176,10 @@ static void media_recorder_prepare_connect_cb(void* cookie, int ret, void* obj)
 static void media_recorder_open_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
-    UNUSED(ctx);
+
+    if (!ctx) {
+        return;
+    }
 
     if (ret < 0) {
         CON_ERR("conversation recorder open cb error:%d", ret);
@@ -1161,7 +1190,10 @@ static void media_recorder_open_cb(void* cookie, int ret)
 static void media_recorder_start_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
-    UNUSED(ctx);
+
+    if (!ctx) {
+        return;
+    }
 
     if (ret < 0) {
         CON_ERR("conversation recorder start cb error:%d", ret);
@@ -1172,7 +1204,10 @@ static void media_recorder_start_cb(void* cookie, int ret)
 static void media_recorder_pause_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
-    UNUSED(ctx);
+
+    if (!ctx) {
+        return;
+    }
 
     if (ret < 0)
     {
@@ -1189,7 +1224,10 @@ static void media_recorder_close_cb(void* cookie, int ret)
 static void media_recorder_event_callback(void* cookie, int event, int ret, const char* extra)
 {
     conversation_context_t* ctx = cookie;
-    UNUSED(ctx);
+
+    if (!ctx) {
+        return;
+    }
 
     if (ret < 0) {
         CON_ERR("conversation recorder event error:%d", ret);
@@ -1225,6 +1263,10 @@ static void media_player_prepare_connect_cb(void* cookie, int ret, void* obj)
 {
     conversation_context_t* ctx = cookie;
 
+    if (!ctx || !obj) {
+        return;
+    }
+
     if (ret < 0) {
         CON_ERR("conversation player prepare connect cb error:%d\n", ret);
         return;
@@ -1236,7 +1278,11 @@ static void media_player_prepare_connect_cb(void* cookie, int ret, void* obj)
 static void media_player_open_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
-    
+
+    if (!ctx) {
+        return;
+    }
+
     ctx->player_status = CONVERSATION_PLAYER_STATUS_OPENED;
 
     if (ret < 0) {
@@ -1248,6 +1294,10 @@ static void media_player_open_cb(void* cookie, int ret)
 static void media_player_start_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
+
+    if (!ctx) {
+        return;
+    }
 
     ctx->player_status = CONVERSATION_PLAYER_STATUS_PLAYING;
 
@@ -1265,6 +1315,10 @@ static void media_player_music_start_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
 
+    if (!ctx) {
+        return;
+    }
+
     ctx->player_status = CONVERSATION_PLAYER_STATUS_PLAYING_MUSIC;
 
     if (ret < 0) {
@@ -1277,6 +1331,10 @@ static void media_player_close_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
 
+    if (!ctx) {
+        return;
+    }
+
     ctx->player_status = CONVERSATION_PLAYER_STATUS_CLOSED;
 
     CON_INFO("conversation player close cb:%d", ret);
@@ -1285,6 +1343,10 @@ static void media_player_close_cb(void* cookie, int ret)
 static void media_player_stop_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
+
+    if (!ctx) {
+        return;
+    }
 
     ctx->player_status = CONVERSATION_PLAYER_STATUS_STOPPED;
 
@@ -1298,7 +1360,10 @@ static void media_player_stop_cb(void* cookie, int ret)
 static void media_player_event_callback(void* cookie, int event, int ret, const char* extra)
 {
     conversation_context_t* ctx = cookie;
-    UNUSED(ctx);
+
+    if (!ctx || ctx->is_closed || !ctx->player_handle) {
+        return;
+    }
 
     if (ret < 0) {
         CON_ERR("conversation player ret error:%d", ret);
@@ -1358,8 +1423,13 @@ static void write_audio_data_cb(uv_write_t* req, int status)
 
     if (ai_circular_buffer_num_items(&ctx->buffer) > 0) {
         size_t available = ai_circular_buffer_num_items(&ctx->buffer);
-        size_t to_write = available > 4096 ? 4096 : available;
 
+        size_t to_write = available > 10240 ? 10240 : available;
+        if (to_write & 1) to_write--;
+        if (to_write == 0) {
+            ctx->write_req.data = NULL;
+            return;
+        }
         ai_circular_buffer_dequeue_arr(&ctx->buffer, ctx->frame_buf, to_write);
 
         uv_buf_t buf = uv_buf_init(ctx->frame_buf, to_write);
@@ -1374,6 +1444,10 @@ static void write_audio_data_cb(uv_write_t* req, int status)
 static void ai_conversation_focus_callback(int suggestion, void* cookie)
 {
     conversation_context_t* ctx = cookie;
+
+    if (!ctx) {
+        return;
+    }
 
     if (suggestion != MEDIA_FOCUS_PLAY) {
         ai_conversation_finish(ctx);

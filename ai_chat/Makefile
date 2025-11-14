@@ -24,6 +24,7 @@ MODULE  = y
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include
 # CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miai/mico_service_agent
 # CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core/protocol
 # CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core/streaming
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/utils

@@ -237,6 +237,11 @@ static int volc_conversation_websocket_callback(struct lws* wsi, enum lws_callba
 
     case LWS_CALLBACK_CLIENT_WRITEABLE:
         CON_INFO("conversation_volc WebSocket writable");
+        if (engine->is_closed) {
+            /* Request graceful close on writable */
+            lws_close_reason(wsi, LWS_CLOSE_STATUS_NORMAL, NULL, 0);
+            return -1; /* trigger close */
+        }
         if (ai_circular_buffer_num_items(&engine->send_buffer) > 0) {
             size_t available = ai_circular_buffer_num_items(&engine->send_buffer);
             size_t message_end = 0;
@@ -273,24 +278,8 @@ static int volc_conversation_websocket_callback(struct lws* wsi, enum lws_callba
                         lws_callback_on_writable(wsi);
                     }
                 }
-            } else if (available >= VOLC_BUFFER_MAX_SIZE - LWS_PRE) {
-
-                size_t to_send = VOLC_BUFFER_MAX_SIZE - LWS_PRE;
-                unsigned char* buffer = malloc(to_send + LWS_PRE);
-                if (buffer) {
-                    ai_circular_buffer_dequeue_arr(&engine->send_buffer, \
-                                                (char*)(buffer + LWS_PRE), to_send);
-                    
-                    int written = lws_write(wsi, buffer + LWS_PRE, to_send, \
-                                        LWS_WRITE_TEXT);
-                    free(buffer);
-
-                    if (written < 0) {
-                        return -1;
-                    }
-                    
-                    lws_callback_on_writable(wsi);
-                }
+            } else if (available > 0) {
+                ai_circular_buffer_clear_arr(&engine->send_buffer, available);
             }
         }
         break;
@@ -308,8 +297,6 @@ static int volc_conversation_websocket_callback(struct lws* wsi, enum lws_callba
         CON_INFO("WebSocket connection closed");
         engine->wsi = NULL;
         engine->state = VOLC_STATE_DISCONNECTED;
-        volc_conversation_send_event(engine, conversation_engine_event_stop,
-                            NULL, 0, conversation_engine_error_success);
         break;
 
     case LWS_CALLBACK_WSI_DESTROY:
@@ -369,7 +356,7 @@ static int volc_conversation_websocket_callback(struct lws* wsi, enum lws_callba
 static int volc_conversation_send_json_message(volc_conversation_engine_t* engine,
                                                json_object* json_obj)
 {
-    if (!engine || !json_obj || !engine->wsi) {
+    if (!engine || !json_obj || engine->is_closed || !engine->wsi) {
         return -EINVAL;
     }
 
@@ -437,9 +424,6 @@ static int volc_conversation_process_server_message(volc_conversation_engine_t* 
             volc_conversation_update_session(engine);
             engine->is_created = true;
         }
-        //TBD:开始对话不应该在这里发送事件!!!
-        //理由:这里应该是对话被创建，传建之后需要向大模型发送update_session事件
-        //     注册mcp工具，updated后，这时候对话才开始
         volc_conversation_send_event(engine, conversation_engine_event_start,
                  engine->session_id, strlen(engine->session_id), 
                     conversation_engine_error_success);
@@ -806,14 +790,9 @@ static int volc_conversation_uninit(void* engine)
 
     volc_conversation_destroy_thread(volc_engine);
 
-    if (volc_engine->wsi) {
-        lws_close_reason(volc_engine->wsi, LWS_CLOSE_STATUS_NORMAL, NULL, 0);
-        volc_engine->wsi = NULL;
-    }
-
+    /* Defer actual socket/context close to the loop thread; just wake it up */
     if (volc_engine->lws_context) {
-        lws_context_destroy(volc_engine->lws_context);
-        volc_engine->lws_context = NULL;
+        lws_cancel_service(volc_engine->lws_context);
     }
 
     if (volc_engine->send_buffer_data) {
@@ -886,6 +865,11 @@ static int volc_conversation_connect_websocket(volc_conversation_engine_t* volc_
         volc_engine->wsi = NULL;
     }
 
+    if (volc_engine->state == VOLC_STATE_CONNECTED) {
+        CON_INFO("WebSocket connection already active, reusing existing connection");
+        return 0;
+    }
+
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof(info));
 
@@ -936,12 +920,10 @@ static int volc_conversation_write_audio(void* engine, const char* data, int len
     if (!volc_engine || !data || len <= 0) {
         return -EINVAL;
     }
-    
-    //TBD:删除is_finished标志位
 
-    // if (volc_engine->is_finished || volc_engine->is_closed) {
-    //     return 0;
-    // }
+    if (volc_engine->is_finished || volc_engine->is_closed) {
+        return 0;
+    }
 
     char* audio_b64 = base64_encode((const unsigned char*)data, len);
     if (!audio_b64) {
@@ -1009,7 +991,7 @@ json_object *mcp_get_tool_list(void) {
     json_object_object_add(tools_music_play, "name", \
                             json_object_new_string("music_play"));
     json_object_object_add(tools_music_play, "description", \
-                            json_object_new_string("播放音乐"));
+                        json_object_new_string("播放音乐，如果接受到的消息只有音乐，请返回“随机音乐”这个字符串"));
     json_object* tools_music_play_params = json_object_new_object();
     json_object_object_add(tools_music_play_params, "type", \
                             json_object_new_string("object"));
@@ -1038,7 +1020,7 @@ json_object *mcp_get_tool_list(void) {
     json_object_object_add(tools_adjust_volume, "name", \
                             json_object_new_string("adjust_volume"));
     json_object_object_add(tools_adjust_volume, "description", \
-                            json_object_new_string("调节音量，范围0-100"));
+                            json_object_new_string("调节系统音量，调节说话声音大小，调节参数0-100"));
 
     json_object* tools_adjust_volume_params = json_object_new_object();
     json_object_object_add(tools_adjust_volume_params, "type", \
@@ -1115,7 +1097,8 @@ static int volc_conversation_update_session(void* engine)
     json_object_array_add(session_modalities, json_object_new_string("audio"));
     json_object_object_add(session, "modalities", session_modalities);
     json_object_object_add(session, "instructions",\
-                    json_object_new_string("你的名字叫小v，你是一个智能助手，你的回答要尽量简短。"));
+        json_object_new_string( "你的名字叫小v，你是一个智能助手，你的回答要尽量简短。一旦你判断字数超过200个字，\
+                                 你可以精简整个回答,然后引导用户调用工具"));
     json_object_object_add(session, "voice",\
                             json_object_new_string("zh_female_tianmeiyueyue_moon_bigtts"));
     json_object_object_add(session, "input_audio_format", \

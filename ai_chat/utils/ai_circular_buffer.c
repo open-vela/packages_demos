@@ -19,8 +19,8 @@
  ****************************************************************************/
 
 #include <stdlib.h>
+#include <string.h>
 
-#include "ai_log.h"
 #include "ai_circular_buffer.h"
 
 void ai_circular_buffer_init(ai_circular_buffer_t* buffer, char* buf, size_t buf_size)
@@ -35,7 +35,7 @@ void ai_circular_buffer_init(ai_circular_buffer_t* buffer, char* buf, size_t buf
 void ai_circular_buffer_queue(ai_circular_buffer_t* buffer, char data)
 {
     if (ai_circular_buffer_is_full(buffer))
-        buffer->tail_index = ((buffer->tail_index + 1) & AI_RING_BUFFER_MASK(buffer));
+        return;
 
     /* Place data in buffer */
     buffer->buffer[buffer->head_index] = data;
@@ -44,9 +44,25 @@ void ai_circular_buffer_queue(ai_circular_buffer_t* buffer, char data)
 
 void ai_circular_buffer_queue_arr(ai_circular_buffer_t* buffer, const char* data, ai_circular_buffer_size_t size)
 {
-    ai_circular_buffer_size_t i;
-    for (i = 0; i < size; i++)
-        ai_circular_buffer_queue(buffer, data[i]);
+    if (!buffer || !buffer->buffer || !data || size == 0) return;
+
+    const ai_circular_buffer_size_t cap = buffer->buffer_mask + 1;
+    ai_circular_buffer_size_t used = ((buffer->head_index - buffer->tail_index) & buffer->buffer_mask);
+    ai_circular_buffer_size_t free_space = cap - used;
+
+    if (free_space < size) {
+        return;
+    }
+
+    ai_circular_buffer_size_t head = buffer->head_index & buffer->buffer_mask;
+    ai_circular_buffer_size_t first = cap - head;
+    if (first > size) first = size;
+    ai_circular_buffer_size_t second = size - first;
+
+    memcpy(buffer->buffer + head, data, first);
+    if (second > 0) memcpy(buffer->buffer, data + first, second);
+
+    buffer->head_index = (buffer->head_index + size) & buffer->buffer_mask;
 }
 
 uint8_t ai_circular_buffer_dequeue(ai_circular_buffer_t* buffer, char* data)
@@ -62,31 +78,38 @@ uint8_t ai_circular_buffer_dequeue(ai_circular_buffer_t* buffer, char* data)
 
 ai_circular_buffer_size_t ai_circular_buffer_clear_arr(ai_circular_buffer_t* buffer, ai_circular_buffer_size_t len)
 {
-    if (ai_circular_buffer_is_empty(buffer))
-        return 0;
+    if (!buffer || !buffer->buffer) return 0;
 
-    char* data_ptr = &buffer->drop_char;
-    ai_circular_buffer_size_t cnt = 0;
-    while ((cnt < len) && ai_circular_buffer_dequeue(buffer, data_ptr)) {
-        cnt++;
-    }
+    ai_circular_buffer_size_t avail = ((buffer->head_index - buffer->tail_index) & buffer->buffer_mask);
+    if (avail == 0) return 0;
 
-    return cnt;
+    if (len > avail) len = avail;
+
+    buffer->tail_index = (buffer->tail_index + len) & buffer->buffer_mask;
+    return len;
 }
 
 ai_circular_buffer_size_t ai_circular_buffer_dequeue_arr(ai_circular_buffer_t* buffer, char* data, ai_circular_buffer_size_t len)
 {
-    if (ai_circular_buffer_is_empty(buffer))
-        return 0;
+    if (!buffer || !buffer->buffer || !data || len == 0) return 0;
 
-    char* data_ptr = data;
-    ai_circular_buffer_size_t cnt = 0;
-    while ((cnt < len) && ai_circular_buffer_dequeue(buffer, data_ptr)) {
-        cnt++;
-        data_ptr++;
-    }
+    ai_circular_buffer_size_t avail = ((buffer->head_index - buffer->tail_index) & buffer->buffer_mask);
+    if (avail == 0) return 0;
 
-    return cnt;
+    if (len > avail) len = avail;
+
+    const ai_circular_buffer_size_t cap = buffer->buffer_mask + 1;
+    ai_circular_buffer_size_t tail = buffer->tail_index & buffer->buffer_mask;
+
+    ai_circular_buffer_size_t first = cap - tail;
+    if (first > len) first = len;
+    ai_circular_buffer_size_t second = len - first;
+
+    memcpy(data, buffer->buffer + tail, first);
+    if (second > 0) memcpy(data + first, buffer->buffer, second);
+
+    buffer->tail_index = (buffer->tail_index + len) & buffer->buffer_mask;
+    return len;
 }
 
 uint8_t ai_circular_buffer_peek(ai_circular_buffer_t* buffer, char* data, ai_circular_buffer_size_t index)
