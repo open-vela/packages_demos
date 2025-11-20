@@ -59,8 +59,7 @@ static void auto_knock_timer_cb(lv_timer_t *timer) {
 
     play_wooden_fish_sound();
 
-    lv_anim_t anim;
-    lv_memzero(&anim, sizeof(lv_anim_t));
+    lv_anim_t anim = {0};
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, app->ui.fish_img);
     lv_anim_set_values(&anim, 0, 10);
@@ -94,8 +93,7 @@ static void fish_click_cb(lv_event_t *e) {
 
     play_wooden_fish_sound();
 
-    lv_anim_t anim;
-    lv_memzero(&anim, sizeof(lv_anim_t));
+    lv_anim_t anim = {0};
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, app->ui.fish_img);
     lv_anim_set_values(&anim, 0, 10);
@@ -165,16 +163,14 @@ static void create_pr_animation(wooden_fish_t *app, int32_t x, int32_t y) {
     int32_t label_y = y - text_size.y / 2;
     lv_obj_set_size(label, text_size.x, text_size.y);
     lv_obj_set_pos(label, label_x, label_y);
-    lv_anim_t move_anim;
-    lv_memzero(&move_anim, sizeof(lv_anim_t));
+    lv_anim_t move_anim = {0};
     lv_anim_init(&move_anim);
     lv_anim_set_var(&move_anim, label);
     lv_anim_set_values(&move_anim, label_y, label_y - 120);
     lv_anim_set_exec_cb(&move_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
     lv_anim_set_time(&move_anim, 1500);
     lv_anim_set_path_cb(&move_anim, lv_anim_path_ease_out);
-    lv_anim_t fade_anim;
-    lv_memzero(&fade_anim, sizeof(lv_anim_t));
+    lv_anim_t fade_anim = {0};
     lv_anim_init(&fade_anim);
     lv_anim_set_var(&fade_anim, label);
     lv_anim_set_values(&fade_anim, LV_OPA_COVER, LV_OPA_TRANSP);
@@ -322,16 +318,14 @@ static void create_merit_animation(wooden_fish_t *app, int32_t x, int32_t y){
     LV_LOG_INFO("创建功德+1动画: 位置(%d,%d) 尺寸(%d,%d)", 
                 label_x, label_y, text_size.x, text_size.y);
 
-    lv_anim_t move_anim;
-    lv_memzero(&move_anim, sizeof(lv_anim_t));
+    lv_anim_t move_anim = {0};
     lv_anim_init(&move_anim);
     lv_anim_set_var(&move_anim, label);
     lv_anim_set_values(&move_anim, label_y, label_y - 120);
     lv_anim_set_exec_cb(&move_anim, (lv_anim_exec_xcb_t)lv_obj_set_y);
     lv_anim_set_time(&move_anim, 1500);
     lv_anim_set_path_cb(&move_anim, lv_anim_path_ease_out);
-    lv_anim_t fade_anim;
-    lv_memzero(&fade_anim, sizeof(lv_anim_t));
+    lv_anim_t fade_anim = {0};
     lv_anim_init(&fade_anim);
     lv_anim_set_var(&fade_anim, label);
     lv_anim_set_values(&fade_anim, LV_OPA_COVER, LV_OPA_TRANSP);

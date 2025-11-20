@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "audio_ctl.h"
 #include "wooden_fish.h"
@@ -62,7 +63,6 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
 
         if (pos < 0) {
 
-            printf("lseek failed: %s\n", strerror(errno));
 
             return;
 
@@ -72,14 +72,12 @@ static void app_dequeue_cb(unsigned long arg, FAR struct ap_buffer_s *apb)
     }
 
     if (apb->nmaxbytes > SSIZE_MAX) {
-        printf("nmaxbytes too large: %u\n", apb->nmaxbytes);
         apb->nbytes = 0;
         return;
     }
 
     ssize_t bytes_read = read(ctl->fd, apb->samp, apb->nmaxbytes);
     if (bytes_read < 0) {
-        printf("read audio data failed: %s\n", strerror(errno));
         apb->nbytes = 0;
         return;
     }
@@ -130,7 +128,7 @@ static void app_user_cb(unsigned long arg,
     /* Do nothing.. */
 }
 
-static FAR void *audio_loop_thread(pthread_addr_t arg)
+static FAR void *audio_loop_thread(void *arg)
 {
     FAR audioctl_s *ctl = (FAR audioctl_s *)arg;
 
@@ -163,26 +161,40 @@ FAR audioctl_s *audio_ctl_init_nxaudio(FAR const char *arg)
 
     ctl->fd = open(arg, O_RDONLY);
     if (ctl->fd < 0) {
-       printf("can't open audio file: %s, error: %s\n", arg, strerror(errno));
        free(ctl);
        return NULL;
     }
 
     ssize_t read_ret = read(ctl->fd, &ctl->wav, sizeof(ctl->wav));
     if (read_ret < (ssize_t)sizeof(ctl->wav)) {
-       printf("can't read WAV header from %s, read %zd bytes, expected %zu bytes, error: %s\n", 
-              arg, read_ret, sizeof(ctl->wav), strerror(errno));
        close(ctl->fd);
        free(ctl);
        return NULL;
     }
 
-    ret = init_nxaudio(&ctl->nxaudio, ctl->wav.fmt.samplerate,
-                       ctl->wav.fmt.bitspersample,
-                       ctl->wav.fmt.numchannels);
+    if (ctl->wav.fmt.samplerate > INT_MAX || ctl->wav.fmt.samplerate == 0) {
+       close(ctl->fd);
+       free(ctl);
+       return NULL;
+    }
+
+    if (ctl->wav.fmt.bitspersample > INT_MAX || ctl->wav.fmt.bitspersample == 0) {
+       close(ctl->fd);
+       free(ctl);
+       return NULL;
+    }
+
+    if (ctl->wav.fmt.numchannels > INT_MAX || ctl->wav.fmt.numchannels == 0) {
+       close(ctl->fd);
+       free(ctl);
+       return NULL;
+    }
+
+    ret = init_nxaudio(&ctl->nxaudio, (int)ctl->wav.fmt.samplerate,
+                       (int)ctl->wav.fmt.bitspersample,
+                       (int)ctl->wav.fmt.numchannels);
     if (ret < 0)
     {
-        printf("init_nxaudio() return with error!!\n");
         close(ctl->fd);
         free(ctl);
         return NULL;
@@ -221,13 +233,12 @@ int audio_ctl_start(FAR audioctl_s *ctl)
     pthread_attr_setstacksize(&tattr, 4096);
 
     ret = pthread_create(&ctl->pid, &tattr, audio_loop_thread,
-                         (pthread_addr_t)ctl);
+                         (void *)ctl);
 
     pthread_attr_destroy(&tattr);
 
     if (ret != 0)
     {
-        printf("pthread_create failed: %s\n", strerror(ret));
         ctl->state = AUDIO_CTL_STATE_INIT;
         return -1;
     }
