@@ -47,8 +47,8 @@ static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_nuttx_result_t *result)
 int main(int argc, FAR char *argv[])
 {
     // init lvgl
-    lv_nuttx_dsc_t info;
-    lv_nuttx_result_t result;
+    lv_nuttx_dsc_t info = {0};
+    lv_nuttx_result_t result = {0};
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
     uv_loop_t ui_loop;
@@ -66,9 +66,7 @@ int main(int argc, FAR char *argv[])
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
 
-    lv_memzero(&info, sizeof(lv_nuttx_dsc_t));
     lv_nuttx_dsc_init(&info);
-    lv_memzero(&result, sizeof(lv_nuttx_result_t));
     lv_nuttx_init(&info, &result);
 
     if (result.disp == NULL)
