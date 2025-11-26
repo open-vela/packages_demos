@@ -232,7 +232,7 @@ async def receive_messages(client, save_file_name):
 
 async def with_realtime(audio_file_path: str, save_file_name: str):
     ws_url = "wss://ai-gateway.vei.volces.com/v1/realtime?model=AG-voice-chat-agent"
-    key = "sk-8b5a267e4b564abcaa2943a786760427guqtb24r5z2b8vye"  # 修改为你的 key
+    key = "your key"
     headers = {
         "Authorization": f"Bearer {key}",
     }

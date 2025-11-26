@@ -30,6 +30,7 @@ typedef enum {
     conversation_engine_event_stop,
     conversation_engine_event_complete,
     conversation_engine_event_input_text,
+    conversation_engine_event_audio_start, // Audio start
     conversation_engine_event_audio, // Response audio
     conversation_engine_event_text, // Response text
     conversation_engine_event_mcp_call,

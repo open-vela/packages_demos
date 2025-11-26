@@ -36,9 +36,9 @@
 #include <unistd.h>
 #include <uv.h>
 #include <uv_async_queue.h>
+#include <kvdb.h>
 
 #include "builtin/builtin.h"
-#include "service_agent.h"
 #include "ai_log.h"
 #include "ai_circular_buffer.h"
 #include "ai_conversation.h"
@@ -77,14 +77,16 @@ typedef struct {
 } music_mapping_t;
 
 static const music_mapping_t g_music_mapping[] = {
+    {"k歌之王",
+      CONFIG_AI_CONVERSATION_MUSIC_PATH "/Kgezhiwang.mp3"},
     {"稻香", 
-    "/data/res/music/daoxiang.mp3"},
+      CONFIG_AI_CONVERSATION_MUSIC_PATH "/daoxiang.mp3"},
     {"同桌的你",
-    "/data/res/music/tongzhuodeni.mp3"},
+      CONFIG_AI_CONVERSATION_MUSIC_PATH "/tongzhuodeni.mp3"},
     {"晴天",
-    "/data/res/music/qingtian.mp3"},
+      CONFIG_AI_CONVERSATION_MUSIC_PATH "/qingtian.mp3"},
     {"青花瓷",
-    "/data/res/music/qinghuaci.mp3"},
+      CONFIG_AI_CONVERSATION_MUSIC_PATH "/qinghuaci.mp3"},
     {NULL,NULL}
 };
 
@@ -94,6 +96,13 @@ typedef struct {
 } launcher_app_mapping_t;;
 
 static const launcher_app_mapping_t g_launcher_app_mapping[] = {
+    {"会议纪要", "com.openvela.meeting"},
+    {"翻译", "com.system.translation"},
+    {"情感陪伴", "com.openvela.realtime.chat"},
+    {"新能力发布", "com.test.asr"},
+    {"塔罗牌", "com.vela.xmsdemo.tarot"},
+    {"敲木鱼", "com.vela.xmsdemo.woodenfish"},
+    {"电子宠物", "com.vela.xmsdemo.pet"},
     {"日历", "com.application.x4b.calendar"},
     {"设置", "com.application.x4b.settings"},
     {"白噪音", "com.application.x4b.whitenoise"},
@@ -195,8 +204,11 @@ static int conversation_mcp_destroy_thread(conversation_context_t* ctx);
 static const char* find_music_url(const char* music_name);
 static const char* get_random_music_url(void);
 static int function_call_music_play(conversation_context_t* ctx);
+static int get_system_volume(void);
 static int set_system_volume(int vol, int req_id);
 static int function_call_adjust_volume(conversation_context_t* ctx);
+static int function_call_get_volume(conversation_context_t* ctx);
+static int function_call_increase_or_decrease_volume(conversation_context_t* ctx);
 //launch app tools
 static const char* find_app_url(const char* app_name);
 static int function_call_launch_app(conversation_context_t* ctx);
@@ -230,7 +242,6 @@ static void media_recorder_close_cb(void* cookie, int ret);
 static void media_recorder_event_callback(void* cookie, int event, int ret, const char* extra);
 static void media_player_prepare_connect_cb(void* cookie, int ret, void* obj);
 static void media_player_open_cb(void* cookie, int ret);
-static void media_player_start_cb(void* cookie, int ret);
 static void media_player_music_start_cb(void* cookie, int ret);
 static void media_player_close_cb(void* cookie, int ret);
 static void media_player_stop_cb(void* cookie, int ret);
@@ -314,7 +325,6 @@ static int function_call_music_play(conversation_context_t* ctx)
             return -1;
         }
         ctx->plugin->mcp_response(ctx->engine, result);
-        sem_wait(&ctx->media_lock);
         return -1;
     }
 
@@ -360,13 +370,72 @@ static int function_call_music_play(conversation_context_t* ctx)
     return ret;
 }
 
+static int get_system_volume(void)
+{
+    // hope you to extend this function to support other volume type
+    return -1;
+}
+
 static int set_system_volume(int vol, int req_id)
 {
-    char params[96];
-    int n = snprintf(params, sizeof(params),
-    "{\"key\":\"persist.global.settings.sound.volume\",\"value\":\"%d\"}", vol);
-    if (n <= 0 || n >= (int)sizeof(params)) return -1;
-    return service_agent_send_cmd_to_client(req_id, "utils.kvdbchanged", params);
+    // hope you to extend this function to support other volume type
+    return -1;
+}
+
+static int function_call_get_volume(conversation_context_t* ctx)
+{
+    int vol = get_system_volume();
+    if (vol < 0) {
+        return -1;
+    }
+    char* result = NULL;
+    int ret = asprintf(&result, "当前音量为%d", vol);
+    if (ret < 0) {
+        CON_ERR("asprintf failed");
+        return -1;
+    }
+    return ctx->plugin->mcp_response(ctx->engine, result);
+}
+
+static int function_call_increase_or_decrease_volume(conversation_context_t* ctx)
+{
+    int vol = get_system_volume();
+    char* result = NULL;
+    if (vol < 0) {
+        result = strdup("音量调整失败");
+        ctx->plugin->mcp_response(ctx->engine, result);
+        return -1;
+    }
+    if (strcmp(ctx->mcp_server.mcp_call_data.argument, "增加") == 0) {
+        vol += 10;
+    } else if (strcmp(ctx->mcp_server.mcp_call_data.argument, "减少") == 0) {
+        vol -= 10;
+    } else {
+        CON_ERR("mcp_tool::Invalid argument: %s", ctx->mcp_server.mcp_call_data.argument);
+        result = strdup("音量调整失败");
+        ctx->plugin->mcp_response(ctx->engine, result);
+        return -1;
+    }
+    if (vol > 100) {
+        vol = 100;
+    } else if (vol < 5) {
+        vol = 5;
+    }
+    int ret = set_system_volume(vol, 10086); // 10086 is the temporary req_id
+    if (ret < 0) {
+        CON_ERR("mcp_tool::set_system_volume failed");
+        result = strdup("音量调整失败");
+        ctx->plugin->mcp_response(ctx->engine, result);
+        return -1;
+    }
+    ret = asprintf(&result, "音量已调整为%d", vol);
+    if (ret < 0) {
+        CON_ERR("asprintf failed");
+        result = strdup("音量调整失败");
+        ctx->plugin->mcp_response(ctx->engine, result);
+        return -1;
+    }
+    return ctx->plugin->mcp_response(ctx->engine, result);
 }
 
 static int function_call_adjust_volume(conversation_context_t* ctx)
@@ -390,6 +459,11 @@ static int function_call_adjust_volume(conversation_context_t* ctx)
         volume = (int)res;
     }
     CON_INFO("mcp_tool_aysync_cb::volume: %s\n", ctx->mcp_server.mcp_call_data.argument);
+    if (volume > 100) {
+        volume = 100;
+    } else if (volume < 5) {
+        volume = 5;
+    }
     ret = set_system_volume(volume, 10086); // 10086 is the temporary req_id
     if (ret < 0) {
         CON_ERR("mcp_tool::set_system_volume failed");
@@ -430,13 +504,9 @@ static int function_call_launch_app(conversation_context_t* ctx)
     }
 
     CON_INFO("mcp_tool_aysync_cb::launch_app\n");
-    char *argv[] = {"am",
-                    "start", 
-                    (char*)app_url, 
-                    NULL};
-    int pid = exec_builtin("am", argv, NULL);
-    
-    
+    int pid = -1;
+
+
     if (pid < 0) {
         CON_INFO("launch_app::exec_builtin failed");
         result = strdup("打开应用失败");
@@ -483,6 +553,10 @@ static void mcp_tool_aysync_cb(uv_async_queue_t* asyncq, void* data)
         function_call_adjust_volume(ctx);
     } else if (strcmp(ctx->mcp_server.mcp_call_data.tool_name, "launch_app") == 0) {
         function_call_launch_app(ctx);
+    } else if (strcmp(ctx->mcp_server.mcp_call_data.tool_name, "increase_or_decrease_volume") == 0) {
+        function_call_increase_or_decrease_volume(ctx);
+    } else if (strcmp(ctx->mcp_server.mcp_call_data.tool_name, "get_volume") == 0) {
+        function_call_get_volume(ctx);
     } else {
         function_call_unknown_tool(ctx);
     }
@@ -584,6 +658,9 @@ static void conversation_engine_event_cb(conversation_engine_event_t event,
             break;
         case conversation_engine_event_input_text:
             user_event = conversation_event_input_text;
+            break;
+        case conversation_engine_event_audio_start:
+            user_event = conversation_event_response_audio_start;
             break;
         case conversation_engine_event_mcp_call:
             handle_mcp_call_event(ctx, result);
@@ -794,24 +871,16 @@ static int conversation_message_finish_handler(void* message_data)
         CON_INFO("Reusing existing player");
     }
 
-    ret = media_uv_player_prepare(ctx->player_handle, NULL, ctx->format,
-        media_player_prepare_connect_cb, NULL, NULL);
-    if (ret < 0) {
-        CON_ERR("conversation player prepare failed");
-        goto failed;
-    }
+    ctx->player_status = CONVERSATION_PLAYER_STATUS_PLAYING;
 
-    ret = media_uv_player_start(ctx->player_handle, media_player_start_cb, \
-                                ctx);
-
-    if (ret < 0) {
-        CON_ERR("conversation player start failed");
-        goto failed;
-    }
+    CON_INFO("sem waiting ctx->media_lock");
+    /*如果某轮对话只返回文本、不播语音，或播放流程在准备阶段就失败，就不会触发 media_player_stop_cb，
+      导致下一次 ai_conversation_finish() 永久阻塞*/
+    sem_wait(&ctx->media_lock);
+    CON_INFO("sem wait done ctx->media_lock");
 
     ret = media_uv_recorder_pause(ctx->recorder_handle, \
                         media_recorder_pause_cb, ctx);
-    CON_INFO("Recorder pause");
     if (ret < 0)
         goto failed;
 
@@ -870,6 +939,10 @@ static int conversation_message_close_handler(void* message_data)
     uv_async_queue_close(ctx->asyncq, conversation_uvasyncq_close_cb);
 
     uv_async_queue_close(&ctx->user_asyncq, NULL);
+
+    sem_post(&ctx->media_lock);
+
+    sem_destroy(&ctx->media_lock);
 
     conversation_mcp_destroy_thread(ctx);
 
@@ -937,15 +1010,10 @@ static int conversation_message_close_handler(void* message_data)
         ctx->frame_buf = NULL;
     }
 
-
     if (ctx->mcp_server.loop) {
         free(ctx->mcp_server.loop);
         ctx->mcp_server.loop = NULL;
     }
-
-    sem_post(&ctx->media_lock);
-
-    sem_destroy(&ctx->media_lock);
 
     CON_INFO("ai_conversation_close_handler");
 
@@ -961,6 +1029,7 @@ static void conversation_uvasyncq_close_cb(uv_handle_t* handle)
     if (!ctx) {
         return;
     }
+    usleep(500000); // wait 500ms to ensure the mcp thread exit
     free(async_queue);
     free(ctx);
 
@@ -973,6 +1042,20 @@ static int conversation_message_cb_handler(void* message_data)
 
     if (!data || !data->ctx || !data->ctx->cb) {
         return -EINVAL;
+    }
+
+    if (data->event == conversation_event_response_audio_start) {
+        int ret = media_uv_player_prepare(data->ctx->player_handle, NULL, data->ctx->format,
+            media_player_prepare_connect_cb, NULL, NULL);
+        if (ret < 0) {
+            CON_ERR("conversation player prepare failed");
+            return ret;
+        }
+        ret = media_uv_player_start(data->ctx->player_handle, NULL, data->ctx);
+        if (ret < 0) {
+            CON_ERR("conversation player start failed");
+            return ret;
+        }
     }
 
     if (data->event == conversation_event_response_audio && 
@@ -1095,7 +1178,7 @@ failed:
 
 static int ai_conversation_play_audio(conversation_context_t* ctx, const void* data, int length)
 {
-    if (!ctx || !data || length <= 0 || !ctx->player_pipe) {
+    if (!ctx || !data || length <= 0) {
         return -EINVAL;
     }
 
@@ -1104,9 +1187,16 @@ static int ai_conversation_play_audio(conversation_context_t* ctx, const void* d
         return -ENOSPC;
     }
 
+    ctx->player_status = CONVERSATION_PLAYER_STATUS_PLAYING;
+
     CON_INFO("ai_conversation_play_audio %p, %d", ctx->player_handle, length);
 
     ai_circular_buffer_queue_arr(&ctx->buffer, (const char*)data, length);
+
+    if (!ctx->player_pipe) {
+        CON_ERR("Player pipe not initialized");
+        return -EINVAL;
+    }
 
     if (ai_circular_buffer_num_items(&ctx->buffer) > 0 && !ctx->write_req.data) {
         size_t available = ai_circular_buffer_num_items(&ctx->buffer);
@@ -1289,26 +1379,6 @@ static void media_player_open_cb(void* cookie, int ret)
         CON_ERR("conversation player open cb error:%d", ret);
     }
     CON_INFO("conversation player open cb:%d", ret);
-}
-
-static void media_player_start_cb(void* cookie, int ret)
-{
-    conversation_context_t* ctx = cookie;
-
-    if (!ctx) {
-        return;
-    }
-
-    ctx->player_status = CONVERSATION_PLAYER_STATUS_PLAYING;
-
-    CON_INFO("sem waiting ctx->media_lock");
-    sem_wait(&ctx->media_lock);
-    CON_INFO("sem wait done ctx->media_lock");
-
-    if (ret < 0) {
-        CON_ERR("conversation player start cb error:%d", ret);
-    }
-    CON_INFO("conversation player start cb:%d", ret);
 }
 
 static void media_player_music_start_cb(void* cookie, int ret)

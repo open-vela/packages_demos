@@ -23,6 +23,9 @@
  ****************************************************************************/
 
 #include <errno.h>
+#include <json-c/json_object.h>
+#include <json-c/json_object_iterator.h>
+#include <json-c/json_types.h>
 #include <json_object.h>
 #include <json_tokener.h>
 #include <libwebsockets.h>
@@ -41,6 +44,7 @@
 
 #include "ai_log.h"
 #include "ai_conversation_plugin.h"
+#include "ai_conversation.h"
 #include "ai_circular_buffer.h"
 
 #define VOLC_API_KEY CONFIG_VOLC_PULGIN_API_KEY
@@ -51,7 +55,8 @@
 
 #define VOLC_BUFFER_MAX_SIZE 128 * 1024
 #define VOLC_LOOP_INTERVAL 1000 // microseconds
-#define VOLC_PING_INTERVAL 100000000 // 100 seconds 服务器120s没有收到消息会断开连接
+#define VOLC_PING_INTERVAL 100000000 // 100 seconds if server 120s no message, consider it as timeout
+#define VOLC_RESPONSE_TIMEOUT 20000000 // 20 seconds if server 20s no response, consider it as error
 
 /****************************************************************************
  * Private Types
@@ -115,7 +120,51 @@ typedef struct volc_conversation_engine {
     uint64_t last_ping_time;
     bool ping_pending;
 
+    uint64_t last_response_time;
+    bool response_pending;
+
 } volc_conversation_engine_t;
+
+static const mcp_param_def_t g_turn_light_params[] = {
+    { "properties", "string", "灯所在位置", true },
+};
+
+static const mcp_param_def_t g_music_play_params[] = {
+    { "properties", "string", "歌曲名称；若为空则播放“随机音乐”", true },
+};
+
+static const mcp_param_def_t g_adjust_volume_params[] = {
+    { "properties", "string", "0-100 的音量值", true },
+};
+
+static const mcp_param_def_t g_launch_app_params[] = {
+    { "properties", "string", "应用名称", true },
+};
+
+static const mcp_param_def_t g_increase_or_decrease_volume_params[] = {
+    { "properties", "string", "增加或减少音量，只支持输入“增加”或“减少”", true },
+};
+
+static const mcp_tool_def_t g_mcp_tools[] = {
+    { "turn_light_on", "控制灯亮度",
+       g_turn_light_params,
+      (sizeof(g_turn_light_params) / sizeof((g_turn_light_params)[0])) },
+    { "music_play", "播放音乐",
+       g_music_play_params,
+      (sizeof(g_music_play_params) / sizeof((g_music_play_params)[0])) },
+    { "adjust_volume", "调节系统音量",  // only support in x4b platform
+       g_adjust_volume_params,
+      (sizeof(g_adjust_volume_params) / sizeof((g_adjust_volume_params)[0])) },
+    { "increase_or_decrease_volume", "增加或减少系统音量", // only support in x4b platform
+       g_increase_or_decrease_volume_params,
+      (sizeof(g_increase_or_decrease_volume_params) / sizeof((g_increase_or_decrease_volume_params)[0])) },
+    { "get_volume", "获取系统音量", // only support in x4b platform
+       NULL,
+        0 },
+    { "launch_app", "打开应用",
+       g_launch_app_params,
+      (sizeof(g_launch_app_params) / sizeof((g_launch_app_params)[0])) }
+};
 
 /****************************************************************************
  * Private Functions
@@ -512,6 +561,10 @@ static int volc_conversation_process_server_message(volc_conversation_engine_t* 
             }
         }
 
+    } else if (strcmp(type, "response.audio_transcript.done") == 0) {
+        volc_conversation_send_event(engine, conversation_engine_event_audio_start,
+                                       NULL, 0, 
+                                    conversation_engine_error_success);
     } else if (strcmp(type, "response.audio.delta") == 0) {
         json_object* delta_obj;
         if (json_object_object_get_ex(json, "delta", &delta_obj)) {
@@ -532,11 +585,15 @@ static int volc_conversation_process_server_message(volc_conversation_engine_t* 
 
     } else if (strcmp(type, "response.audio_transcript.delta") == 0) {
         json_object* delta_obj;
+        engine->response_pending = false;
         if (json_object_object_get_ex(json, "delta", &delta_obj)) {
             const char* text_delta = json_object_get_string(delta_obj);
-            volc_conversation_send_event(engine, conversation_engine_event_text,
-                                       text_delta, strlen(text_delta), 
+            const char* text = strdup(text_delta);
+            if (text) {
+                volc_conversation_send_event(engine, conversation_engine_event_text,
+                                       text, strlen(text), 
                                        conversation_engine_error_success);
+            }
         }
 
     } else if (strcmp(type, "response.done") == 0) {
@@ -758,7 +815,9 @@ static int volc_conversation_init(void* engine, const conversation_engine_init_p
     volc_engine->is_closed = false;
     volc_engine->is_running = false;
     volc_engine->ping_pending = false;
+    volc_engine->response_pending = false;
     volc_engine->last_ping_time = 0;
+    volc_engine->last_response_time = 0;
 
     volc_engine->opaque = param->opaque;
 
@@ -948,134 +1007,60 @@ static int volc_conversation_write_audio(void* engine, const char* data, int len
     return ret;
 }
 
-json_object *mcp_get_tool_list(void) {
-    /*
-    TBD: 这里需要创建整个mcp工具，目前还只是发送json数据
-         创建工具需要function_name
-                   description
-                   parameters
-                   function_call
-    */
+static json_object *mcp_params_to_json(const mcp_param_def_t *params,
+                                       size_t count)
+{
+    json_object *params_json = json_object_new_object();
+    json_object *properties = json_object_new_object();
+    json_object *required = json_object_new_array();
+
+    for (size_t i = 0; i < count; ++i) {
+        const mcp_param_def_t *param = &params[i];
+        json_object *prop = json_object_new_object();
+        json_object_object_add(prop, "type", json_object_new_string(param->type));
+        if (param->description) {
+            json_object_object_add(prop, "description", 
+                                json_object_new_string(param->description));
+        }
+        json_object_object_add(properties, param->name, prop);
+        if (param->required) {
+            json_object_array_add(required, json_object_new_string(param->name));
+        }
+    }
+
+    json_object_object_add(params_json, "type", json_object_new_string("object"));
+    json_object_object_add(params_json, "properties", properties);
+    if (json_object_array_length(required) > 0) {
+        json_object_object_add(params_json, "required", required);
+    } else {
+        json_object_put(required);
+    }
+    return params_json;
+}
+
+static json_object *mcp_tool_to_json(const mcp_tool_def_t *tool)
+{
+    json_object *tool_json = json_object_new_object();
+    json_object_object_add(tool_json, "type", json_object_new_string("function"));
+    json_object_object_add(tool_json, "name", json_object_new_string(tool->name));
+    if (tool->description) {
+        json_object_object_add(tool_json, "description", 
+                            json_object_new_string(tool->description));
+    }
+    if (tool->parameters && tool->param_count > 0) {
+        json_object_object_add(tool_json, "parameters", 
+                            mcp_params_to_json(tool->parameters, tool->param_count));
+    }
+    return tool_json;
+}
+
+json_object *mcp_get_tool_list(void)
+{
     json_object* tool_list = json_object_new_array();
-
-    json_object* tools_light = json_object_new_object();
-    json_object_object_add(tools_light, "type", \
-                            json_object_new_string("function"));
-    json_object_object_add(tools_light, "name", \
-                            json_object_new_string("turn_light_on"));
-    json_object_object_add(tools_light, "description", \
-                            json_object_new_string("控制灯亮度"));
-    json_object* tools_light_params = json_object_new_object();
-    json_object_object_add(tools_light_params, "type", \
-                            json_object_new_string("object"));
-    json_object* tools_light_params_properties = json_object_new_object();
-    json_object* tools_light_params_properties_location = json_object_new_object();
-    json_object_object_add(tools_light_params_properties_location, "type", \
-                            json_object_new_string("string"));
-    json_object_object_add(tools_light_params_properties, "properties", \
-                            tools_light_params_properties_location);
-    json_object_object_add(tools_light_params, "properties", \
-                            tools_light_params_properties);
-
-    json_object* tools_light_params_required = json_object_new_array();
-    json_object_array_add(tools_light_params_required, json_object_new_string("location"));
-    json_object_object_add(tools_light_params, "required", tools_light_params_required);
-
-    json_object_object_add(tools_light, "parameters", tools_light_params);
-
-    json_object_array_add(tool_list, tools_light);
-
-    json_object* tools_music_play = json_object_new_object();
-    json_object_object_add(tools_music_play, "type", \
-                            json_object_new_string("function"));
-    json_object_object_add(tools_music_play, "name", \
-                            json_object_new_string("music_play"));
-    json_object_object_add(tools_music_play, "description", \
-                        json_object_new_string("播放音乐，如果接受到的消息只有音乐，请返回“随机音乐”这个字符串"));
-    json_object* tools_music_play_params = json_object_new_object();
-    json_object_object_add(tools_music_play_params, "type", \
-                            json_object_new_string("object"));
-    json_object* tools_music_play_params_properties = json_object_new_object();
-    json_object* tools_music_play_params_properties_location = json_object_new_object();
-    json_object_object_add(tools_music_play_params_properties_location, "type", \
-                            json_object_new_string("string"));
-    json_object_object_add(tools_music_play_params_properties, "properties", \
-                            tools_music_play_params_properties_location);
-    json_object_object_add(tools_music_play_params, "properties", \
-                            tools_music_play_params_properties);
-
-    json_object* tools_music_play_params_required = json_object_new_array();
-    json_object_array_add(tools_music_play_params_required, \
-                            json_object_new_string("location"));
-    json_object_object_add(tools_music_play_params, "required", \
-                            tools_music_play_params_required);
-
-    json_object_object_add(tools_music_play, "parameters", tools_music_play_params);
-
-    json_object_array_add(tool_list, tools_music_play);
-
-    json_object* tools_adjust_volume = json_object_new_object();
-    json_object_object_add(tools_adjust_volume, "type", \
-                            json_object_new_string("function"));
-    json_object_object_add(tools_adjust_volume, "name", \
-                            json_object_new_string("adjust_volume"));
-    json_object_object_add(tools_adjust_volume, "description", \
-                            json_object_new_string("调节系统音量，调节说话声音大小，调节参数0-100"));
-
-    json_object* tools_adjust_volume_params = json_object_new_object();
-    json_object_object_add(tools_adjust_volume_params, "type", \
-                            json_object_new_string("object"));
-    json_object* tools_adjust_volume_params_properties = json_object_new_object();
-    json_object* tools_adjust_volume_params_properties_location = json_object_new_object();
-    json_object_object_add(tools_adjust_volume_params_properties_location, "type", \
-                            json_object_new_string("string"));
-    json_object_object_add(tools_adjust_volume_params_properties, "properties", \
-                            tools_adjust_volume_params_properties_location);
-    json_object_object_add(tools_adjust_volume_params, "properties", \
-                            tools_adjust_volume_params_properties);
-
-    json_object* tools_adjust_volume_params_required = json_object_new_array();
-    json_object_array_add(tools_adjust_volume_params_required, \
-                            json_object_new_string("value"));
-    json_object_object_add(tools_adjust_volume_params, "required", \
-                            tools_adjust_volume_params_required);
-
-    json_object_object_add(tools_adjust_volume, "parameters", \
-                            tools_adjust_volume_params);
-
-    json_object_array_add(tool_list, tools_adjust_volume);
-
-    json_object* tools_launch_app = json_object_new_object();
-    json_object_object_add(tools_launch_app, "type", \
-                            json_object_new_string("function"));
-    json_object_object_add(tools_launch_app, "name", \
-                            json_object_new_string("launch_app"));
-    json_object_object_add(tools_launch_app, "description", \
-                            json_object_new_string("打开已经安装的应用"));
-
-    json_object* tools_launch_app_params = json_object_new_object();
-    json_object_object_add(tools_launch_app_params, "type", \
-                            json_object_new_string("object"));
-    json_object* tools_launch_app_params_properties = json_object_new_object();
-    json_object* tools_launch_app_params_properties_location = json_object_new_object();
-    json_object_object_add(tools_launch_app_params_properties_location, "type", \
-                            json_object_new_string("string"));
-    json_object_object_add(tools_launch_app_params_properties, "properties", \
-                            tools_launch_app_params_properties_location);
-    json_object_object_add(tools_launch_app_params, "properties", \
-                            tools_launch_app_params_properties);
-
-    json_object* tools_launch_app_params_required = json_object_new_array();
-    json_object_array_add(tools_launch_app_params_required, \
-                            json_object_new_string("value"));
-    json_object_object_add(tools_launch_app_params, "required", \
-                            tools_launch_app_params_required);
-
-    json_object_object_add(tools_launch_app, "parameters", \
-                            tools_launch_app_params);
-
-    json_object_array_add(tool_list, tools_launch_app);
-
+    for (size_t i = 0; i < (sizeof(g_mcp_tools) / sizeof((g_mcp_tools)[0])); ++i) {
+        json_object *tool_json = mcp_tool_to_json(&g_mcp_tools[i]);
+        json_object_array_add(tool_list, tool_json);
+    }
     return tool_list;
 }
 
@@ -1098,7 +1083,7 @@ static int volc_conversation_update_session(void* engine)
     json_object_object_add(session, "modalities", session_modalities);
     json_object_object_add(session, "instructions",\
         json_object_new_string( "你的名字叫小v，你是一个智能助手，你的回答要尽量简短。一旦你判断字数超过200个字，\
-                                 你可以精简整个回答,然后引导用户调用工具"));
+                                 你必须精简整个回答,然后引导用户调用工具"));
     json_object_object_add(session, "voice",\
                             json_object_new_string("zh_female_tianmeiyueyue_moon_bigtts"));
     json_object_object_add(session, "input_audio_format", \
@@ -1156,6 +1141,9 @@ static int volc_conversation_finish(void* engine)
     json_object_object_add(json_response, "response", response_json);
 
     ret = volc_conversation_send_json_message(engine, json_response);
+
+    volc_engine->last_response_time = lws_now_usecs();
+    volc_engine->response_pending = true;
 
     if (ret < 0) {
         CON_ERR("Failed to send response.create to Volc");
@@ -1267,6 +1255,18 @@ static void* volc_conversation_loop_thread(void* arg)
                 }
             }
 
+            if (engine->response_pending && \
+                lws_now_usecs() - engine->last_response_time > VOLC_RESPONSE_TIMEOUT) {
+                engine->response_pending = false;
+                volc_conversation_send_event(engine, conversation_engine_event_error,
+                                           "Response timeout", 13,
+                                           conversation_engine_error_network);
+                if (ret < 0) {
+                    CON_INFO("Failed to send finish: %d", ret);
+                    break;
+                }
+            }
+
         } else if (engine->is_closed && engine->lws_context) {
             // Cleanup when connection is explicitly closed
             lws_context_destroy(engine->lws_context);
@@ -1304,7 +1304,6 @@ static int volc_conversation_create_thread(volc_conversation_engine_t* engine)
 
     CON_INFO("Creating conversation thread");
 
-    //TBD:删除这个semaphore，理由，因为这个semaphore没有被使用
     ret = sem_init(&engine->sem, 0, 0);
     if (ret < 0) {
         CON_ERR("Failed to init semaphore");

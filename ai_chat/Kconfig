@@ -5,13 +5,13 @@
 
 config AI_CONVERSATION_DEMO
 	bool "AI-chat"
-	depends on MEDIA
-	depends on MEDIA_SERVER
-	depends on LIBUV_EXTENSION
-	depends on LIB_JSONC
-	depends on CRYPTO_MBEDTLS
-	depends on OPENSSL_MBEDTLS_WRAPPER
-	depends on NETUTILS_LIBWEBSOCKETS
+	select MEDIA
+	select MEDIA_SERVER
+	select LIBUV_EXTENSION
+	select LIB_JSONC
+	select CRYPTO_MBEDTLS
+	select OPENSSL_MBEDTLS_WRAPPER
+	select NETUTILS_LIBWEBSOCKETS
 	default n
 
 if AI_CONVERSATION_DEMO
@@ -32,21 +32,17 @@ config AI_CONVERSATION_RECORDER_STREAM
 	string "AI conversation recorder stream"
 	default "Capture"
 
-config AI_CONVERSATION_GUI_ROOT
-	string "AI conversation GUI root"
-	default "/data"
-
-config AI_CONVERSATION_GUI_RES_PATH
-	string "AI conversation GUI resource path"
-	default "/res"
+config AI_CONVERSATION_MUSIC_PATH
+	string "AI conversation recorder device"
+	default "/data/res/music"
 
 config AI_CONVERSATION_GUI_FONT_PATH
 	string "AI conversation GUI font path"
-	default "/fonts"
+	default "/data/res/fonts"
 
 config AI_CONVERSATION_GUI_ICONS_PATH
 	string "AI conversation GUI image path"
-	default "/icons"
+	default "/data/res/icons"
 
 config AI_CONVERSATION_GUI_STACKSIZE
 	int "AI conversation GUI stack size"

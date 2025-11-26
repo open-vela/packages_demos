@@ -22,6 +22,7 @@
  * Included Files
  ****************************************************************************/
 
+#include "src/tick/lv_tick.h"
 #include <stdio.h>
 #include <uv.h>
 #include <nuttx/config.h>
@@ -114,6 +115,13 @@ static void key_press_cb(lv_event_t* e)
         return;
     }
 
+    uint32_t current_time = lv_tick_get();
+    static uint32_t last_time = 0;
+    if (current_time - last_time < 1500) {
+        return;
+    }
+    last_time = current_time;
+
     if (!(ai_conversation_is_busy(ai_gui->handle)))
     {
         if (ai_gui->conversation_active) {
@@ -156,14 +164,12 @@ static int ui_resource_init(conver_gui_t* arg)
         return ret;
     }
     conver_gui_t* ai_gui = arg;
-    ai_gui->ui.ui_source_path.font_path = CONFIG_AI_CONVERSATION_GUI_ROOT 
-                                          CONFIG_AI_CONVERSATION_GUI_RES_PATH
-                                          CONFIG_AI_CONVERSATION_GUI_FONT_PATH
+    ai_gui->ui.ui_source_path.font_path = CONFIG_AI_CONVERSATION_GUI_FONT_PATH
                                           "/MiSans-Normal.ttf";
-    ai_gui->ui.ui_source_path.app_icon_path = CONFIG_AI_CONVERSATION_GUI_ROOT 
-                                              CONFIG_AI_CONVERSATION_GUI_RES_PATH
-                                              CONFIG_AI_CONVERSATION_GUI_ICONS_PATH
-                                             "/app.png";
+    ai_gui->ui.ui_source_path.app_icon_path = CONFIG_AI_CONVERSATION_GUI_ICONS_PATH
+                                              "/app.png";
+    ai_gui->ui.ui_source_path.mic_icon_path = CONFIG_AI_CONVERSATION_GUI_ICONS_PATH
+                                              "/VoiceButton.png";
     if(ai_gui->ui.ui_source_path.font_path     == NULL ||
        ai_gui->ui.ui_source_path.app_icon_path == NULL) {
         ret = -1;
@@ -275,10 +281,16 @@ static int ui_create(conver_gui_t* arg)
                     0, DEMO(20));
     lv_obj_set_size(ai_gui->ui.ui_components.voice_btntnm, DEMO(10), DEMO(10));
     lv_obj_set_style_bg_color(ai_gui->ui.ui_components.voice_btntnm,\
-                             lv_color_white(), 0);
+                             lv_color_black(), 0);
     lv_obj_set_style_border_color(ai_gui->ui.ui_components.voice_btntnm,\
                                  lv_color_black(), 0);
-    
+
+    ai_gui->ui.ui_image.mic_icon = lv_img_create(ai_gui->ui.ui_components.voice_btntnm);
+    lv_img_set_src(ai_gui->ui.ui_image.mic_icon, ai_gui->ui.ui_source_path.mic_icon_path);
+    lv_obj_set_size(ai_gui->ui.ui_image.mic_icon, DEMO(10), DEMO(10));
+    lv_obj_align(ai_gui->ui.ui_image.mic_icon, LV_ALIGN_CENTER, 0, 0);
+    lv_img_set_zoom(ai_gui->ui.ui_image.mic_icon, 50);
+
     // Add event callbacks
     lv_obj_add_event_cb(ai_gui->ui.ui_components.voice_btntnm, key_press_cb, \
                                              LV_EVENT_CLICKED, ai_gui);
@@ -290,7 +302,6 @@ static void ai_conv_callback(conversation_event_t event, \
                             const conversation_result_t* result, void* cookie)
 {
     conver_gui_t* ai_gui = (conver_gui_t*)cookie;
-    //TBD：优化callback逻辑
     if (!ai_gui) {
         return;
     }

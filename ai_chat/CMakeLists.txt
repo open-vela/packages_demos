@@ -28,18 +28,20 @@ if(CONFIG_AI_CONVERSATION_DEMO)
              ${CMAKE_CURRENT_LIST_DIR}/include
              ${CMAKE_CURRENT_LIST_DIR}/src/conversation/plugin)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/netutils/libwebsockets)
-  list(APPEND INCDIR ${NUTTX_APPS_DIR}/system/libarchive/libarchive/libarchive)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/frameworks/system/utils/uv/include)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/netutils/libwebsockets/libwebsockets/include)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/external/json-c)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/external/json-c/json-c)
   list(APPEND INCDIR ${NUTTX_APPS_DIR}/apps/include)
+  list(APPEND INCDIR ${NUTTX_APPS_DIR}/frameworks/system/utils/include)
+  list(APPEND INCDIR ${NUTTX_APPS_DIR}/apps/include/netutils)
+  list(APPEND INCDIR ${CMAKE_CURRENT_LIST_DIR}/src/mcp)
 
   # ############################################################################
   # Sources
   # ############################################################################
 
-  file(GLOB_RECURSE CSRCS 
+  file(GLOB CSRCS 
       "${CMAKE_CURRENT_SOURCE_DIR}/src/conversation/*.c"
       "${CMAKE_CURRENT_SOURCE_DIR}/src/conversation/plugin/*.c"
       "${CMAKE_CURRENT_SOURCE_DIR}/src/conversation/volc/*.c"

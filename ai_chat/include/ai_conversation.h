@@ -67,6 +67,7 @@ typedef enum {
     conversation_event_stop,
     conversation_event_complete,
     conversation_event_input_text,
+    conversation_event_response_audio_start,
     conversation_event_response_audio,
     conversation_event_response_text,
     conversation_event_mcp_request,
@@ -86,6 +87,20 @@ typedef struct conversation_result {
     int len;
     conversation_error_t error_code;
 } conversation_result_t;
+
+typedef struct mcp_param_def_s {
+    const char *name;
+    const char *description;
+    const char *type;
+    bool required;
+} mcp_param_def_t;
+
+typedef struct mcp_tool_def_s {
+    const char *name;
+    const char *description;
+    const mcp_param_def_t *parameters;
+    size_t param_count;
+} mcp_tool_def_t;
 
 typedef void (*conversation_callback_t)(conversation_event_t event, 
                                        const conversation_result_t* result, 

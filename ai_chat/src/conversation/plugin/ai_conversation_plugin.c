@@ -61,3 +61,11 @@ void conversation_plugin_uninit(conversation_engine_plugin_t* plugin, void* engi
         engine = NULL;
     }
 }
+
+void conversation_plugin_destroy(conversation_engine_plugin_t* plugin, void* engine)
+{
+    if (engine) {
+        free(engine);
+        engine = NULL;
+    }
+}

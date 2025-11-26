@@ -22,15 +22,11 @@ include $(APPDIR)/Make.defs
 
 MODULE  = y
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include
-# CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/system/utils/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/vendor/xiaomi/miai/mico_service_agent
-# CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core/protocol
-# CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/include/mcp/core/streaming
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/utils
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/ai_chat/src/conversation/plugin
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/netutils/libwebsockets
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/system/libarchive/libarchive/libarchive
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/json-c
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/json-c/json-c
 CFLAGS += ${INCDIR_PREFIX}${APPDIR}/apps/include
@@ -40,11 +36,6 @@ ifneq ($(CONFIG_AI_CONVERSATION_DEMO),)
   CSRCS += $(wildcard src/conversation/*.c)
   CSRCS += $(wildcard src/conversation/plugin/*.c)
   CSRCS += $(wildcard src/conversation/volc/*.c)
-  CSRCS += src/conversation/mcp/core/mcp_server_unified.c
-#   CSRCS += $(wildcard src/conversation/mcp/*.c)
-#   CSRCS += $(wildcard src/conversation/mcp/core/*.c)
-#   CSRCS += $(wildcard src/conversation/mcp/core/protocol/*.c)
-#   CSRCS += $(wildcard src/conversation/mcp/core/streaming/*.c)
   CSRCS += $(wildcard utils/*.c)
   MAINSRC   += src/ai_conversation_main.c
   PROGNAME  += ai_conversation
