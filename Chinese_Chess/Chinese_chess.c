@@ -1337,17 +1337,3 @@ static void exit_event_cb(lv_event_t* e)
     lv_obj_t* win = lv_obj_get_parent(btn);
     lv_obj_del_async(win);  
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
