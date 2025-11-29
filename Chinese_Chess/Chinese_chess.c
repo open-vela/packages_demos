@@ -164,12 +164,6 @@ const lv_style_prop_t transition_props[] = {
     LV_STYLE_PROP_FLAG_NONE
 };
 
-
-
-
-
-
-
 void Chinese_Chess_app_create(void)
 {
     lv_memzero(&R, sizeof(R));
