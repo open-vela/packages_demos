@@ -15,3 +15,8 @@
 - [亲戚计算器](relation_calculator/Readme.md)
 - [打地鼠](Whackmole/README_zh-cn.md)
 - [音乐播放器2](music_player2/README.md)
+- [打砖块](breakout/Readme.md)
+- [电子沙漏](hourglass/Readme.md)
+- [贪吃蛇](snake_game/Readme.md)
+- [虚拟宠物](pet/README.md)
+- [电子木鱼](wooden_fish/README_zh-cn.md)
