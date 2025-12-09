@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022 Xiaomi Corporation
+# Copyright (C) 2023 Xiaomi Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-include $(APPDIR)/Make.defs
-
-ifeq ($(CONFIG_LVX_USE_DEMO_MUSIC_PLAYER), y)
-PROGNAME = music_player
-PRIORITY = 100
-STACKSIZE = 32768
-MODULE = $(CONFIG_LVX_USE_DEMO_MUSIC_PLAYER)
-
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/utils/include
-CSRCS = music_player.c
-MAINSRC = music_player_main.c
+ifneq ($(CONFIG_LVX_USE_DEMO_UTILS),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/utils
 endif
-
-include $(APPDIR)/Application.mk

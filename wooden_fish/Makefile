@@ -22,7 +22,8 @@ PRIORITY = 100
 STACKSIZE = 131072
 MODULE = $(CONFIG_LVX_USE_DEMO_WOODEN_FISH)
 
-CSRCS = wooden_fish.c audio_ctl.c
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/utils/include
+CSRCS = wooden_fish.c
 MAINSRC = wooden_fish_main.c 
 endif
 

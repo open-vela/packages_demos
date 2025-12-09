@@ -80,9 +80,9 @@ static void progress_smooth_anim_cb(void* obj, int32_t value);
 static void start_smooth_progress_animation(int32_t target_value);
 static void reset_progress_bar_state(void);
 
-struct resource_s R;
-struct ctx_s C;
-struct conf_s CF;
+static struct resource_s R;
+static struct ctx_s C;
+static struct conf_s CF;
 static progress_bar_state_t progress_state = {.is_seeking = false,
     .was_playing = false,
     .seek_preview_time = 0,
@@ -105,7 +105,7 @@ const lv_style_prop_t transition_props[] = {LV_STYLE_OPA, LV_STYLE_BG_OPA,
  *   GLOBAL FUNCTIONS
  **********************/
 
-void app_create(void) {
+void music_player2_app_create(void) {
     lv_memzero(&R, sizeof(R));
     lv_memzero(&C, sizeof(C));
     lv_memzero(&CF, sizeof(CF));
