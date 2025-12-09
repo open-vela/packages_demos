@@ -6,6 +6,7 @@
 config LVX_USE_DEMO_VELA_AUDIO
 	bool "Music_player2"
 	default n
+	select LVX_USE_DEMO_UTILS
 	help
 	 Vela Audio Music Player 2.
 

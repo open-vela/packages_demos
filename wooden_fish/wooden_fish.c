@@ -154,12 +154,14 @@ static void switch_mode_cb(lv_event_t *e) {
     if (is_coder_mode) {
         LV_LOG_USER("切换图片路径: %s", WOODEN_FISH_ENTER_IMG_PATH);
         lv_img_set_src(g_wooden_fish.ui.fish_img, WOODEN_FISH_ENTER_IMG_PATH);
+        lv_img_set_zoom(g_wooden_fish.ui.fish_img, 400);
         lv_obj_invalidate(g_wooden_fish.ui.fish_img);
         lv_label_set_text(g_wooden_fish.ui.today_label, "今日pr: 0");
         lv_label_set_text(g_wooden_fish.ui.counter, "pr: 0");
     } else {
         LV_LOG_USER("切换图片路径: %s", WOODEN_FISH_IMG_PATH);
         lv_img_set_src(g_wooden_fish.ui.fish_img, WOODEN_FISH_IMG_PATH);
+        lv_img_set_zoom(g_wooden_fish.ui.fish_img, 250);
         lv_obj_invalidate(g_wooden_fish.ui.fish_img);
         lv_label_set_text(g_wooden_fish.ui.today_label, "今日功德: 0");
         lv_label_set_text(g_wooden_fish.ui.counter, "功德: 0");
@@ -228,6 +230,7 @@ static void create_main_ui(void) {
     lv_obj_align(g_wooden_fish.ui.fish_img, LV_ALIGN_CENTER, 0, -50);
     lv_obj_add_flag(g_wooden_fish.ui.fish_img, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(g_wooden_fish.ui.fish_img, fish_click_cb, LV_EVENT_CLICKED, &g_wooden_fish);
+    lv_img_set_zoom(g_wooden_fish.ui.fish_img, 250);
 
     // 创建功德计数器
     g_wooden_fish.ui.counter = lv_label_create(g_wooden_fish.ui.screen);
@@ -395,5 +398,4 @@ static void create_merit_animation(wooden_fish_t *app, int32_t x, int32_t y){
     lv_refr_now(NULL);
     LV_LOG_INFO("功德+1动画已启动");
 }
-
 

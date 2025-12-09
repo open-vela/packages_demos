@@ -6,6 +6,7 @@
 config LVX_USE_DEMO_WOODEN_FISH
 	bool "Wooden Fish"
 	default n
+	select LVX_USE_DEMO_UTILS
 
 if LVX_USE_DEMO_WOODEN_FISH
 	config LVX_WOODEN_FISH_DATA_ROOT

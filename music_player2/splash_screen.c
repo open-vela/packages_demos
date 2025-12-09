@@ -134,5 +134,5 @@ static void splash_timer_cb(lv_timer_t* timer) {
 static void splash_fadeout_complete_cb(lv_anim_t* anim) {
     LV_UNUSED(anim);
     lv_obj_delete(splash_screen);
-    app_create();
+    music_player2_app_create();
 }
