@@ -149,7 +149,7 @@ struct conf_s {
 #endif
 };
 
-void app_create(void);
+void music_player2_app_create(void);
 void splash_screen_create(void);
 
 void playlist_manager_create(lv_obj_t* parent);

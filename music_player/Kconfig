@@ -6,6 +6,7 @@
 config LVX_USE_DEMO_MUSIC_PLAYER
 	bool "Music Player"
 	default n
+	select LVX_USE_DEMO_UTILS
 	
 if LVX_USE_DEMO_MUSIC_PLAYER
 	config LVX_MUSIC_PLAYER_DATA_ROOT
