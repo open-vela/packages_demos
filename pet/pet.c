@@ -69,9 +69,9 @@ static void update_visuals(void);
  **********************/
 
 // clang-format off
-pet_res_t   R;  /**< Resources */
-pet_ctx_t   C;  /**< Context */
-pet_conf_t  CF; /**< Configuration */
+static pet_res_t   R;  /**< Resources */
+static pet_ctx_t   C;  /**< Context */
+static pet_conf_t  CF; /**< Configuration */
 // clang-format on
 
 /* Transition properties for the objects */
@@ -94,7 +94,7 @@ static const lv_style_prop_t transition_props[] = {
 /**
  * 应用创建入口函数
  */
-void app_create(void)
+void pet_app_create(void)
 {
     // 初始化资源和上下文结构
     lv_memzero(&R, sizeof(R));
@@ -746,7 +746,6 @@ void exercise_pet(lv_event_t *e)
             lv_msgbox_add_title(msg, "Can't exercise");
             lv_msgbox_add_text(msg, "The pet is too thirsty, can't exercise!\nPlease drink first.");
         }
-        lv_msgbox_add_footer_button(msg, "OK");
         lv_obj_center(msg);
         
         // 自动关闭消息框
@@ -838,7 +837,6 @@ void add_achievement(uint32_t achievement)
         }
         
         lv_msgbox_add_text(achievement_msg, achievement_text);
-        lv_msgbox_add_footer_button(achievement_msg, "OK");
         lv_obj_center(achievement_msg);
         
         // 自动关闭消息框

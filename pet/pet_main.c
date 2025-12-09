@@ -89,7 +89,7 @@ int main(int argc, FAR char* argv[])
     }
 
     // 创建虚拟宠物应用
-    app_create();
+    pet_app_create();
 
     // 启动LVGL UI刷新循环
     lv_nuttx_uv_loop(&ui_loop, &result);

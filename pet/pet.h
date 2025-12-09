@@ -174,7 +174,7 @@ typedef struct {
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-void app_create(void);
+void pet_app_create(void);
 
 #ifdef __cplusplus
 } /*extern "C"*/
