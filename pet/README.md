@@ -66,12 +66,12 @@
 在NuttX配置中启用：
 ```
 CONFIG_LVX_USE_DEMO_PET=y
-CONFIG_LVX_PET_DATA_ROOT="/sdcard"  # 设置资源文件路径
+CONFIG_LVX_PET_DATA_ROOT="/data"  # 设置资源文件路径
 ```
 
 ## 资源文件结构
 ```
-/sdcard/res/
+/data/res/
   ├── fonts/        # 字体文件
   ├── image/        # 宠物和背景图像
   └── icons/        # 操作按钮图标
