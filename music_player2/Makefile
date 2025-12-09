@@ -22,11 +22,12 @@ PRIORITY = 100
 STACKSIZE = 32768 
 MODULE = $(CONFIG_LVX_USE_DEMO_VELA_AUDIO)
 
-CSRCS = music_player2.c audio_ctl.c wifi.c splash_screen.c playlist_manager.c font_config.c
+CSRCS = music_player2.c splash_screen.c playlist_manager.c font_config.c
 
 MAINSRC = music_player2_main.c
 
 CFLAGS += -DUSING_SIMULATOR_AUDIO=1
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/demos/utils/include
 
 LDLIBS += -lm -lpthread
 
