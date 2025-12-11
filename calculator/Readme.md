@@ -147,20 +147,36 @@ CXXEXT := .cpp
 CXXSRCS = calculator_cre.cpp expression_calc.cpp 
 ```
 
-### 3.资源推送更新 /res
-需要在模拟器运行状况下，使用ADB指令更新资源推送，才能显示更换的新图片和字体。
-- 启动模拟器
+### 3.资源管理方式
+
+#### (1) 内置资源模式（推荐，默认启用）
+在 menuconfig 中启用 `use the builtin resources` (默认为 `y`)：
+- 字体和图片编译到固件中，无需额外推送
+- elf会增大
+- 优点：部署简单，无需 adb 推送
+- 适用场景：生产环境、快速测试
+
+#### (2) 文件系统资源模式
+在 menuconfig 中禁用 `use the builtin resources` (设置为 `n`)：
+- 需要在模拟器运行状况下，使用 ADB 指令推送资源：
+
+启动模拟器：
 ```bash
 ./emulator.sh vela
 ```
-- ADB推送更新资源（在模拟器运行状况下，终端使用）
+
+ADB推送更新资源（在模拟器运行状况下）：
 ```bash
 adb push apps/packages/demos/calculator/res /data/
 ```
-- 之后启动计算器应用即可
+
+启动计算器应用：
 ```bash
 calculator &
 ```
+
+- 优点：可动态更换资源，ROM 占用小
+- 适用场景：开发调试、频繁更换 UI 资源
 
 
 ## 📁原工程路径
@@ -180,7 +196,7 @@ vela-opensource/apps/packages/demos/calculator/
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap menuconfig
 ```
 
-### ADB推送更新资源（在模拟器运行状况下）
+### ADB推送更新资源（使用文件系统资源模式，在模拟器运行状况下）
 ```bash
 adb push apps/packages/demos/calculator/res /data/
 ```
