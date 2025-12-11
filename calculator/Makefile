@@ -22,7 +22,14 @@ PRIORITY = 100
 STACKSIZE = 32768
 MODULE = $(CONFIG_LVX_USE_DEMO_CALCULATOR)
 CXXEXT := .cpp
-CXXSRCS = calculator_cre.cpp expression_calc.cpp 
+CXXSRCS = calculator_cre.cpp expression_calc.cpp    
+CSRCS += ./res/fonts/size_16_normal.c
+CSRCS += ./res/fonts/size_22_bold.c
+CSRCS += ./res/fonts/size_24_normal.c
+CSRCS += ./res/fonts/size_28_normal.c 
+CSRCS += ./res/fonts/size_48_normal.c
+CSRCS += ./res/fonts/size_60_bold.c
+CSRCS += ./res/icons/background.c
 MAINSRC = calculator_main.cpp
 endif
 

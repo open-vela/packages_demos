@@ -11,4 +11,8 @@ if LVX_USE_DEMO_CALCULATOR
 	config LVX_CALCULATOR_DATA_ROOT
 		string "Calculator Data Root"
 		default "/data"
+
+	config CALCULATOR_USE_BUILTIN_RES
+		bool "use the builtin resources"
+		default y
 endif
