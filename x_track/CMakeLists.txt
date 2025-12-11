@@ -45,6 +45,8 @@ if(CONFIG_LVX_USE_DEMO_X_TRACK)
 
   set(MAINSRC x_track_main.cpp)
   file(GLOB_RECURSE CSRCS "*.c")
+  file(GLOB_RECURSE CSRCS_REMOVE "*/itoa.c")
+  list(REMOVE_ITEM CSRCS ${CSRCS_REMOVE})
   file(GLOB_RECURSE CXXSRCS_ALL "*.cpp")
   list(FILTER CXXSRCS_ALL EXCLUDE REGEX "x_track_main.cpp")
   set(CXXSRCS ${CXXSRCS_ALL})
