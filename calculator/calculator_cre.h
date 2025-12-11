@@ -6,6 +6,16 @@
 #include <cstring>
 #define RES_ROOT CONFIG_LVX_CALCULATOR_DATA_ROOT
 
+#ifdef CONFIG_CALCULATOR_USE_BUILTIN_RES
+LV_FONT_DECLARE(size_16_normal);
+LV_FONT_DECLARE(size_22_bold);
+LV_FONT_DECLARE(size_24_normal);
+LV_FONT_DECLARE(size_28_normal);
+LV_FONT_DECLARE(size_48_normal);
+LV_FONT_DECLARE(size_60_bold);
+LV_IMG_DECLARE(background);
+#endif
+
 class CalculatorState {
 public:
     lv_obj_t *label;
@@ -38,9 +48,19 @@ public:
     // Images sub-structure
     class Images {
     public:
+#ifdef CONFIG_CALCULATOR_USE_BUILTIN_RES
+        const void* background;
+#else
         std::string background;
+#endif
 
-        Images() : background("") {}
+        Images() : background(
+#ifdef CONFIG_CALCULATOR_USE_BUILTIN_RES
+            NULL
+#else
+            ""
+#endif
+        ) {}
     };
 
     // Member variables
@@ -52,6 +72,17 @@ public:
 
     // Method to load the resources (fonts and images)
     bool load_resources() {
+#ifdef CONFIG_CALCULATOR_USE_BUILTIN_RES
+        fonts.size_16_normal = (lv_font_t*)&size_16_normal;
+        
+        fonts.size_22_bold = (lv_font_t*)&size_22_bold;
+        fonts.size_24_normal = (lv_font_t*)&size_24_normal;
+        fonts.size_28_normal = (lv_font_t*)&size_28_normal;
+        fonts.size_48_normal = (lv_font_t*)&size_48_normal;
+        fonts.size_60_bold = (lv_font_t*)&size_60_bold;
+        images.background = &background;
+        
+#else
         std::string icons_path = get_icons_path();
         std::string fonts_path = get_fonts_path();
 
@@ -66,7 +97,7 @@ public:
         // Image initialization
         images.background = icons_path + "/background.png";
         printf("icons Path: %s\n", images.background.c_str());
-
+#endif
         // Check if fonts were loaded successfully
         if (!fonts.size_16_normal || !fonts.size_22_bold || !fonts.size_24_normal || !fonts.size_28_normal || !fonts.size_48_normal || !fonts.size_60_bold ) {
             return false;
