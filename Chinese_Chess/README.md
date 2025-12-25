@@ -11,6 +11,9 @@ Chinese_Chess 是一款基于 OpenVela 系统设计的中国象棋游戏。
 - [更新日志](Update.md)  
 - [内容演示](Chinese_Chess_Show/Chinese_Chess_game.gif)
 
+## 素材说明
+程序中所展现出的棋盘与棋子均是作者使用基本图形自己绘制。
+
 ## 项目目录
 ```
 Chinese_Chess/

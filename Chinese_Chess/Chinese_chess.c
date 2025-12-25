@@ -1,4 +1,4 @@
-/*V4.1*/
+/*V4.2*/
 #include "Chinese_chess.h"
 #include "stdlib.h"
 #include "time.h"
@@ -26,52 +26,70 @@ static void app_get_point_event_handler(lv_event_t* e);
 static void restart_event_cb(lv_event_t* e);
 static void exit_event_cb(lv_event_t* e);
 
-struct resource_s   R;  /**< Resources */
-struct ctx_s        C;  /**< Context */
 
 /*Instantiate chess pieces*/
-lv_obj_t* Red_car_1;
-lv_obj_t* Red_car_2;
-lv_obj_t* Red_horse_1;
-lv_obj_t* Red_horse_2;
-lv_obj_t* Red_elephant_1;
-lv_obj_t* Red_elephant_2;
-lv_obj_t* Red_shi_1;
-lv_obj_t* Red_shi_2;
-lv_obj_t* Red_jiang;
-lv_obj_t* Red_pao_1;
-lv_obj_t* Red_pao_2;
-lv_obj_t* Red_bing_1;
-lv_obj_t* Red_bing_2;
-lv_obj_t* Red_bing_3;
-lv_obj_t* Red_bing_4;
-lv_obj_t* Red_bing_5;
-lv_obj_t* Black_car_1;
-lv_obj_t* Black_car_2;
-lv_obj_t* Black_horse_1;
-lv_obj_t* Black_horse_2;
-lv_obj_t* Black_elephant_1;
-lv_obj_t* Black_elephant_2;
-lv_obj_t* Black_shi_1;
-lv_obj_t* Black_shi_2;
-lv_obj_t* Black_jiang;
-lv_obj_t* Black_pao_1;
-lv_obj_t* Black_pao_2;
-lv_obj_t* Black_bing_1;
-lv_obj_t* Black_bing_2;
-lv_obj_t* Black_bing_3;
-lv_obj_t* Black_bing_4;
-lv_obj_t* Black_bing_5;
-int Board_Xvalue[9]={
+static lv_obj_t* Red_car_1;
+static lv_obj_t* Red_car_2;
+static lv_obj_t* Red_horse_1;
+static lv_obj_t* Red_horse_2;
+static lv_obj_t* Red_elephant_1;
+static lv_obj_t* Red_elephant_2;
+static lv_obj_t* Red_shi_1;
+static lv_obj_t* Red_shi_2;
+static lv_obj_t* Red_jiang;
+static lv_obj_t* Red_pao_1;
+static lv_obj_t* Red_pao_2;
+static lv_obj_t* Red_bing_1;
+static lv_obj_t* Red_bing_2;
+static lv_obj_t* Red_bing_3;
+static lv_obj_t* Red_bing_4;
+static lv_obj_t* Red_bing_5;
+static lv_obj_t* Black_car_1;
+static lv_obj_t* Black_car_2;
+static lv_obj_t* Black_horse_1;
+static lv_obj_t* Black_horse_2;
+static lv_obj_t* Black_elephant_1;
+static lv_obj_t* Black_elephant_2;
+static lv_obj_t* Black_shi_1;
+static lv_obj_t* Black_shi_2;
+static lv_obj_t* Black_jiang;
+static lv_obj_t* Black_pao_1;
+static lv_obj_t* Black_pao_2;
+static lv_obj_t* Black_bing_1;
+static lv_obj_t* Black_bing_2;
+static lv_obj_t* Black_bing_3;
+static lv_obj_t* Black_bing_4;
+static lv_obj_t* Black_bing_5;
+
+/*Define the chessboard coordinate position*/
+static int Board_Xvalue[9]={
     342,416,492,567,641,715,792,867,938
 };
-int Board_Yvalue[10]={
+static int Board_Yvalue[10]={
     63,140,216,289,365,437,514,591,665,737
 };
-int click_number = 0; //The chessboard is 0 when not clicked, and increments by 1 upon clicking
-int chess,chess2;
-int turn_camp=1;
 
+static int click_number = 0; //The chessboard is 0 when not clicked, and increments by 1 upon clicking
+static int chess,chess2;
+static int turn_camp=1;
+
+static struct {
+        const char* chessboard;  
+        const char* redcar; 
+        const char* redhorse; 
+        const char* redelephant; 
+        const char* redshi;  
+        const char* redjiang; 
+        const char* redpao; 
+        const char* redbing; 
+        const char* blackcar; 
+        const char* blackhorse; 
+        const char* blackelephant; 
+        const char* blackshi;  
+        const char* blackjiang; 
+        const char* blackpao; 
+        const char* blackbing; 
+} images;
 pieceStruct piece[32] = {
     {"車",0,0,redCamp,car,alive}, 
     {"马",1,0,redCamp,horse,alive},  
@@ -106,6 +124,7 @@ pieceStruct piece[32] = {
     {"卒",6,6,blackCamp,zu,alive},  
     {"卒",8,6,blackCamp,zu,alive}  
 };
+
 pieceStruct1 piece_struct[32] = {
     {"車",0,0,redCamp},  
     {"马",1,0,redCamp},  
@@ -140,11 +159,12 @@ pieceStruct1 piece_struct[32] = {
     {"卒",6,6,blackCamp},  
     {"卒",8,6,blackCamp}  
 };
+
 changestrcut changebuffer = {
     0,0,0,0,0,0
 };
 
-int chess_board[10][9] = {
+static int chess_board[10][9] = {
     {red_che_1,red_ma_1,red_xiang_1,red_shi_1,red_jiang,red_shi_2,red_xiang_2,red_ma_2,red_che_2},
     {board_black,board_black,board_black,board_black,board_black,board_black,board_black,board_black,board_black},
     {board_black,red_pao_1,board_black,board_black,board_black,board_black,board_black,red_pao_2,board_black},
@@ -156,6 +176,7 @@ int chess_board[10][9] = {
     {board_black,board_black,board_black,board_black,board_black,board_black,board_black,board_black,board_black},
     {black_che_1,black_ma_1,black_xiang_1,black_shi_1,black_jiang,black_shi_2,black_xiang_2,black_ma_2,black_che_2}
 };
+
 const lv_style_prop_t transition_props[] = {
     LV_STYLE_OPA,
     LV_STYLE_BG_OPA,
@@ -166,77 +187,79 @@ const lv_style_prop_t transition_props[] = {
 
 void Chinese_Chess_app_create(void)
 {
-    lv_memzero(&R, sizeof(R));
+    //lv_memzero(&R, sizeof(R));
 
-    C.resource_healthy_check = init_resource();
+    bool resource_healthy_check;
+    resource_healthy_check = init_resource();
 
-    if (!C.resource_healthy_check) {
+    if (!resource_healthy_check) {
         app_create_error_page();
         return;
     }
 
     app_create_main_page();
 }
+
 static void position_init(void)
 {
     lv_obj_t* root = lv_screen_active();
-    lv_obj_set_style_bg_img_src(root, R.images.chessboard, LV_PART_MAIN);  //Chessboard background
+    lv_obj_set_style_bg_img_src(root, images.chessboard, LV_PART_MAIN);  //Chessboard background
     lv_obj_set_style_border_width(root, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(root, 0, LV_PART_MAIN);
     //Add red car
     Red_car_1 = lv_image_create(root);
-    lv_image_set_src(Red_car_1,R.images.redcar); 
+    lv_image_set_src(Red_car_1,images.redcar); 
     lv_obj_set_pos(Red_car_1,Board_Xvalue[piece[red_che_1].Xvalue]-35,Board_Yvalue[piece[red_che_1].Yvalue]-35);   
     Red_car_2 = lv_image_create(root);
-    lv_image_set_src(Red_car_2,R.images.redcar); 
+    lv_image_set_src(Red_car_2,images.redcar); 
     lv_obj_set_pos(Red_car_2,Board_Xvalue[piece[red_che_2].Xvalue]-35,Board_Yvalue[piece[red_che_2].Yvalue]-35);   
     //Add red horse
     Red_horse_1 = lv_image_create(root);
-    lv_image_set_src(Red_horse_1,R.images.redhorse); 
+    lv_image_set_src(Red_horse_1,images.redhorse); 
     lv_obj_set_pos(Red_horse_1,Board_Xvalue[piece[red_ma_1].Xvalue]-35,Board_Yvalue[piece[red_ma_1].Yvalue]-35);   
     Red_horse_2 = lv_image_create(root);
-    lv_image_set_src(Red_horse_2,R.images.redhorse); 
+    lv_image_set_src(Red_horse_2,images.redhorse); 
     lv_obj_set_pos(Red_horse_2,Board_Xvalue[piece[red_ma_2].Xvalue]-35,Board_Yvalue[piece[red_ma_2].Yvalue]-35);   
     //Add red elephant
     Red_elephant_1 = lv_image_create(root);
-    lv_image_set_src(Red_elephant_1,R.images.redelephant); 
+    lv_image_set_src(Red_elephant_1,images.redelephant); 
     lv_obj_set_pos(Red_elephant_1,Board_Xvalue[piece[red_xiang_1].Xvalue]-35,Board_Yvalue[piece[red_xiang_1].Yvalue]-35);   
     Red_elephant_2 = lv_image_create(root);
-    lv_image_set_src(Red_elephant_2,R.images.redelephant); 
+    lv_image_set_src(Red_elephant_2,images.redelephant); 
     lv_obj_set_pos(Red_elephant_2,Board_Xvalue[piece[red_xiang_2].Xvalue]-35,Board_Yvalue[piece[red_xiang_2].Yvalue]-35);   
     //Add red shi
     Red_shi_1 = lv_image_create(root);
-    lv_image_set_src(Red_shi_1,R.images.redshi); 
+    lv_image_set_src(Red_shi_1,images.redshi); 
     lv_obj_set_pos(Red_shi_1,Board_Xvalue[piece[red_shi_1].Xvalue]-35,Board_Yvalue[piece[red_shi_1].Yvalue]-35);   
     Red_shi_2 = lv_image_create(root);
-    lv_image_set_src(Red_shi_2,R.images.redshi); 
+    lv_image_set_src(Red_shi_2,images.redshi); 
     lv_obj_set_pos(Red_shi_2,Board_Xvalue[piece[red_shi_2].Xvalue]-35,Board_Yvalue[piece[red_shi_2].Yvalue]-35);  
     //Add red general
     Red_jiang = lv_image_create(root);
-    lv_image_set_src(Red_jiang,R.images.redjiang); 
+    lv_image_set_src(Red_jiang,images.redjiang); 
     lv_obj_set_pos(Red_jiang,Board_Xvalue[piece[red_jiang].Xvalue]-35,Board_Yvalue[piece[red_jiang].Yvalue]-35);   
     //Add red pao
     Red_pao_1 = lv_image_create(root);
-    lv_image_set_src(Red_pao_1,R.images.redpao); 
+    lv_image_set_src(Red_pao_1,images.redpao); 
     lv_obj_set_pos(Red_pao_1,Board_Xvalue[piece[red_pao_1].Xvalue]-35,Board_Yvalue[piece[red_pao_1].Yvalue]-35);   
     Red_pao_2 = lv_image_create(root);
-    lv_image_set_src(Red_pao_2,R.images.redpao); 
+    lv_image_set_src(Red_pao_2,images.redpao); 
     lv_obj_set_pos(Red_pao_2,Board_Xvalue[piece[red_pao_2].Xvalue]-35,Board_Yvalue[piece[red_pao_2].Yvalue]-35);   
     //Add red soldiers
     Red_bing_1 = lv_image_create(root);
-    lv_image_set_src(Red_bing_1,R.images.redbing); 
+    lv_image_set_src(Red_bing_1,images.redbing); 
     lv_obj_set_pos(Red_bing_1,Board_Xvalue[piece[red_bing_1].Xvalue]-35,Board_Yvalue[piece[red_bing_1].Yvalue]-35);   
     Red_bing_2 = lv_image_create(root);
-    lv_image_set_src(Red_bing_2,R.images.redbing); 
+    lv_image_set_src(Red_bing_2,images.redbing); 
     lv_obj_set_pos(Red_bing_2,Board_Xvalue[piece[red_bing_2].Xvalue]-35,Board_Yvalue[piece[red_bing_2].Yvalue]-35);   
     Red_bing_3 = lv_image_create(root);
-    lv_image_set_src(Red_bing_3,R.images.redbing); 
+    lv_image_set_src(Red_bing_3,images.redbing); 
     lv_obj_set_pos(Red_bing_3,Board_Xvalue[piece[red_bing_3].Xvalue]-35,Board_Yvalue[piece[red_bing_3].Yvalue]-35);   
     Red_bing_4 = lv_image_create(root);
-    lv_image_set_src(Red_bing_4,R.images.redbing); 
+    lv_image_set_src(Red_bing_4,images.redbing); 
     lv_obj_set_pos(Red_bing_4,Board_Xvalue[piece[red_bing_4].Xvalue]-35,Board_Yvalue[piece[red_bing_4].Yvalue]-35);   
     Red_bing_5 = lv_image_create(root);
-    lv_image_set_src(Red_bing_5,R.images.redbing); 
+    lv_image_set_src(Red_bing_5,images.redbing); 
     lv_obj_set_pos(Red_bing_5,Board_Xvalue[piece[red_bing_5].Xvalue]-35,Board_Yvalue[piece[red_bing_5].Yvalue]-35);   
     /*Create a black chess faction, which includes instantiating chess pieces, transferring images, and locating chess pieces*/
     //Instantiate chess pieces
@@ -264,22 +287,22 @@ static void position_init(void)
     Black_bing_4 = lv_image_create(root);
     Black_bing_5 = lv_image_create(root);
     //Send pictures
-    lv_image_set_src(Black_car_1,R.images.blackcar);
-    lv_image_set_src(Black_car_2,R.images.blackcar);
-    lv_image_set_src(Black_horse_1,R.images.blackhorse);
-    lv_image_set_src(Black_horse_2,R.images.blackhorse);
-    lv_image_set_src(Black_pao_1,R.images.blackpao);
-    lv_image_set_src(Black_pao_2,R.images.blackpao);
-    lv_image_set_src(Black_jiang,R.images.blackjiang);
-    lv_image_set_src(Black_elephant_1,R.images.blackelephant);
-    lv_image_set_src(Black_elephant_2,R.images.blackelephant);
-    lv_image_set_src(Black_shi_1,R.images.blackshi);
-    lv_image_set_src(Black_shi_2,R.images.blackshi);
-    lv_image_set_src(Black_bing_1,R.images.blackbing);
-    lv_image_set_src(Black_bing_2,R.images.blackbing);
-    lv_image_set_src(Black_bing_3,R.images.blackbing);
-    lv_image_set_src(Black_bing_4,R.images.blackbing);
-    lv_image_set_src(Black_bing_5,R.images.blackbing);
+    lv_image_set_src(Black_car_1,images.blackcar);
+    lv_image_set_src(Black_car_2,images.blackcar);
+    lv_image_set_src(Black_horse_1,images.blackhorse);
+    lv_image_set_src(Black_horse_2,images.blackhorse);
+    lv_image_set_src(Black_pao_1,images.blackpao);
+    lv_image_set_src(Black_pao_2,images.blackpao);
+    lv_image_set_src(Black_jiang,images.blackjiang);
+    lv_image_set_src(Black_elephant_1,images.blackelephant);
+    lv_image_set_src(Black_elephant_2,images.blackelephant);
+    lv_image_set_src(Black_shi_1,images.blackshi);
+    lv_image_set_src(Black_shi_2,images.blackshi);
+    lv_image_set_src(Black_bing_1,images.blackbing);
+    lv_image_set_src(Black_bing_2,images.blackbing);
+    lv_image_set_src(Black_bing_3,images.blackbing);
+    lv_image_set_src(Black_bing_4,images.blackbing);
+    lv_image_set_src(Black_bing_5,images.blackbing);
     //Locate the coordinates of the chess piece
     lv_obj_set_pos(Black_car_1,Board_Xvalue[piece[black_che_1].Xvalue]-35,Board_Yvalue[piece[black_che_1].Yvalue]-35);   
     lv_obj_set_pos(Black_car_2,Board_Xvalue[piece[black_che_2].Xvalue]-35,Board_Yvalue[piece[black_che_2].Yvalue]-35);   
@@ -298,66 +321,67 @@ static void position_init(void)
     lv_obj_set_pos(Black_bing_4,Board_Xvalue[piece[black_bing_4].Xvalue]-35,Board_Yvalue[piece[black_bing_4].Yvalue]-35);   
     lv_obj_set_pos(Black_bing_5,Board_Xvalue[piece[black_bing_5].Xvalue]-35,Board_Yvalue[piece[black_bing_5].Yvalue]-35);   
 }
+
 static void app_create_main_page(void)
 {
     lv_obj_t* root = lv_screen_active();  //Get the current screen
-    lv_obj_set_style_bg_img_src(root, R.images.chessboard, LV_PART_MAIN);  //Chessboard background
+    lv_obj_set_style_bg_img_src(root, images.chessboard, LV_PART_MAIN);  //Chessboard background
     lv_obj_set_style_border_width(root, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(root, 0, LV_PART_MAIN);
     //Add red car
     Red_car_1 = lv_image_create(root);
-    lv_image_set_src(Red_car_1,R.images.redcar); 
+    lv_image_set_src(Red_car_1,images.redcar); 
     lv_obj_set_pos(Red_car_1,Board_Xvalue[piece[red_che_1].Xvalue]-35,Board_Yvalue[piece[red_che_1].Yvalue]-35);  
     Red_car_2 = lv_image_create(root);
-    lv_image_set_src(Red_car_2,R.images.redcar); 
+    lv_image_set_src(Red_car_2,images.redcar); 
     lv_obj_set_pos(Red_car_2,Board_Xvalue[piece[red_che_2].Xvalue]-35,Board_Yvalue[piece[red_che_2].Yvalue]-35);   
     //Add red horse
     Red_horse_1 = lv_image_create(root);
-    lv_image_set_src(Red_horse_1,R.images.redhorse); 
+    lv_image_set_src(Red_horse_1,images.redhorse); 
     lv_obj_set_pos(Red_horse_1,Board_Xvalue[piece[red_ma_1].Xvalue]-35,Board_Yvalue[piece[red_ma_1].Yvalue]-35);   
     Red_horse_2 = lv_image_create(root);
-    lv_image_set_src(Red_horse_2,R.images.redhorse); 
+    lv_image_set_src(Red_horse_2,images.redhorse); 
     lv_obj_set_pos(Red_horse_2,Board_Xvalue[piece[red_ma_2].Xvalue]-35,Board_Yvalue[piece[red_ma_2].Yvalue]-35);   
     //Add red elephant
     Red_elephant_1 = lv_image_create(root);
-    lv_image_set_src(Red_elephant_1,R.images.redelephant); 
+    lv_image_set_src(Red_elephant_1,images.redelephant); 
     lv_obj_set_pos(Red_elephant_1,Board_Xvalue[piece[red_xiang_1].Xvalue]-35,Board_Yvalue[piece[red_xiang_1].Yvalue]-35);  
     Red_elephant_2 = lv_image_create(root);
-    lv_image_set_src(Red_elephant_2,R.images.redelephant); 
+    lv_image_set_src(Red_elephant_2,images.redelephant); 
     lv_obj_set_pos(Red_elephant_2,Board_Xvalue[piece[red_xiang_2].Xvalue]-35,Board_Yvalue[piece[red_xiang_2].Yvalue]-35);   
     //Add red shi
     Red_shi_1 = lv_image_create(root);
-    lv_image_set_src(Red_shi_1,R.images.redshi); 
+    lv_image_set_src(Red_shi_1,images.redshi); 
     lv_obj_set_pos(Red_shi_1,Board_Xvalue[piece[red_shi_1].Xvalue]-35,Board_Yvalue[piece[red_shi_1].Yvalue]-35);   
     Red_shi_2 = lv_image_create(root);
-    lv_image_set_src(Red_shi_2,R.images.redshi); 
+    lv_image_set_src(Red_shi_2,images.redshi); 
     lv_obj_set_pos(Red_shi_2,Board_Xvalue[piece[red_shi_2].Xvalue]-35,Board_Yvalue[piece[red_shi_2].Yvalue]-35);   
     //Add red general
     Red_jiang = lv_image_create(root);
-    lv_image_set_src(Red_jiang,R.images.redjiang); 
+    lv_image_set_src(Red_jiang,images.redjiang); 
     lv_obj_set_pos(Red_jiang,Board_Xvalue[piece[red_jiang].Xvalue]-35,Board_Yvalue[piece[red_jiang].Yvalue]-35);  
     //Add red pao
     Red_pao_1 = lv_image_create(root);
-    lv_image_set_src(Red_pao_1,R.images.redpao); 
+    lv_image_set_src(Red_pao_1,images.redpao); 
     lv_obj_set_pos(Red_pao_1,Board_Xvalue[piece[red_pao_1].Xvalue]-35,Board_Yvalue[piece[red_pao_1].Yvalue]-35);   
     Red_pao_2 = lv_image_create(root);
-    lv_image_set_src(Red_pao_2,R.images.redpao); 
+    lv_image_set_src(Red_pao_2,images.redpao); 
     lv_obj_set_pos(Red_pao_2,Board_Xvalue[piece[red_pao_2].Xvalue]-35,Board_Yvalue[piece[red_pao_2].Yvalue]-35);  
     //Add red soldiers
     Red_bing_1 = lv_image_create(root);
-    lv_image_set_src(Red_bing_1,R.images.redbing); 
+    lv_image_set_src(Red_bing_1,images.redbing); 
     lv_obj_set_pos(Red_bing_1,Board_Xvalue[piece[red_bing_1].Xvalue]-35,Board_Yvalue[piece[red_bing_1].Yvalue]-35);   
     Red_bing_2 = lv_image_create(root);
-    lv_image_set_src(Red_bing_2,R.images.redbing); 
+    lv_image_set_src(Red_bing_2,images.redbing); 
     lv_obj_set_pos(Red_bing_2,Board_Xvalue[piece[red_bing_2].Xvalue]-35,Board_Yvalue[piece[red_bing_2].Yvalue]-35);  
     Red_bing_3 = lv_image_create(root);
-    lv_image_set_src(Red_bing_3,R.images.redbing); 
+    lv_image_set_src(Red_bing_3,images.redbing); 
     lv_obj_set_pos(Red_bing_3,Board_Xvalue[piece[red_bing_3].Xvalue]-35,Board_Yvalue[piece[red_bing_3].Yvalue]-35);  
     Red_bing_4 = lv_image_create(root);
-    lv_image_set_src(Red_bing_4,R.images.redbing); 
+    lv_image_set_src(Red_bing_4,images.redbing); 
     lv_obj_set_pos(Red_bing_4,Board_Xvalue[piece[red_bing_4].Xvalue]-35,Board_Yvalue[piece[red_bing_4].Yvalue]-35);  
     Red_bing_5 = lv_image_create(root);
-    lv_image_set_src(Red_bing_5,R.images.redbing); 
+    lv_image_set_src(Red_bing_5,images.redbing); 
     lv_obj_set_pos(Red_bing_5,Board_Xvalue[piece[red_bing_5].Xvalue]-35,Board_Yvalue[piece[red_bing_5].Yvalue]-35);  
     /*Create a black chess faction, which includes instantiating chess pieces, transferring images, and locating chess pieces*/
     //Instantiate chess pieces
@@ -385,22 +409,22 @@ static void app_create_main_page(void)
     Black_bing_4 = lv_image_create(root);
     Black_bing_5 = lv_image_create(root);
     //Send pictures
-    lv_image_set_src(Black_car_1,R.images.blackcar);
-    lv_image_set_src(Black_car_2,R.images.blackcar);
-    lv_image_set_src(Black_horse_1,R.images.blackhorse);
-    lv_image_set_src(Black_horse_2,R.images.blackhorse);
-    lv_image_set_src(Black_pao_1,R.images.blackpao);
-    lv_image_set_src(Black_pao_2,R.images.blackpao);
-    lv_image_set_src(Black_jiang,R.images.blackjiang);
-    lv_image_set_src(Black_elephant_1,R.images.blackelephant);
-    lv_image_set_src(Black_elephant_2,R.images.blackelephant);
-    lv_image_set_src(Black_shi_1,R.images.blackshi);
-    lv_image_set_src(Black_shi_2,R.images.blackshi);
-    lv_image_set_src(Black_bing_1,R.images.blackbing);
-    lv_image_set_src(Black_bing_2,R.images.blackbing);
-    lv_image_set_src(Black_bing_3,R.images.blackbing);
-    lv_image_set_src(Black_bing_4,R.images.blackbing);
-    lv_image_set_src(Black_bing_5,R.images.blackbing);
+    lv_image_set_src(Black_car_1,images.blackcar);
+    lv_image_set_src(Black_car_2,images.blackcar);
+    lv_image_set_src(Black_horse_1,images.blackhorse);
+    lv_image_set_src(Black_horse_2,images.blackhorse);
+    lv_image_set_src(Black_pao_1,images.blackpao);
+    lv_image_set_src(Black_pao_2,images.blackpao);
+    lv_image_set_src(Black_jiang,images.blackjiang);
+    lv_image_set_src(Black_elephant_1,images.blackelephant);
+    lv_image_set_src(Black_elephant_2,images.blackelephant);
+    lv_image_set_src(Black_shi_1,images.blackshi);
+    lv_image_set_src(Black_shi_2,images.blackshi);
+    lv_image_set_src(Black_bing_1,images.blackbing);
+    lv_image_set_src(Black_bing_2,images.blackbing);
+    lv_image_set_src(Black_bing_3,images.blackbing);
+    lv_image_set_src(Black_bing_4,images.blackbing);
+    lv_image_set_src(Black_bing_5,images.blackbing);
     //Locate the coordinates of the chess piece
     lv_obj_set_pos(Black_car_1,Board_Xvalue[piece[black_che_1].Xvalue]-35,Board_Yvalue[piece[black_che_1].Yvalue]-35);   
     lv_obj_set_pos(Black_car_2,Board_Xvalue[piece[black_che_2].Xvalue]-35,Board_Yvalue[piece[black_che_2].Yvalue]-35);   
@@ -432,26 +456,25 @@ static void app_get_point_event_handler(lv_event_t* e)
     }
 }
 
-
 //Loading resources such as images
 static bool init_resource(void)
 {
     // images
-    R.images.chessboard = ICONS_ROOT "/Board.png";  
-    R.images.blackbing = ICONS_ROOT "/黑棋卒.png";
-    R.images.redcar = ICONS_ROOT "/红棋车.png";
-    R.images.redhorse= ICONS_ROOT "/红棋马.png";
-    R.images.redelephant = ICONS_ROOT "/红棋相.png";
-    R.images.redshi = ICONS_ROOT "/红棋仕.png";
-    R.images.redjiang = ICONS_ROOT "/红棋帥.png";
-    R.images.redpao = ICONS_ROOT "/红棋炮.png";
-    R.images.redbing = ICONS_ROOT "/红棋兵.png";   
-    R.images.blackcar = ICONS_ROOT "/黑棋车.png";
-    R.images.blackjiang = ICONS_ROOT "/黑棋将.png";
-    R.images.blackhorse = ICONS_ROOT "/黑棋马.png";
-    R.images.blackpao = ICONS_ROOT "/黑棋炮.png";
-    R.images.blackshi = ICONS_ROOT "/黑棋仕.png";
-    R.images.blackelephant = ICONS_ROOT "/黑棋象.png";
+    images.chessboard = ICONS_ROOT "/Board.png";  
+    images.blackbing = ICONS_ROOT "/黑棋卒.png";
+    images.redcar = ICONS_ROOT "/红棋车.png";
+    images.redhorse= ICONS_ROOT "/红棋马.png";
+    images.redelephant = ICONS_ROOT "/红棋相.png";
+    images.redshi = ICONS_ROOT "/红棋仕.png";
+    images.redjiang = ICONS_ROOT "/红棋帥.png";
+    images.redpao = ICONS_ROOT "/红棋炮.png";
+    images.redbing = ICONS_ROOT "/红棋兵.png";   
+    images.blackcar = ICONS_ROOT "/黑棋车.png";
+    images.blackjiang = ICONS_ROOT "/黑棋将.png";
+    images.blackhorse = ICONS_ROOT "/黑棋马.png";
+    images.blackpao = ICONS_ROOT "/黑棋炮.png";
+    images.blackshi = ICONS_ROOT "/黑棋仕.png";
+    images.blackelephant = ICONS_ROOT "/黑棋象.png";
     return true;
 }
 
@@ -510,6 +533,7 @@ static int car(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int horse(int x1,int y1,int x2,int y2,int Camp)
 {
     int dx,dy,x3,y3,index;
@@ -536,6 +560,7 @@ static int horse(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int elephant(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, dx, dy;
@@ -573,6 +598,7 @@ static int elephant(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int shi(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, dx, dy;
@@ -604,6 +630,7 @@ static int shi(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int jiang(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, dx, dy;
@@ -635,6 +662,7 @@ static int jiang(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int pao(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, i, temp, pieceN, temp1;
@@ -685,6 +713,7 @@ static int pao(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int bing(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, dx, dy;
@@ -711,6 +740,7 @@ static int bing(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static int zu(int x1,int y1,int x2,int y2,int Camp)
 {
     int index, dx, dy;
@@ -737,6 +767,7 @@ static int zu(int x1,int y1,int x2,int y2,int Camp)
     //No obstacles, the chess pieces can move to the target location normally
     return 1;
 }
+
 static void piece_position(long int x,long int y)
 {
     static int x1,y1,x2,y2;
@@ -799,6 +830,7 @@ static void piece_position(long int x,long int y)
         piece_change(&changebuffer);
     }
 }
+
 static void piece_change(changestrcut* p)
 {
     //Before changing the position of the chess piece, check if the movement of the chess piece is reasonable
@@ -948,6 +980,7 @@ static int board_check(void)
         return 1;
     }
 }
+
 static int board_check_shuai_statue(void)
 {
     if (piece[4].statue == death) {
@@ -961,7 +994,6 @@ static int board_check_shuai_statue(void)
         return 0;
     }
 }
-
 
 //Chessboard information update function
 static void piece_information_change(changestrcut* p_information)
@@ -1150,6 +1182,7 @@ static void piece_information_change(changestrcut* p_information)
         }
     }
 }
+
 static void reset(void)
 {
     turn_camp=1;
@@ -1266,7 +1299,7 @@ static void reset(void)
 static void reset_choose_page(int choose_camp)
 {
     lv_obj_t* root = lv_screen_active();
-    lv_obj_set_style_bg_img_src(root, R.images.chessboard, LV_PART_MAIN); 
+    lv_obj_set_style_bg_img_src(root, images.chessboard, LV_PART_MAIN); 
     lv_obj_set_style_border_width(root, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(root, 0, LV_PART_MAIN);
     lv_obj_t* game_over_window = lv_obj_create(root);
@@ -1315,6 +1348,7 @@ static void app_create_error_page(void)
     lv_obj_set_style_text_font(label, &lv_font_montserrat_32, LV_PART_MAIN);
     lv_obj_center(label);
 }
+
 static void restart_event_cb(lv_event_t* e)
 {
     // Logic after clicking 'restart'

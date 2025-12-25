@@ -44,31 +44,6 @@
 #define black_bing_5 31
 #define board_black -1
 
-struct ctx_s {
-    bool resource_healthy_check;
-
-};
-
-struct resource_s {   
-    struct {
-        const char* chessboard;  
-        const char* redcar; 
-        const char* redhorse; 
-        const char* redelephant; 
-        const char* redshi;  
-        const char* redjiang; 
-        const char* redpao; 
-        const char* redbing; 
-        const char* blackcar; 
-        const char* blackhorse; 
-        const char* blackelephant; 
-        const char* blackshi;  
-        const char* blackjiang; 
-        const char* blackpao; 
-        const char* blackbing; 
-    } images;
-};
-
 typedef struct {
     char* name;
     int Xvalue;
@@ -96,5 +71,8 @@ typedef struct{
     int last_camp;
     int new_camp;
 }changestrcut;
+
 void Chinese_Chess_app_create(void);
+
 #endif
+

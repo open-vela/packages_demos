@@ -1,15 +1,18 @@
 # Chinese_Chess
-Chinese_Chess is a Chinese chess game designed based on the OpenVela system.
+Chinese_Chess is a Chinese chess game developed based on the OpenVela system.
 
 ## Core Features
-1. Click a piece to select it, then click a position on the board to move it.  
-2. The pieces—Rook, Knight, Cannon, Elephant, Advisor, General, and Pawn—can move according to the rules of Chinese chess.  
-3. Pieces can capture opposing pieces.  
-4. The game ends when the opponent’s General is captured.
+1. Click a piece to select it, then click a position on the board to move the piece.  
+2. Rook, Knight, Cannon, Elephant, Advisor, General/King, and Soldier pieces move according to the rules of Chinese chess.  
+3. Pieces can capture opponent pieces.  
+4. The game ends when the opponent’s General/King is captured.
 
 ## Documentation
-- [Changelog](Update_en.md)  
-- [Demo](Chinese_Chess_Show/Chinese_Chess_game.gif)
+- [Update Log](Update.md)  
+- [Gameplay Demo](Chinese_Chess_Show/Chinese_Chess_game.gif)
+
+## Asset Description
+The chessboard and chess pieces displayed in the program are all drawn by the author using basic graphics.
 
 ## Project Structure
 ```

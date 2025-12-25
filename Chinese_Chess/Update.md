@@ -1,5 +1,9 @@
 #Chinese_Chess 更新日志
 
+## v4.2
+1. 对于冗余程序进行调整
+2. 在ReadMe文件中更新了素材来源说明
+
 ## v4.1
 1. 在Chinese_chess.h文件中只保留了Chinese_Chess_app_create()一个接口函数
 2. 将只在内部调用的变量放到Chinese_chess.c文件中
