@@ -1,5 +1,5 @@
 # ##############################################################################
-# packages/demos/CMakeLists.txt
+# packages/demos/utils/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,29 +18,14 @@
 #
 # ##############################################################################
 
-if(CONFIG_LVX_USE_DEMO_WOODEN_FISH)
-  # Source Directories
-  set(WOODEN_FISH_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+if(CONFIG_LVX_USE_DEMO_UTILS)
 
-  # Flags
-  set(INCDIR)
+  nuttx_add_library(demo_utils)
 
-  set(PROGNAME wooden_fish)
-  set(PRIORITY 100)
-  set(STACKSIZE 131072)
-  set(MODULE ${CONFIG_LVX_USE_DEMO_WOODEN_FISH})
-  set(MAINSRC wooden_fish_main.c)
   file(GLOB_RECURSE CSRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.c")
-  list(REMOVE_ITEM CSRCS wooden_fish_main.c)
 
-  list(APPEND INCDIR ${WOODEN_FISH_DIR}/../utils/include)
+  target_sources(demo_utils PRIVATE ${CSRCS})
 
-  nuttx_add_application(
-    NAME ${PROGNAME}
-    PRIORITY ${PRIORITY}
-    STACKSIZE ${STACKSIZE}
-    MODULE ${MODULE}
-    INCLUDE_DIRECTORIES ${INCDIR}
-    SRCS ${MAINSRC} ${CSRCS}
-  )
+  target_include_directories(demo_utils PRIVATE ./include)
+
 endif()

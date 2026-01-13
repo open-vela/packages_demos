@@ -19,22 +19,29 @@
 # ##############################################################################
 
 if(CONFIG_LVX_USE_DEMO_MUSIC_PLAYER)
+  # Source Directories
+  set(MUSIC_PLAYER_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+  # Flags
+  set(INCDIR)
+
   set(PROGNAME music_player)
   set(PRIORITY 100)
   set(STACKSIZE 32768)
   set(MODULE ${CONFIG_LVX_USE_DEMO_MUSIC_PLAYER})
   set(CSRCS
       music_player.c
-      audio_ctl.c
-      wifi.c
   )
   set(MAINSRC music_player_main.c)
+
+  list(APPEND INCDIR ${MUSIC_PLAYER_DIR}/../utils/include)
 
   nuttx_add_application(
     NAME ${PROGNAME}
     PRIORITY ${PRIORITY}
     STACKSIZE ${STACKSIZE}
     MODULE ${MODULE}
+    INCLUDE_DIRECTORIES ${INCDIR}
     SRCS ${MAINSRC} ${CSRCS}
   )
 endif()
