@@ -58,15 +58,17 @@ lv_draw_buf_t* app_create_main_page(lv_obj_t *parent, Resource* R) {
     lv_image_decoder_args_t args = { 0 }; // Custom args if needed
 #ifdef CONFIG_CALCULATOR_USE_BUILTIN_RES
     lv_result_t res = lv_image_decoder_open(&decoder_dsc, R->images.background, &args);
+    if(res != LV_RESULT_OK) {
+        LV_LOG_ERROR("Image decode failed !");
+        return NULL;
+    }
 #else
     lv_result_t res = lv_image_decoder_open(&decoder_dsc, R->images.background.c_str(), &args);
-        if(res != LV_RESULT_OK) {
+    if(res != LV_RESULT_OK) {
         LV_LOG_ERROR("Image decode failed: %s", R->images.background.c_str());
         return NULL;
     }
 #endif
-
-
 
     // Step 2: Get decoded data (decoder_dsc.decoded)
     const lv_draw_buf_t* const_buf = decoder_dsc.decoded;
