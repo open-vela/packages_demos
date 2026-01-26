@@ -3,6 +3,7 @@
 ## v4.2
 1. 对于冗余程序进行调整
 2. 在ReadMe文件中更新了素材来源说明
+3. 删除程序中的中文内容
 
 ## v4.1
 1. 在Chinese_chess.h文件中只保留了Chinese_Chess_app_create()一个接口函数

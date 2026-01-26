@@ -75,4 +75,3 @@ typedef struct{
 void Chinese_Chess_app_create(void);
 
 #endif
-

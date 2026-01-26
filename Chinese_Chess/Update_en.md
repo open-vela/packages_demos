@@ -3,6 +3,7 @@
 ## v4.2
 1. Refactored and adjusted redundant code  
 2. Updated the asset source description in the README file  
+3. Remove Chinese characters from the source code  
 
 ## v4.1
 1. Kept only one public interface function, `Chinese_Chess_app_create()`, in the `Chinese_chess.h` file  
