@@ -461,20 +461,20 @@ static bool init_resource(void)
 {
     // images
     images.chessboard = ICONS_ROOT "/Board.png";  
-    images.blackbing = ICONS_ROOT "/黑棋卒.png";
-    images.redcar = ICONS_ROOT "/红棋车.png";
-    images.redhorse= ICONS_ROOT "/红棋马.png";
-    images.redelephant = ICONS_ROOT "/红棋相.png";
-    images.redshi = ICONS_ROOT "/红棋仕.png";
-    images.redjiang = ICONS_ROOT "/红棋帥.png";
-    images.redpao = ICONS_ROOT "/红棋炮.png";
-    images.redbing = ICONS_ROOT "/红棋兵.png";   
-    images.blackcar = ICONS_ROOT "/黑棋车.png";
-    images.blackjiang = ICONS_ROOT "/黑棋将.png";
-    images.blackhorse = ICONS_ROOT "/黑棋马.png";
-    images.blackpao = ICONS_ROOT "/黑棋炮.png";
-    images.blackshi = ICONS_ROOT "/黑棋仕.png";
-    images.blackelephant = ICONS_ROOT "/黑棋象.png";
+    images.blackbing = ICONS_ROOT "/blackzu.png";
+    images.redcar = ICONS_ROOT "/redcar.png";
+    images.redhorse= ICONS_ROOT "/redhorse.png";
+    images.redelephant = ICONS_ROOT "/redelephant.png";
+    images.redshi = ICONS_ROOT "/redshi.png";
+    images.redjiang = ICONS_ROOT "/redjiang.png";
+    images.redpao = ICONS_ROOT "/redpao.png";
+    images.redbing = ICONS_ROOT "/redbing.png";   
+    images.blackcar = ICONS_ROOT "/blackcar.png";
+    images.blackjiang = ICONS_ROOT "/blackjiang.png";
+    images.blackhorse = ICONS_ROOT "/blackhorse.png";
+    images.blackpao = ICONS_ROOT "/blackpao.png";
+    images.blackshi = ICONS_ROOT "/blackshi.png";
+    images.blackelephant = ICONS_ROOT "/blackelephant.png";
     return true;
 }
 
