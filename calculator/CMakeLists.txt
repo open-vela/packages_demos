@@ -24,6 +24,15 @@ if(CONFIG_LVX_USE_DEMO_CALCULATOR)
   set(STACKSIZE 32768)
   set(MODULE ${CONFIG_LVX_USE_DEMO_CALCULATOR})
   set(CXXEXT .cpp)
+  set(CSRCS
+      res/fonts/size_16_normal.c
+      res/fonts/size_22_bold.c
+      res/fonts/size_24_normal.c
+      res/fonts/size_28_normal.c
+      res/fonts/size_48_normal.c
+      res/fonts/size_60_bold.c
+      res/icons/background.c 
+  )
   set(CXXSRCS
       calculator_cre.cpp
       expression_calc.cpp
@@ -35,6 +44,6 @@ if(CONFIG_LVX_USE_DEMO_CALCULATOR)
     PRIORITY ${PRIORITY}
     STACKSIZE ${STACKSIZE}
     MODULE ${MODULE}
-    SRCS ${MAINSRC} ${CXXSRCS}
+    SRCS ${MAINSRC} ${CXXSRCS} ${CSRCS}
   )
 endif()
