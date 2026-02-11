@@ -27,6 +27,7 @@
 #include <nuttx/pthread.h>
 #include <sched.h>
 #include <semaphore.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,6 @@
 #include <uv_async_queue.h>
 #include <kvdb.h>
 
-#include "builtin/builtin.h"
 #include "ai_log.h"
 #include "ai_circular_buffer.h"
 #include "ai_conversation.h"
@@ -49,6 +49,9 @@
 #define CONVERSATION_MIN_TIMEOUT 5000
 #define CONVERSATION_MAX_TIMEOUT 120000
 #define CONVERSATION_BUFFER_MAX_SIZE 128 * 1024
+
+#define PLAYER_TIMER_INTERVAL_MS  500
+#define PLAYER_IDLE_THRESHOLD     4    /* 4 * 500ms = 2s continuous idle */
 
 /****************************************************************************
  * Private Types
@@ -138,6 +141,11 @@ typedef struct conversation_context {
     conversation_player_status_t player_status;
     mcp_server_t mcp_server;
     sem_t media_lock;
+    uv_timer_t player_timer;
+    int idle_count;           /* consecutive idle checks */
+    bool audio_started;       /* received audio_start this round */
+    bool engine_complete;     /* received engine complete this round */
+    bool timer_active;        /* timer is running */
 } conversation_context_t;
 
 typedef enum {
@@ -248,6 +256,7 @@ static void media_player_stop_cb(void* cookie, int ret);
 static void media_player_event_callback(void* cookie, int event, int ret, const char* extra);
 static void write_audio_data_cb(uv_write_t* req, int status);
 static void ai_conversation_focus_callback(int suggestion, void* cookie);
+static void player_timer_cb(uv_timer_t* timer);
 static int ai_conversation_map_params(conversation_context_t* ctx, \
                                      const conversation_init_params_t* in_param,
                                      conversation_engine_init_params_t* out_param);
@@ -835,6 +844,10 @@ static int conversation_message_start_handler(void* message_data)
         }
     }
 
+    ctx->audio_started = false;
+    ctx->engine_complete = false;
+    ctx->idle_count = 0;
+
     ctx->plugin->start(ctx->engine);
 
     ctx->state = CONVERSATION_STATE_START;
@@ -940,6 +953,12 @@ static int conversation_message_close_handler(void* message_data)
 
     uv_async_queue_close(&ctx->user_asyncq, NULL);
 
+    if (ctx->timer_active) {
+        uv_timer_stop(&ctx->player_timer);
+        ctx->timer_active = false;
+    }
+    uv_close((uv_handle_t*)&ctx->player_timer, NULL);
+
     sem_post(&ctx->media_lock);
 
     sem_destroy(&ctx->media_lock);
@@ -1044,14 +1063,17 @@ static int conversation_message_cb_handler(void* message_data)
         return -EINVAL;
     }
 
+    conversation_context_t* ctx = data->ctx;
+
     if (data->event == conversation_event_response_audio_start) {
-        int ret = media_uv_player_prepare(data->ctx->player_handle, NULL, data->ctx->format,
+        ctx->audio_started = true;
+        int ret = media_uv_player_prepare(ctx->player_handle, NULL, ctx->format,
             media_player_prepare_connect_cb, NULL, NULL);
         if (ret < 0) {
             CON_ERR("conversation player prepare failed");
             return ret;
         }
-        ret = media_uv_player_start(data->ctx->player_handle, NULL, data->ctx);
+        ret = media_uv_player_start(ctx->player_handle, NULL, ctx);
         if (ret < 0) {
             CON_ERR("conversation player start failed");
             return ret;
@@ -1060,10 +1082,28 @@ static int conversation_message_cb_handler(void* message_data)
 
     if (data->event == conversation_event_response_audio && 
         data->result.result && data->result.len > 0) {
-        ai_conversation_play_audio(data->ctx, data->result.result, data->result.len);
+        ai_conversation_play_audio(ctx, data->result.result, data->result.len);
     }
 
-    data->ctx->cb(data->event, &data->result, data->ctx->cookie);
+    if (data->event == conversation_event_complete) {
+        ctx->engine_complete = true;
+        CON_INFO("engine complete: audio_started=%d", ctx->audio_started);
+        if (!ctx->audio_started) {
+            /* pure text reply, no audio at all — release lock directly */
+            CON_INFO("No audio this round, releasing media_lock");
+            sem_post(&ctx->media_lock);
+        } else if (!ctx->timer_active) {
+            /* audio was started, begin polling for idle buffer */
+            ctx->idle_count = 0;
+            ctx->player_timer.data = ctx;
+            uv_timer_start(&ctx->player_timer, player_timer_cb,
+                           PLAYER_TIMER_INTERVAL_MS, PLAYER_TIMER_INTERVAL_MS);
+            ctx->timer_active = true;
+            CON_INFO("Player idle timer started");
+        }
+    }
+
+    ctx->cb(data->event, &data->result, ctx->cookie);
 
     if (data->result.result) {
         free((void*)data->result.result);
@@ -1410,12 +1450,59 @@ static void media_player_close_cb(void* cookie, int ret)
     CON_INFO("conversation player close cb:%d", ret);
 }
 
+static void player_timer_cb(uv_timer_t* timer)
+{
+    conversation_context_t* ctx = timer->data;
+
+    if (!ctx || ctx->is_closed) {
+        uv_timer_stop(timer);
+        if (ctx)
+            ctx->timer_active = false;
+        return;
+    }
+
+    bool buffer_idle = (ai_circular_buffer_num_items(&ctx->buffer) == 0)
+                       && (ctx->write_req.data == NULL);
+
+    if (buffer_idle) {
+        ctx->idle_count++;
+    } else {
+        ctx->idle_count = 0;
+    }
+
+    CON_INFO("player_timer_cb: idle_count=%d buffer_items=%zu writing=%d",
+             ctx->idle_count,
+             ai_circular_buffer_num_items(&ctx->buffer),
+             ctx->write_req.data != NULL);
+
+    if (ctx->idle_count >= PLAYER_IDLE_THRESHOLD) {
+        CON_WARN("Player idle timeout after engine complete, forcing stop");
+        uv_timer_stop(timer);
+        ctx->timer_active = false;
+        if (ctx->player_handle &&
+            ctx->player_status == CONVERSATION_PLAYER_STATUS_PLAYING) {
+            ctx->player_pipe = NULL;
+            ctx->write_req.data = NULL;
+            media_uv_player_stop(ctx->player_handle,
+                                 media_player_stop_cb, ctx);
+        } else {
+            /* player never started or already stopped, just release lock */
+            sem_post(&ctx->media_lock);
+        }
+    }
+}
+
 static void media_player_stop_cb(void* cookie, int ret)
 {
     conversation_context_t* ctx = cookie;
 
     if (!ctx) {
         return;
+    }
+
+    if (ctx->timer_active) {
+        uv_timer_stop(&ctx->player_timer);
+        ctx->timer_active = false;
     }
 
     ctx->player_status = CONVERSATION_PLAYER_STATUS_STOPPED;
@@ -1461,8 +1548,10 @@ static void media_player_event_callback(void* cookie, int event, int ret, const 
             ctx->write_req.data = NULL;
         }
         CON_INFO("conversation player evert callback: [MEDIA_EVENT_COMPLETED]");
-        ctx->player_status = CONVERSATION_PLAYER_STATUS_STOPPED;
-        media_uv_player_stop(ctx->player_handle, media_player_stop_cb, ctx);
+        if (ctx->player_status != CONVERSATION_PLAYER_STATUS_STOPPED) {
+            ctx->player_status = CONVERSATION_PLAYER_STATUS_STOPPED;
+            media_uv_player_stop(ctx->player_handle, media_player_stop_cb, ctx);
+        }
         break;
     default:
         break;
@@ -1629,6 +1718,13 @@ conversation_handle_t ai_conversation_create_engine(const conversation_init_para
 
     ctx->state = CONVERSATION_STATE_INIT;
     ctx->player_status = CONVERSATION_PLAYER_STATUS_IDLE;
+
+    uv_timer_init(ctx->loop, &ctx->player_timer);
+    ctx->player_timer.data = ctx;
+    ctx->timer_active = false;
+    ctx->audio_started = false;
+    ctx->engine_complete = false;
+    ctx->idle_count = 0;
 
     if (ctx->plugin && ctx->plugin->start && ctx->engine) {
         ctx->plugin->start(ctx->engine);
