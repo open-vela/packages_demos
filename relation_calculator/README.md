@@ -1,6 +1,6 @@
 # Relatives Calculator Demo Quick Start
 
-\[ English | [简体中文](Readme_zh-cn.md) \]
+\[ English | [简体中文](README_zh-cn.md) \]
 
 This document provides a comprehensive guide to building, deploying, and running the **Relatives Calculator** demo application on the `openvela` system. It covers procedures for both the QEMU emulator and the ESP32-S3-BOX development board, as well as how to customize the application by adding new relationships.
 

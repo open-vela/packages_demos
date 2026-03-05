@@ -1,5 +1,7 @@
 # Snake Game
 
+English | [中文](README_zh-cn.md)
+
 ## Introduction
 
 This is an automatic snake game implemented using the LVGL graphics library. The game area is a 60×35 grid, with each grid cell being 20×20 pixels.

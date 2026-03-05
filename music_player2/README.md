@@ -1,65 +1,67 @@
 # music_player2
 
-music_player2是一个嵌入式音乐播放器，基于 openvela 系统设计。提供 UI 界面，支持音频播放、播放列表管理、启动页面、音量控制等功能。采用模块化架构设计，易于扩展和维护。
+English | [中文](README_zh-cn.md)
 
-## 目录
+music_player2 is an embedded music player designed based on the openvela system. It provides a UI interface with support for audio playback, playlist management, splash screen, volume control, and other features. Built with a modular architecture design for easy extension and maintenance.
 
-- [功能特性](#功能特性)
-- [系统要求](#系统要求)
-- [项目结构](#项目结构)
-- [启动指南](#启动指南)
-- [使用指南](#使用指南)
-- [自定义指南](#自定义指南)
-- [贡献指南](#贡献指南)
+## Table of Contents
 
-## 详细文档
+- [Features](#features)
+- [System Requirements](#system-requirements)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [User Guide](#user-guide)
+- [Customization Guide](#customization-guide)
+- [Contributing](#contributing)
 
-- [故障排除指南](docs/ch/TROUBLESHOOTING.md)
-- [技术文档](docs/ch/TECHNICAL.md)
-- [更新日志](docs/ch/CHANGELOG.md)
+## Detailed Documentation
 
-## 功能特性
+- [Troubleshooting Guide](docs/en/TROUBLESHOOTING.md)
+- [Technical Documentation](docs/en/TECHNICAL.md)
+- [Changelog](docs/en/CHANGELOG.md)
 
-### 核心功能
-- 音频播放控制
-- 上一首/下一首切换
-- 音量调节控制
-- 播放列表管理
-- 实时播放进度显示
-- 顶部状态栏（时间、日期、Wi-Fi、电池）
+## Features
 
-### 界面功能
-- 启动页面：Logo 动画和加载效果
-- 长方形适配：为模拟器长方形屏幕优化
-- 音量条：可视化音量控制
-- 滚动歌曲信息：长标题自动滚动显示
+### Core Features
+- Audio playback control
+- Previous/next track switching
+- Volume adjustment control
+- Playlist management
+- Real-time playback progress display
+- Top status bar (time, date, Wi-Fi, battery)
 
-### 系统功能
-- Wi-Fi 网络连接管理
-- 完整文件系统集成
-- JSON 配置文件管理
-- 系统资源实时监控
-- 模块化架构设计
+### Interface Features
+- Splash screen: Logo animation and loading effects
+- Rectangle adaptation: Optimized for simulator rectangular screen
+- Volume bar: Visual volume control
+- Scrolling song information: Long titles automatically scroll
 
-## 系统要求
+### System Features
+- Wi-Fi network connection management
+- Complete file system integration
+- JSON configuration file management
+- Real-time system resource monitoring
+- Modular architecture design
 
-### 硬件要求
-支持 ARM 架构的嵌入式设备，具备音频输出和显示功能。
+## System Requirements
 
-### 软件要求
-- **操作系统**：openvela
-- **图形库**：LVGL
-- **音频库**：NuttX Audio 框架 / 模拟器音频控制器
-- **网络**：Wi-Fi 驱动支持
+### Hardware Requirements
+ARM architecture embedded devices with audio output and display capabilities.
 
-### 开发环境
-- **编译器**：arm-none-eabi-gcc
-- **构建系统**：Make / NuttX 构建系统
-- **调试工具**：ADB
-- **主机系统**：Linux
-- **模拟器**：QEMU
+### Software Requirements
+- **Operating System**: openvela
+- **Graphics Library**: LVGL
+- **Audio Library**: NuttX Audio Framework / Simulator Audio Controller
+- **Network**: Wi-Fi driver support
 
-## 项目结构
+### Development Environment
+- **Compiler**: arm-none-eabi-gcc
+- **Build System**: Make / NuttX Build System
+- **Debug Tools**: ADB
+- **Host System**: Linux
+- **Emulator**: QEMU
+
+## Project Structure
 
 ```
 music_player2/
@@ -90,37 +92,40 @@ music_player2/
     └── config.json
 ```
 
-## 启动指南
+## Getting Started
 
-### 环境准备
+### Environment Setup
 ```bash
-# 安装必要的工具
+# Install necessary tools
 sudo apt update && sudo apt install -y android-tools-adb build-essential git
 
-# 克隆 openvela 仓库
+# Clone openvela repository
 git clone <openvela-repo-url> && cd vela_code
 ```
 
-### 配置和构建
+### Configuration and Build
 ```bash
-# 配置音乐播放器
+# Configure music player
 echo "CONFIG_LVX_USE_DEMO_VELA_AUDIO=y" >> vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap/defconfig
 echo 'CONFIG_LVX_MUSIC_PLAYER_DATA_ROOT="/data"' >> vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap/defconfig
 
-# 构建项目
+# Build project
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap distclean -j8
 ./build.sh vendor/openvela/boards/vela/configs/goldfish-armeabi-v7a-ap -j8
 ```
 
-### 启动和部署
+### Startup and Deployment
 ```bash
+cd nuttx && ln -sf vela_ap.elf nuttx && cd ..
 ./emulator.sh vela
+sleep 15 && adb connect 127.0.0.1:5555
 adb -s emulator-5554 push apps/packages/demos/music_player2/res /data/
+adb -s emulator-5554 shell "music_player2 &"
 ```
 
-### 配置文件说明
+### Configuration File Description
 
-#### config.json - Wi-Fi配置
+#### config.json - Wi-Fi Configuration
 ```json
 {
   "wifi": {
@@ -130,7 +135,7 @@ adb -s emulator-5554 push apps/packages/demos/music_player2/res /data/
 }
 ```
 
-#### manifest.json - 音乐配置
+#### manifest.json - Music Configuration
 ```json
 {
   "musics": [
@@ -146,33 +151,31 @@ adb -s emulator-5554 push apps/packages/demos/music_player2/res /data/
 }
 ```
 
-## 使用指南
+## User Guide
 
-### 基本操作
-1. **播放/暂停**: 点击中央播放按钮
-2. **上一首/下一首**: 点击左右箭头按钮
-3. **音量控制**: 点击音量按钮显示音量条
-4. **打开播放列表**: 点击播放列表按钮
-5. **选择歌曲**: 在列表中点击想要播放的歌曲
+### Basic Operations
+1. **Play/Pause**: Click the central play button
+2. **Previous/Next**: Click the left/right arrow buttons
+3. **Volume Control**: Click the volume button to show volume bar
+4. **Open Playlist**: Click the playlist button
+5. **Select Song**: Click the desired song in the list
 
-### 调试模式
-在编译时添加 `-DDEBUG` 标志启用调试模式：
+### Debug Mode
+Enable debug mode by adding the `-DDEBUG` flag during compilation:
 ```bash
 make CFLAGS="-DDEBUG"
 ```
 
-## 自定义指南
+## Customization Guide
 
-### 添加新音乐
+### Adding New Music
 
-#### 1. 准备音频文件
+#### 1. Prepare Audio Files
 ```bash
-# 确保音频文件为支持的格式（MP3/WAV）
-# 准备专辑封面（推荐 300x300，支持 JPG/PNG 格式）
 convert cover.jpg -resize 300x300 cover.png
 ```
 
-#### 2. 更新配置文件
+#### 2. Update Configuration File
 ```json
 {
   "musics": [
@@ -188,70 +191,70 @@ convert cover.jpg -resize 300x300 cover.png
 }
 ```
 
-#### 3. 部署文件
+#### 3. Deploy Files
 ```bash
-# 复制文件到资源目录
+# Copy files to resource directory
 cp new_song.mp3 res/musics/
 cp new_cover.png res/musics/
 
-# 推送到设备
+# Push to device
 adb push res/musics/ /data/res/musics/
 ```
 
-### 自定义界面
+### Interface Customization
 
-#### 修改主题颜色
+#### Modify Theme Colors
 ```c
-// 在 music_player2.c 中修改
+// Modify in music_player2.c
 #define MODERN_PRIMARY_COLOR        lv_color_hex(0x00BFFF)
 #define MODERN_SECONDARY_COLOR      lv_color_hex(0xFF6B6B)
 #define MODERN_BACKGROUND_COLOR     lv_color_hex(0x121212)
 ```
 
-#### 调整界面布局
+#### Adjust Interface Layout
 ```c
-// 修改分辨率适配
+// Modify resolution adaptation
 #define SCREEN_WIDTH  1280
 #define SCREEN_HEIGHT 800
 
-// 调整控件大小
+// Adjust component sizes
 #define COVER_SIZE 200
 #define BUTTON_SIZE 60
 ```
 
-## 贡献指南
+## Contributing
 
-### 开发流程
-1. Fork 项目
-2. 创建功能分支
-3. 开发和测试
-4. 提交更改
-5. 创建 Pull Request
+### Development Process
+1. Fork the project
+2. Create feature branch
+3. Develop and test
+4. Submit changes
+5. Create Pull Request
 
-### 代码规范
-- 函数命名：snake_case
-- 变量命名：snake_case
-- 常量命名：UPPER_CASE
-- 结构体命名：snake_case_t
+### Code Standards
+- Function naming: snake_case
+- Variable naming: snake_case
+- Constant naming: UPPER_CASE
+- Structure naming: snake_case_t
 
-### 提交信息规范
-- feat: 新功能
-- fix: 修复bug
-- docs: 文档更新
-- style: 代码格式调整
-- refactor: 重构
-- test: 测试相关
+### Commit Message Standards
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation update
+- style: Code formatting adjustment
+- refactor: Refactoring
+- test: Test related
 
-## 许可证
+## License
 
-本项目采用 Apache License 2.0 开源许可证。
+This project is licensed under the Apache License 2.0 open source license.
 
-## 致谢
+## Acknowledgments
 
-- **openvela**：提供嵌入式操作系统平台
-- **LVGL 社区**：提供图形库和UI组件支持
+- **openvela**: Providing embedded operating system platform
+- **LVGL Community**: Providing graphics library and UI component support
 
 ---
 
-*最后更新时间：2025-10-29*  
-*当前版本：v2.3.3*
+*Last updated: 2025-10-29*  
+*Current version: v2.3.3*  
