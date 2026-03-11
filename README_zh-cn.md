@@ -18,5 +18,6 @@
 - [打砖块](breakout/Readme.md)
 - [电子沙漏](hourglass/Readme.md)
 - [贪吃蛇](snake_game/Readme.md)
+- [MiMo AI 大模型接入](mimo/README_zh-cn.md)
 - [虚拟宠物](pet/README.md)
 - [电子木鱼](wooden_fish/README_zh-cn.md)
