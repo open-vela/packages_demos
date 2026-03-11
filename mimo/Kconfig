@@ -1,0 +1,87 @@
+#
+# Copyright (C) 2024 Xiaomi Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menuconfig DEMOS_MIMO
+	tristate "Xiaomi MiMo AI Provider"
+	default n
+	depends on NETUTILS_CJSON
+	select NETUTILS_WEBCLIENT
+	select CRYPTO_MBEDTLS
+	---help---
+		Xiaomi MiMo AI model provider for openvela/NuttX.
+		Provides a standalone CLI demo that calls the MiMo
+		chat completions API with thinking mode support.
+
+		API: https://api.xiaomimimo.com/v1/chat/completions
+		Model: mimo-v2-flash (309B/15B MoE, 262K context)
+
+if DEMOS_MIMO
+
+config MIMO_API_KEY
+	string "Xiaomi MiMo API Key"
+	default ""
+	---help---
+		API key from https://platform.xiaomimimo.com/
+
+config MIMO_MODEL
+	string "Model Name"
+	default "mimo-v2-flash"
+	---help---
+		MiMo model identifier.
+
+config MIMO_API_BASE_URL
+	string "API Base URL"
+	default "https://api.xiaomimimo.com/v1/chat/completions"
+	---help---
+		MiMo chat completions endpoint.
+
+config MIMO_TEMPERATURE
+	int "Temperature x100"
+	default 80
+	---help---
+		Temperature * 100. Recommended: 80 for general,
+		30 for agentic/tool-use tasks.
+
+config MIMO_ENABLE_THINKING
+	bool "Enable thinking mode"
+	default y
+	---help---
+		Enable MiMo extended thinking/reasoning mode.
+		The model returns reasoning_content alongside
+		regular content for deeper chain-of-thought.
+
+config MIMO_ENABLE_TOOLS
+	bool "Enable tool calling"
+	default y
+	---help---
+		Enable OpenAI-compatible function calling / tools.
+
+config MIMO_PRIORITY
+	int "Task priority"
+	default 100
+
+config MIMO_STACKSIZE
+	int "Stack size"
+	default 32768
+	---help---
+		Stack size (32KB recommended for TLS/HTTPS)
+
+endif # DEMOS_MIMO
