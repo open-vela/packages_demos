@@ -12,6 +12,7 @@ This repository implements examples of openvela native application code. Develop
 - [Breakout Game](breakout/Readme.md)
 - [Calculator](calculator/Readme.md)
 - [Hourglass](hourglass/Readme.md)
+- [MiMo AI Provider](mimo/README.md)
 - [Music Player](../../../docs/blob/dev/en/demo/Music_Player_Example.md)
 - [Music Player 2](music_player2/README-en.md)
 - [Relation Calculator](relation_calculator/Readme.md)
