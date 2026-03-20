@@ -43,7 +43,8 @@ if(CONFIG_AI_BAILIAN)
   target_sources(bailian_hal PRIVATE ${HAL_SRCS})
   target_include_directories(bailian_hal PRIVATE
     ${BAILIAN_SDK_DIR}/include
-    ${BAILIAN_SDK_DIR}/include/c_utils)
+    ${BAILIAN_SDK_DIR}/include/c_utils
+    ${NUTTX_APPS_DIR}/netutils/cjson/cJSON)
 
   # Create the main application
   nuttx_add_application(
@@ -60,7 +61,7 @@ if(CONFIG_AI_BAILIAN)
     INCLUDE_DIRECTORIES
     ${BAILIAN_SDK_DIR}/include
     ${BAILIAN_SDK_DIR}/include/c_utils
-    ${BAILIAN_SDK_DIR}/third_party/cJSON
+    ${NUTTX_APPS_DIR}/netutils/cjson/cJSON
     ${BAILIAN_SDK_DIR}/third_party/tinycrypt/include)
 
   # Link SDK libraries with HAL library using whole-archive to ensure all HAL symbols are included
@@ -74,7 +75,6 @@ if(CONFIG_AI_BAILIAN)
     # libc_license.a removed - using pay-as-you-go mode
     ${BAILIAN_SDK_DIR}/libs/libc_mmi_cmd.a
     ${BAILIAN_SDK_DIR}/libs/libqwen_test.a
-    ${BAILIAN_SDK_DIR}/third_party/cJSON/libcjson.a
     ${BAILIAN_SDK_DIR}/third_party/tinycrypt/libtinycrypt.a
     -Wl,--end-group)
 

@@ -3,6 +3,7 @@ config AI_BAILIAN
 	default n
 	select AUDIOUTILS_NXAUDIO
 	select SYSTEM_NXRECORDER
+	select NETUTILS_CJSON
 	---help---
 		Enable the openvela Bailian SDK adaptation example.
 
