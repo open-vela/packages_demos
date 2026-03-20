@@ -1,0 +1,52 @@
+config AI_BAILIAN
+	tristate "Bailian SDK adaptation"
+	default n
+	select AUDIOUTILS_NXAUDIO
+	select SYSTEM_NXRECORDER
+	---help---
+		Enable the openvela Bailian SDK adaptation example.
+
+if AI_BAILIAN
+
+config AI_BAILIAN_PROGNAME
+	string "Program name"
+	default "bailian"
+	---help---
+		This is the name of the program that will be used when the NSH ELF
+		program is installed.
+
+config AI_BAILIAN_PRIORITY
+	int "Bailian task priority"
+	default 100
+
+config AI_BAILIAN_STACKSIZE
+	int "Bailian stack size"
+	default 8192
+
+config AI_BAILIAN_HEAPSIZE
+	int "Bailian heap size"
+	depends on MM_TASK_HEAP
+	default MM_TASK_HEAP_DEFAULT_SIZE
+
+config AI_BAILIAN_WORKSPACE_ID
+	string "Workspace ID"
+	default ""
+
+config AI_BAILIAN_APP_ID
+	string "App ID"
+	default ""
+
+config AI_BAILIAN_API_KEY
+	string "API Key"
+	default ""
+
+# License mode configs removed - using pay-as-you-go mode
+config AI_BAILIAN_RECORDER_DEV
+	string "Recorder device path"
+	default "/dev/audio/pcm0c"
+
+config AI_BAILIAN_PLAYER_DEV
+	string "Player device path"
+	default "/dev/audio/pcm0p"
+
+endif
