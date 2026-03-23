@@ -1,0 +1,23 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_WEATHER_DASHBOARD
+	bool "WEATHER DASHBOARD"
+	default n
+
+if LVX_USE_DEMO_WEATHER_DASHBOARD
+	config LVX_WEATHER_DASHBOARD_DATA_ROOT
+		string "Weather Dashboard Data Root"
+		default "/data"
+
+	config WEATHER_DASHBOARD_CITY_NAME
+		string "Default City Name"
+		default "Beijing"
+
+	config WEATHER_DASHBOARD_TEMP_UNIT
+		int "Temperature Unit (0=Celsius, 1=Fahrenheit)"
+		default 0
+		range 0 1
+endif
