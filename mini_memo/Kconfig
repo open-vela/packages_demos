@@ -1,0 +1,28 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_MINI_MEMO
+	bool "Mini Memo - AI Memory Assistant"
+	default n
+	depends on GRAPHICS_LVGL
+	depends on LV_USE_NUTTX
+	depends on EXAMPLES_AI_AGENT_VELA || VELACLAW_DAEMON
+	select NETUTILS_CJSON
+	---help---
+		AI-powered memory assistant with voice input,
+		intent classification, and proactive reminders.
+		Requires VelaClaw framework for LLM and tools.
+
+if LVX_USE_DEMO_MINI_MEMO
+
+config MINI_MEMO_DATA_DIR
+	string "Mini Memo data directory"
+	default "/data/mini_memo"
+
+config MINI_MEMO_REVIEW_INTERVAL
+	int "Default periodic review interval (seconds)"
+	default 14400
+
+endif
