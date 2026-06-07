@@ -4,3 +4,4 @@
 .kconfig
 /Kconfig
 Make.dep
+.DS_Store
