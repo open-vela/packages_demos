@@ -328,8 +328,8 @@ int memo_store_load(void)
     }
 
     if (version_obj->valueint != MEMO_JSON_VERSION) {
-        syslog(LOG_WARNING, "%s: unsupported version %d\n",
-            MEMO_TAG, version_obj->valueint);
+        syslog(LOG_WARNING, "%s: unsupported version %lld\n",
+            MEMO_TAG, (long long)version_obj->valueint);
         cJSON_Delete(root);
         root = NULL;
         return 0;

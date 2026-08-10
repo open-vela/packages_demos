@@ -22,11 +22,17 @@ if(CONFIG_LVX_USE_DEMO_MINI_MEMO)
   set(MAINSRC mini_memo_main.c)
   set(CSRCS mini_memo_core.c mini_memo_ui.c)
 
+  # AI Agent client SDK include paths (keep in sync with Makefile)
+  set(MINI_MEMO_INCDIRS
+      ${NUTTX_APPS_DIR}/packages/ai_agent/include
+      ${NUTTX_APPS_DIR}/packages/ai_agent/src)
+
   nuttx_add_application(
     NAME ${PROGNAME}
     PRIORITY ${PRIORITY}
     STACKSIZE ${STACKSIZE}
     MODULE ${MODULE}
     SRCS ${MAINSRC} ${CSRCS}
+    INCLUDE_DIRECTORIES ${MINI_MEMO_INCDIRS}
   )
 endif()
